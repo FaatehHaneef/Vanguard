@@ -295,6 +295,16 @@ Against the rubric, this also needs: functional tests with a pass rate (D6), at 
 
 ## 4.9 Build plan by part and phase (draft 2026-11-21)
 
+**Foundation status (2026-11-21, evening):** done and committed in `backend/`: contracts, catalog (5 personas, Tallowmere tasks), shared hard and safety rules (S0, H1, H4a), action gate, provider interface (Gemini + scripted fake), executor interface + fake browser, agent loop with deterministic success and stuck checks, trace store, run service and API. 27 tests pass offline. Checker and metrics have defined interfaces only. `apps/web` and `apps/tallowmere` have handover notes only. Next: the Playwright executor and the worker (Faateh).
+
+**Proposed team split (to confirm with Hadi and Ibrahim):** every member covers both AI and engineering work, as A3 Table 3 row 12 requires.
+
+| Member | Engineering | AI |
+|---|---|---|
+| Faateh | foundation, Playwright executor and worker, gate, run controller | agent loop and prompts, persona and limits system |
+| Hadi | web app ported from Sentinel, Tallowmere extraction | verdict / explanation generator, preview personas' prompts |
+| Ibrahim | metrics, results-table script, functional tests | leakage checker, labelling and kappa, failure analysis, latency and cost |
+
 | # | Part | A3 (due 2026-11-22) | A4 | Stretch |
 |---|---|---|---|---|
 | 0 | Foundation: repo layout, Docker Compose (web, api, worker, db, tallowmere), env config, basic CI, `AI_USE.md`, provenance NOTICE | ✅ all | full CI/CD, deploy | — |
