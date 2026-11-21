@@ -166,6 +166,31 @@ export type Explanation = {
   prompt_version: string;
 };
 
+export type Condition = "mobile" | "slow_network";
+
+export type BatchRequest = {
+  site_id: string;
+  task_ids: string[];
+  persona_ids: string[];
+  enforcements: EnforcementOption[][];
+  conditions: Condition[];
+  provider: string;
+  repeats: number;
+};
+
+export type BatchStatus = {
+  batch_id: string;
+  groups: {
+    task_id: string;
+    persona_id: string;
+    enforcement: EnforcementOption[];
+    target: number;
+    done: number;
+  }[];
+  remaining: number;
+  stopped: string | null;
+};
+
 export type Health = { status: string; providers: string[]; executor: string };
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
@@ -198,6 +223,9 @@ export const api = {
       method: "POST",
       body: JSON.stringify(config),
     }),
+  startBatch: (body: BatchRequest) =>
+    request<BatchStatus>("/batches", { method: "POST", body: JSON.stringify(body) }),
+  batch: (batchId: string) => request<BatchStatus>(`/batches/${encodeURIComponent(batchId)}`),
   runs: (batchId?: string) =>
     request<RunSummary[]>(
       batchId ? `/runs?batch_id=${encodeURIComponent(batchId)}` : "/runs",
