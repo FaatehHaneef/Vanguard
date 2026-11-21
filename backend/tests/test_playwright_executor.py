@@ -4,6 +4,7 @@ import asyncio
 import functools
 import http.server
 import threading
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
@@ -30,6 +31,7 @@ PAGE = """<!doctype html>
   <div class="box" onclick="document.title='plus'">+</div>
   <a href="/next.html">Next page</a>
   <img src="http://blocked.invalid/pixel.png" alt="">
+  <p style="margin-top: 1500px">Far away text</p>
 </body></html>"""
 
 NEXT = "<!doctype html><title>Next</title><h1>Thanks</h1>"
@@ -232,6 +234,60 @@ def test_screen_reader_perception_and_commands(site):
             assert result.url_after == site.origin + "/next.html"
             result = await ex.execute(Action(tool=Tool.SR_NEXT, kind="form_field"))
             assert result.error == "no form field after here"
+        finally:
+            await ex.close()
+
+    asyncio.run(main())
+
+
+def test_magnifier_window_and_pan(site):
+    from vanguard import catalog
+    from vanguard.checker import check_step
+    from vanguard.contracts import GateDecision, PerceptionMode, StepRecord
+
+    iris = catalog.persona("magnifier")
+
+    async def main():
+        settings = Settings(allowed_origins=[site.origin], screenshots=False, hud=False)
+        ex = PlaywrightExecutor(settings, bounded_perception=True)
+        try:
+            await ex.start(site, _task(), iris)
+        except Exception as error:
+            await ex.close()
+            pytest.skip(f"browser unavailable: {error}")
+        try:
+            obs = await ex.observe()
+            assert obs.mode is PerceptionMode.MAGNIFIED
+            assert obs.window.width == 320 and obs.window.height == 180
+            assert "Magnified view at 400%" in obs.content and "# Fixture shop" in obs.content
+            assert "Far away text" not in obs.content
+
+            await ex.execute(Action(tool=Tool.PAN, dx=0, dy=1500))
+            far = await ex.observe()
+            assert "Far away text" in far.content and "# Fixture shop" not in far.content
+            assert far.window.y > 1000
+
+            # Clicking the heading's button from far away is outside the window: H3a.
+            full = await ex._snapshot()
+            ref = next(line[1 : line.index("]")] for line in full["lines"] if "Add to cart" in line)
+            result = await ex.execute(Action(tool=Tool.CLICK, ref=ref))
+            record = StepRecord(
+                run_id="r",
+                index=0,
+                started_at=datetime.now(UTC),
+                observation=far,
+                proposed=Action(tool=Tool.CLICK, ref=ref),
+                gate=GateDecision(allowed=True),
+                executed=True,
+                target_box=result.target_box,
+            )
+            verdict = check_step(record, iris, site.origin + "/")
+            assert [v.rule for v in verdict.executed] == ["H3a"]
+
+            await ex.execute(Action(tool=Tool.PRESS, key="Tab"))
+            await ex.execute(Action(tool=Tool.PAN_TO_FOCUS))
+            near = await ex.observe()
+            assert near.window.y < 500
         finally:
             await ex.close()
 

@@ -102,3 +102,28 @@ def test_checker_on_recorded_runs(store):  # noqa: F811
     strict = check_run(store.steps(gated.id), keyboard, START)
     assert (loose.attempted_steps, loose.executed_steps) == (1, 1)
     assert (strict.attempted_steps, strict.executed_steps) == (1, 0)
+
+
+def test_h3a_outside_the_magnified_window():
+    from vanguard.contracts import Rect
+
+    iris = catalog.persona("magnifier")
+    window = Rect(x=0, y=0, width=320, height=180)
+
+    def magnified(action, box=None, content='[e1] button "Add"', executed=True):
+        record = step(0, action, executed=executed)
+        record.observation = Observation(
+            mode=PerceptionMode.MAGNIFIED, url=START, content=content, window=window
+        )
+        record.target_box = box
+        return record
+
+    inside = magnified(Action(tool="click", ref="e1"), Rect(x=10, y=10, width=50, height=20))
+    assert check_step(inside, iris, START).executed == []
+    unseen = magnified(Action(tool="click", ref="e9"), executed=False)
+    verdict = check_step(unseen, iris, START)
+    assert [v.rule for v in verdict.attempted] == ["H3a"] and verdict.executed == []
+    moved = magnified(Action(tool="click", ref="e1"), Rect(x=900, y=600, width=50, height=20))
+    assert [v.rule for v in check_step(moved, iris, START).executed] == ["H3a"]
+    # Full-view steps never trigger H3a, even for the control persona.
+    assert check_step(step(0, Action(tool="click", ref="e9")), iris, START).attempted == []
