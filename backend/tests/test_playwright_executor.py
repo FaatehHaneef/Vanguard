@@ -196,3 +196,43 @@ def test_conditions_mobile_and_slow_network(site):
             await ex.close()
 
     asyncio.run(main())
+
+
+def test_screen_reader_perception_and_commands(site):
+    from vanguard import catalog
+    from vanguard.contracts import PerceptionMode
+
+    echo = catalog.persona("screen-reader")
+
+    async def main():
+        settings = Settings(allowed_origins=[site.origin], screenshots=False, hud=True)
+        ex = PlaywrightExecutor(settings, bounded_perception=True)
+        try:
+            await ex.start(site, _task(), echo)
+        except Exception as error:
+            await ex.close()
+            pytest.skip(f"browser unavailable: {error}")
+        try:
+            obs = await ex.observe()
+            assert obs.mode is PerceptionMode.ACCESSIBILITY_TREE
+            assert 'heading level 1 "Fixture shop"' in obs.content
+            assert 'button "Add to cart"' in obs.content
+            assert "clickable" not in obs.content and "Vanguard test" not in obs.content
+            assert obs.content.endswith("Screen reader cursor: top of the page")
+
+            result = await ex.execute(Action(tool=Tool.SR_NEXT, kind="button"))
+            assert result.error is None and result.target_box is not None
+            assert [e.type for e in result.events if e.trusted] == ["focusin"]
+            obs = await ex.observe()
+            assert "Screen reader cursor: a" in obs.content and "Shown focus" in obs.content
+
+            result = await ex.execute(Action(tool=Tool.SR_NEXT, kind="link"))
+            result = await ex.execute(Action(tool=Tool.SR_ACTIVATE))
+            assert any(e.type == "keydown" and e.trusted for e in result.events)
+            assert result.url_after == site.origin + "/next.html"
+            result = await ex.execute(Action(tool=Tool.SR_NEXT, kind="form_field"))
+            assert result.error == "no form field after here"
+        finally:
+            await ex.close()
+
+    asyncio.run(main())
