@@ -27,7 +27,8 @@ class Settings(BaseSettings):
     default_provider: str = "gemini"
     enabled_providers: list[str] = ["gemini", "fake"]
     gemini_api_keys: list[str] = []
-    gemini_models: list[str] = ["gemini-flash-latest", "gemini-flash-lite-latest"]
+    # Current model IDs (ai.google.dev pricing page, read 2026-11-22). Tried in order.
+    gemini_models: list[str] = ["gemini-3.8-flash", "gemini-3.5-flash-lite"]
     # OpenAI-compatible providers by name (local runs only), for example
     # {"ollama": {"base_url": "http://localhost:11434/v1", "model": "qwen2.5:7b"}}.
     # Each name must also be listed in enabled_providers.
