@@ -6,7 +6,7 @@ numbers can be regenerated at any time from the database.
 
 from dataclasses import asdict
 
-from vanguard import catalog
+from vanguard import catalog, failures
 from vanguard.checker import RunLeakage, check_run
 from vanguard.contracts import RunStatus, RunSummary, StepRecord
 from vanguard.metrics import GroupMetrics, RunMetrics, group_metrics, run_metrics
@@ -89,3 +89,16 @@ def markdown_table(groups: list[GroupMetrics]) -> str:
     rows = ["| " + " | ".join(str(get(g)) for _, get in COLUMNS) + " |" for g in groups]
     note = "Rates with 95% Wilson intervals. Leakage is decided by code (vanguard.checker)."
     return "\n".join([header, rule, *rows, "", note])
+
+
+def batch_failures(
+    store: RunStore, batch_id: str | None, settings: Settings
+) -> list[failures.RunFailure]:
+    out = []
+    for summary in store.list_runs(batch_id, limit=10_000):
+        if summary.status not in (RunStatus.FINISHED, RunStatus.FAILED):
+            continue
+        steps = store.steps(summary.id)
+        leakage, _ = score(summary, steps, settings)
+        out.append(failures.classify(summary, steps, leakage))
+    return out

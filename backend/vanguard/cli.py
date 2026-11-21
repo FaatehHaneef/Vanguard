@@ -6,6 +6,7 @@
     python -m vanguard.cli show <run_id>
     python -m vanguard.cli batch --personas keyboard-only unrestricted --tasks buy-two \
         --repeats 5 --batch a3-baseline   # prompt_only and gate, balanced, resumable
+    python -m vanguard.cli failures --batch a3-baseline     # failing runs grouped by cause
     python -m vanguard.cli report --batch knock-buy-two [--out results.md]
 
 Settings come from the environment and .env, as for the API (VANGUARD_EXECUTOR,
@@ -17,7 +18,7 @@ import asyncio
 import sys
 from pathlib import Path
 
-from vanguard import batch, results, service
+from vanguard import batch, failures, results, service
 from vanguard.contracts import BatchRequest, EnforcementOption, RunConfig, StepRecord
 from vanguard.settings import get_settings
 from vanguard.store import RunStore
@@ -147,6 +148,10 @@ def main(argv: list[str] | None = None) -> int:
     many.add_argument("--max-runs", type=int, default=None)
     many.add_argument("--batch", default=None)
 
+    failing = sub.add_parser("failures", help="failing runs grouped by cause")
+    failing.add_argument("--batch", default=None)
+    failing.add_argument("--out", type=Path, default=None)
+
     report = sub.add_parser("report", help="metrics table for a batch (or all runs)")
     report.add_argument("--batch", default=None)
     report.add_argument("--out", type=Path, default=None)
@@ -154,6 +159,14 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     if args.command == "batch":
         return asyncio.run(_batch(args))
+    if args.command == "failures":
+        settings = get_settings()
+        items = results.batch_failures(RunStore(settings.database_url), args.batch, settings)
+        table = failures.markdown(items)
+        if args.out:
+            args.out.write_text(table + "\n", encoding="utf-8")
+        print(table)
+        return 0
     if args.command == "report":
         settings = get_settings()
         groups = results.batch_groups(RunStore(settings.database_url), args.batch, settings)
