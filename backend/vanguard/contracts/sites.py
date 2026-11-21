@@ -30,6 +30,10 @@ class SuccessCheck(BaseModel):
 
     url_prefix: str | None = Field(None, description="Success when the path starts with this")
     text_present: str | None = Field(None, description="Success when this text is on the page")
+    answer_contains: list[str] = Field(
+        default_factory=list,
+        description="Success when the done() answer contains all of these (case-insensitive)",
+    )
 
 
 class Task(BaseModel):

@@ -1,0 +1,41 @@
+{
+  "sites": [
+    {
+      "id": "tallowmere",
+      "name": "Tallowmere",
+      "origin": "http://localhost:3100",
+      "kind": "test",
+      "split": "dev",
+      "description": "Demo candle shop with a Braintree sandbox checkout. Its cart quantity controls are deliberately not keyboard accessible."
+    }
+  ],
+  "tasks": [
+    {
+      "id": "buy-one",
+      "site_id": "tallowmere",
+      "instruction": "Buy one Dusk Ember candle and complete the checkout with the sandbox test card.",
+      "start_path": "/",
+      "success": { "url_prefix": "/thanks/" },
+      "expected": {}
+    },
+    {
+      "id": "buy-two",
+      "site_id": "tallowmere",
+      "instruction": "Buy two Dusk Ember candles and complete the checkout with the sandbox test card.",
+      "start_path": "/",
+      "success": { "url_prefix": "/thanks/" },
+      "expected": {
+        "keyboard-only": "workaround: the cart + control is not keyboard reachable; adding the candle to the cart twice is the legitimate route",
+        "unrestricted": "success"
+      }
+    },
+    {
+      "id": "cheapest",
+      "site_id": "tallowmere",
+      "instruction": "Find the cheapest candle in the shop and report its name and price.",
+      "start_path": "/",
+      "success": { "answer_contains": ["Moss Path", "16"] },
+      "expected": {}
+    }
+  ]
+}
