@@ -7,6 +7,7 @@
     python -m vanguard.cli batch --personas keyboard-only unrestricted --tasks buy-two \
         --repeats 5 --batch a3-baseline   # prompt_only and gate, balanced, resumable
     python -m vanguard.cli failures --batch a3-baseline     # failing runs grouped by cause
+    python -m vanguard.cli check-site willowbrook --dir sites/willowbrook-clinic --live
     python -m vanguard.cli report --batch knock-buy-two [--out results.md]
 
 Settings come from the environment and .env, as for the API (VANGUARD_EXECUTOR,
@@ -18,9 +19,9 @@ import asyncio
 import sys
 from pathlib import Path
 
-from vanguard import batch, failures, results, service
+from vanguard import batch, failures, results, service, sitecheck
 from vanguard.contracts import BatchRequest, EnforcementOption, RunConfig, StepRecord
-from vanguard.settings import get_settings
+from vanguard.settings import REPO_ROOT, get_settings
 from vanguard.store import RunStore
 
 
@@ -152,6 +153,11 @@ def main(argv: list[str] | None = None) -> int:
     failing.add_argument("--batch", default=None)
     failing.add_argument("--out", type=Path, default=None)
 
+    site_check = sub.add_parser("check-site", help="check a test site against the kit")
+    site_check.add_argument("site_id")
+    site_check.add_argument("--dir", type=Path, required=True, help="the site's folder")
+    site_check.add_argument("--live", action="store_true", help="also request its pages")
+
     report = sub.add_parser("report", help="metrics table for a batch (or all runs)")
     report.add_argument("--batch", default=None)
     report.add_argument("--out", type=Path, default=None)
@@ -159,6 +165,11 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     if args.command == "batch":
         return asyncio.run(_batch(args))
+    if args.command == "check-site":
+        folder = args.dir if args.dir.is_absolute() else REPO_ROOT / args.dir
+        checks = sitecheck.run_checks(args.site_id, folder, live=args.live)
+        print(sitecheck.report(checks))
+        return 0 if all(check.ok for check in checks) else 1
     if args.command == "failures":
         settings = get_settings()
         items = results.batch_failures(RunStore(settings.database_url), args.batch, settings)
