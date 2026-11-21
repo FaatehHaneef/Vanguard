@@ -23,6 +23,10 @@ class Settings(BaseSettings):
     enabled_providers: list[str] = ["gemini", "fake"]
     gemini_api_keys: list[str] = []
     gemini_models: list[str] = ["gemini-flash-latest", "gemini-flash-lite-latest"]
+    # OpenAI-compatible providers by name (local runs only), for example
+    # {"ollama": {"base_url": "http://localhost:11434/v1", "model": "qwen2.5:7b"}}.
+    # Each name must also be listed in enabled_providers.
+    openai_compatible: dict[str, dict[str, str]] = {}
 
     # Where the worker is allowed to send the browser. Anything else is blocked by the gate.
     allowed_origins: list[str] = ["http://localhost:3100"]
