@@ -368,7 +368,7 @@ A3 external integrations: Gemini API and the Braintree sandbox checkout, which t
 - All seven TA suggestions adopted.
 - Acceptance criteria as sent to the supervisor: core flows (create spec, run, view report, export) covered by automated tests with at least 90% passing; rule-based leakage checks agree with two human labellers on at least 50 labelled steps, with agreement reported; leakage rates of all four options measured against the prompt-only baseline on identical tasks and repeated runs, with the choice justified; latency (p50, p95) and cost per run reported.
 - Fine-tuning is not in the plan sent to the supervisor (removed from the email; undecided, not forbidden).
-- Repository setup (2026-11-21): local repo at `C:/dev/Vanguard` (moved out of OneDrive on 2026-11-21 to avoid sync locks on node_modules, .venv, .git and Docker mounts), remote `https://github.com/FaatehHaneef/Vanguard.git`, author `FaatehHaneef` with the user's chosen Gmail address (set in local git config, not repeated here because this file may become public). `sentinel/`, `synthetic-users/`, the six course PDFs and the two planning markdown files in `docs/` are gitignored, while the `docs/` folder itself is tracked (via `.gitkeep`) for future customised documents. Nothing is pushed until the user says so. No commit is required during the understanding phase.
+- Repository setup (2026-11-21): local repo at `C:/dev/Vanguard` (moved out of OneDrive on 2026-11-21 to avoid sync locks on node_modules, .venv, .git and Docker mounts), remote `https://github.com/FaatehHaneef/Vanguard.git`, author `FaatehHaneef` with the GitHub noreply address (switched from Gmail on 2026-11-21 when GitHub email privacy refused the first push; all commits were rewritten before anything was published). `sentinel/`, `synthetic-users/`, the six course PDFs and the two planning markdown files in `docs/` are gitignored, while the `docs/` folder itself is tracked (via `.gitkeep`) for future customised documents. First pushed to GitHub on 2026-11-21 at the user's request.
 - No AI attribution in commits, PRs or files; commits are authored by FaatehHaneef only. If GitHub refuses the Gmail address on push, switch to the GitHub noreply address and keep the username `FaatehHaneef`.
 - Decided by the user on 2026-11-21:
   - **Core in Python**: FastAPI backend, Playwright (Python) worker, Postgres; React frontend.
@@ -398,7 +398,7 @@ A3 external integrations: Gemini API and the Braintree sandbox checkout, which t
 10. Whether to add LoRA or other fine-tuning later.
 11. Ownership split among the three members, and real commits from each in time for A3.
 12. Provenance wording for reused code; licence for Synthetic Users code (it has none).
-13. Git email visibility: past commits in both repos use GitHub noreply addresses `[repo: git log]`, while Vanguard is set to the Gmail address. If GitHub's "block pushes that expose my email" setting is on, the first push will be rejected.
+13. ~~Git email visibility~~: resolved 2026-11-21, commits use the GitHub noreply address.
 
 ### 6.3 Practical rules `[context-only]`
 - Keep a running `AI_USE.md` (tools and what they were used for); the declaration is required for A3 and A4, and a missing one costs up to 3 marks `[doc: A3, Section 9; R3, Section 7]`.
