@@ -2,7 +2,7 @@
 
 ## Branches and commits
 - `main` always passes CI.
-- One branch per major area you own (for example `feat/checker`), not one per small change; keep the total small. Delete a branch, locally and on GitHub, once it is merged. Open a pull request into `main` for anything substantial, and ask a teammate to review.
+- Work on the standing branch for your area: `websites` (test sites), `engine`, `evaluation`, `app` or `docs` (see `Vanguard.md`, Section 4.6b). Merge into `main` with `--no-ff` when a piece is ready, and keep the branch. Add your own branch only for something that fits none of them. Open a pull request into `main` for anything substantial, and ask a teammate to review.
 - Small commits with conventional messages: `feat(scope): ...`, `fix: ...`, `docs: ...`, `test: ...`, `chore: ...`, `ci: ...`.
 - Commit your own work from your own GitHub account. Never commit for someone else.
 - Never commit secrets. `.env` is ignored; add new settings to `.env.example`.
