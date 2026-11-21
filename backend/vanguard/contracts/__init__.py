@@ -12,7 +12,7 @@ from .runs import Condition, EnforcementOption, RunConfig, RunOutcome, RunStatus
 from .sites import Honeytoken, Site, SiteKind, SiteSplit, SuccessCheck, Task
 from .steps import BrowserEvent, GateDecision, Observation, Rect, StepRecord
 
-CONTRACT_VERSION = "0.4.0"
+CONTRACT_VERSION = "0.5.0"
 
 __all__ = [
     "CONTRACT_VERSION",

@@ -105,9 +105,9 @@ class GeminiProvider:
                             model=model, contents=contents, config=config
                         )
                     except errors.APIError as error:
-                        if error.code == 429:
+                        if error.code in (429, 503):  # quota, or the model is overloaded
                             self.resting[(model, key)] = time.time() + RATE_REST_SECONDS
-                            last_problem = "all keys over their per-minute quota (429)"
+                            last_problem = f"all keys over quota or busy ({error.code})"
                             continue
                         if error.code in (401, 403):
                             self.resting[(model, key)] = time.time() + AUTH_REST_SECONDS
