@@ -4,6 +4,8 @@
     python -m vanguard.cli run --persona keyboard-only --task buy-two --enforcement prompt_only \
         --repeats 3 --batch knock-buy-two
     python -m vanguard.cli show <run_id>
+    python -m vanguard.cli batch --personas keyboard-only unrestricted --tasks buy-two \
+        --repeats 5 --batch a3-baseline   # prompt_only and gate, balanced, resumable
     python -m vanguard.cli report --batch knock-buy-two [--out results.md]
 
 Settings come from the environment and .env, as for the API (VANGUARD_EXECUTOR,
@@ -15,8 +17,8 @@ import asyncio
 import sys
 from pathlib import Path
 
-from vanguard import results, service
-from vanguard.contracts import EnforcementOption, RunConfig, StepRecord
+from vanguard import batch, results, service
+from vanguard.contracts import BatchRequest, EnforcementOption, RunConfig, StepRecord
 from vanguard.settings import get_settings
 from vanguard.store import RunStore
 
@@ -77,6 +79,35 @@ async def _run(args: argparse.Namespace) -> int:
     return 0
 
 
+async def _batch(args: argparse.Namespace) -> int:
+    settings = get_settings()
+    store = RunStore(settings.database_url)
+    store.create_schema()
+    request = BatchRequest(
+        batch_id=args.batch,
+        site_id=args.site,
+        task_ids=args.tasks,
+        persona_ids=args.personas,
+        enforcements=[
+            [EnforcementOption(part) for part in option.split("+")] for option in args.enforcements
+        ],
+        provider=args.provider or settings.default_provider,
+        repeats=args.repeats,
+        max_steps=args.max_steps,
+    )
+    request = batch.prepare(request, settings)
+    store.save_batch(request)
+    print(f"batch {request.batch_id}")
+    final = await batch.run_batch(request, settings, store, max_runs=args.max_runs)
+    for group in final.groups:
+        options = "+".join(group.enforcement)
+        print(f"  {group.persona_id}/{group.task_id}/{options}: {group.done}/{group.target}")
+    if final.stopped:
+        print(f"stopped: {final.stopped}")
+    print(results.markdown_table(results.batch_groups(store, request.batch_id, settings)))
+    return 0 if final.remaining == 0 else 1
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="vanguard")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -100,11 +131,29 @@ def main(argv: list[str] | None = None) -> int:
     show = sub.add_parser("show", help="print a run and its steps")
     show.add_argument("run_id")
 
+    many = sub.add_parser("batch", help="run a balanced, resumable batch")
+    many.add_argument("--site", default="tallowmere")
+    many.add_argument("--tasks", nargs="+", required=True)
+    many.add_argument("--personas", nargs="+", required=True)
+    many.add_argument(
+        "--enforcements",
+        nargs="+",
+        default=["prompt_only", "gate"],
+        help="one option per configuration; join combined options with +, e.g. gate+verifier",
+    )
+    many.add_argument("--provider", default=None)
+    many.add_argument("--repeats", type=int, default=3)
+    many.add_argument("--max-steps", type=int, default=None)
+    many.add_argument("--max-runs", type=int, default=None)
+    many.add_argument("--batch", default=None)
+
     report = sub.add_parser("report", help="metrics table for a batch (or all runs)")
     report.add_argument("--batch", default=None)
     report.add_argument("--out", type=Path, default=None)
 
     args = parser.parse_args(argv)
+    if args.command == "batch":
+        return asyncio.run(_batch(args))
     if args.command == "report":
         settings = get_settings()
         groups = results.batch_groups(RunStore(settings.database_url), args.batch, settings)

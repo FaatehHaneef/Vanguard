@@ -7,11 +7,13 @@ from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 
-from vanguard import __version__, catalog, results, service
+from vanguard import __version__, batch, catalog, results, service
 from vanguard.agent import PROMPT_VERSION
 from vanguard.catalog import CatalogError
 from vanguard.contracts import (
     CONTRACT_VERSION,
+    BatchRequest,
+    BatchStatus,
     PersonaSpec,
     RunConfig,
     RunSummary,
@@ -155,3 +157,33 @@ def get_batch_metrics(
 ) -> list[dict]:
     """Metrics per persona x task x enforcement x provider group in one batch."""
     return [group.as_dict() for group in results.batch_groups(store, batch_id, settings)]
+
+
+@app.post("/batches", status_code=202)
+async def start_batch(
+    request: BatchRequest,
+    background: BackgroundTasks,
+    settings: Settings = Depends(get_settings),
+    store: RunStore = Depends(get_store),
+) -> BatchStatus:
+    """Queue a balanced batch. Posting the same batch_id again continues it."""
+    try:
+        request = batch.prepare(request, settings)
+    except (CatalogError, service.RunRejected) as error:
+        raise HTTPException(422, str(error)) from None
+    store.save_batch(request)
+    background.add_task(batch.run_batch, request, settings, store)
+    return batch.status(store, request)
+
+
+@app.get("/batches")
+def list_batches(store: RunStore = Depends(get_store)) -> list[BatchStatus]:
+    return [batch.status(store, request) for request in store.list_batches()]
+
+
+@app.get("/batches/{batch_id}")
+def get_batch(batch_id: str, store: RunStore = Depends(get_store)) -> BatchStatus:
+    request = store.get_batch(batch_id)
+    if request is None:
+        raise HTTPException(404, "batch not found")
+    return batch.status(store, request)
