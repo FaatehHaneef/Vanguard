@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { api, type Persona, type RunSummary } from "@/lib/api";
 import { characterFor } from "@/lib/cast";
+import { BatchMetrics } from "./BatchMetrics";
 import { Sprite } from "./Sprite";
 
 const OUTCOME: Record<string, string> = {
@@ -31,7 +32,11 @@ export function TrialBoard() {
   useEffect(() => {
     api
       .personas()
-      .then((all) => setPersonas(Object.fromEntries(all.map((persona) => [persona.id, persona]))))
+      .then((all) =>
+        setPersonas(
+          Object.fromEntries(all.map((persona) => [persona.id, persona])),
+        ),
+      )
       .catch(() => undefined);
   }, []);
 
@@ -41,7 +46,11 @@ export function TrialBoard() {
       try {
         const found = await api.runs(batchId);
         setRuns(found);
-        if (found.some((run) => run.status === "queued" || run.status === "running")) {
+        if (
+          found.some(
+            (run) => run.status === "queued" || run.status === "running",
+          )
+        ) {
           timer = window.setTimeout(load, 1500);
         }
       } catch {
@@ -53,41 +62,58 @@ export function TrialBoard() {
   }, [batchId]);
 
   if (error) return <p className="font-bold text-rose">{error}</p>;
-  if (runs.length === 0) return <p className="text-mist">No runs in this trial yet.</p>;
+  if (runs.length === 0)
+    return <p className="text-mist">No runs in this trial yet.</p>;
+  const finished = runs.filter((run) => run.status === "finished").length;
 
   return (
-    <ul className="grid gap-3 sm:grid-cols-2">
-      {[...runs].reverse().map((run) => {
-        const character = characterFor(run.config.persona_id);
-        const persona = personas[run.config.persona_id];
-        const done = run.status === "finished" || run.status === "failed";
-        return (
-          <li key={run.id}>
-            <Link href={`/runs/${run.id}`} className="pixel-panel flex items-center gap-4 p-4">
-              {character ? (
-                <Sprite
-                  id={character.id}
-                  scale={3}
-                  mood={!done ? "walk" : run.outcome === "success" ? "happy" : "worry"}
-                />
-              ) : null}
-              <span className="grid gap-1">
-                <span className="font-display text-xl font-bold text-parchment">
-                  {character?.name ?? run.config.persona_id}
-                  {persona?.status === "preview" ? (
-                    <span className="preview-badge ml-2 align-middle">Preview</span>
-                  ) : null}
+    <div className="grid gap-6">
+      <BatchMetrics batchId={batchId} refreshKey={finished} />
+      <ul className="grid gap-3 sm:grid-cols-2">
+        {[...runs].reverse().map((run) => {
+          const character = characterFor(run.config.persona_id);
+          const persona = personas[run.config.persona_id];
+          const done = run.status === "finished" || run.status === "failed";
+          return (
+            <li key={run.id}>
+              <Link
+                href={`/runs/${run.id}`}
+                className="pixel-panel flex items-center gap-4 p-4"
+              >
+                {character ? (
+                  <Sprite
+                    id={character.id}
+                    scale={3}
+                    mood={
+                      !done
+                        ? "walk"
+                        : run.outcome === "success"
+                          ? "happy"
+                          : "worry"
+                    }
+                  />
+                ) : null}
+                <span className="grid gap-1">
+                  <span className="font-display text-xl font-bold text-parchment">
+                    {character?.name ?? run.config.persona_id}
+                    {persona?.status === "preview" ? (
+                      <span className="preview-badge ml-2 align-middle">
+                        Preview
+                      </span>
+                    ) : null}
+                  </span>
+                  <span className="text-parchment">{outcomeText(run)}</span>
+                  <span className="text-sm text-mist">
+                    {run.config.enforcement.join(" + ")} · run{" "}
+                    {(run.config.repeat_index ?? 0) + 1} · {run.steps} steps ·{" "}
+                    {run.blocked} refused
+                  </span>
                 </span>
-                <span className="text-parchment">{outcomeText(run)}</span>
-                <span className="text-sm text-mist">
-                  {run.config.enforcement.join(" + ")} · run {(run.config.repeat_index ?? 0) + 1}{" "}
-                  · {run.steps} steps · {run.blocked} refused
-                </span>
-              </span>
-            </Link>
-          </li>
-        );
-      })}
-    </ul>
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
   );
 }

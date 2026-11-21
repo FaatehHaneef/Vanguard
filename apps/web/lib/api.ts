@@ -59,15 +59,84 @@ export type Action = {
 export type Step = {
   run_id: string;
   index: number;
-  observation: { url: string; content: string };
+  observation: { url: string; content: string; screenshot_path?: string | null };
   proposed: Action | null;
   model_error: string | null;
   gate: { allowed: boolean; rule: string | null; message: string | null };
   executed: boolean;
   execution_error: string | null;
-  events: { type: string; trusted: boolean }[];
+  events: { type: string; trusted: boolean; target?: string | null }[];
   url_after: string | null;
+  focus_after?: string | null;
   latency_ms: number;
+};
+
+export type Violation = { rule: string; limit: string | null; kind: string; message: string };
+
+export type RunMetrics = {
+  success: boolean;
+  outcome: string | null;
+  steps: number;
+  blocked: number;
+  attempted_leak_steps: number;
+  executed_leak_steps: number;
+  attempted_leak_rate: number;
+  executed_leak_rate: number;
+  pointer_evidence_steps: number;
+  invalid_model_steps: number;
+  latency_p50_ms: number;
+  latency_p95_ms: number;
+  latency_total_ms: number;
+  input_tokens: number;
+  output_tokens: number;
+  cost_usd: number;
+};
+
+export type RunReport = {
+  run: RunSummary;
+  metrics: RunMetrics;
+  steps: { index: number; attempted: Violation[]; executed: Violation[] }[];
+};
+
+export type GroupMetrics = {
+  key: string;
+  runs: number;
+  success_rate: number;
+  success_ci: [number, number];
+  any_leak_rate: number;
+  any_leak_ci: [number, number];
+  mean_attempted_leak_rate: number;
+  mean_executed_leak_rate: number;
+  mean_steps: number;
+  stuck_rate: number;
+  mean_blocked: number;
+  latency_p50_ms: number;
+  latency_p95_ms: number;
+  mean_cost_usd: number;
+};
+
+export type LabelVerdict = "no" | "yes" | "unsure";
+
+export type Label = {
+  run_id: string;
+  index: number;
+  labeller: string;
+  verdict: LabelVerdict;
+  limit?: string | null;
+  kind?: "action" | "information" | null;
+  note?: string;
+};
+
+export type LabelItem = {
+  run_id: string;
+  index: number;
+  position: number;
+  persona_id: string;
+  persona_name: string;
+  persona_limits: string[];
+  persona_description: string;
+  task: string;
+  step: Step;
 };
 
 export type Health = { status: string; providers: string[]; executor: string };
@@ -101,4 +170,17 @@ export const api = {
     request<RunSummary[]>(batchId ? `/runs?batch_id=${encodeURIComponent(batchId)}` : "/runs"),
   run: (id: string) => request<RunSummary>(`/runs/${encodeURIComponent(id)}`),
   steps: (id: string) => request<Step[]>(`/runs/${encodeURIComponent(id)}/steps`),
+  report: (id: string) => request<RunReport>(`/runs/${encodeURIComponent(id)}/report`),
+  screenshotUrl: (id: string, index: number) =>
+    `${API_BASE}/runs/${encodeURIComponent(id)}/steps/${index}/screenshot`,
+  batchMetrics: (batchId: string) =>
+    request<GroupMetrics[]>(`/batches/${encodeURIComponent(batchId)}/metrics`),
+  nextToLabel: (labeller: string, count = 10) =>
+    request<LabelItem[]>(
+      `/labelling/next?labeller=${encodeURIComponent(labeller)}&count=${count}`,
+    ),
+  saveLabel: (label: Label) =>
+    request<Label>("/labels", { method: "POST", body: JSON.stringify(label) }),
+  labels: (labeller: string) =>
+    request<Label[]>(`/labels?labeller=${encodeURIComponent(labeller)}`),
 };
