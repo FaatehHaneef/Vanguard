@@ -12,6 +12,12 @@ Vanguard reuses and adapts code from two earlier projects by the same author (Fa
 
 - 2026-11-21: `apps/web`, from Sentinel's `engine/art` (sprites), `engine/audio/sfx.ts`, `app/globals.css`, the root layout, `components/sentinel/Sprite.tsx`, `LobbyBackdrop.tsx` and `GameLobby.tsx`, and `public/store/banner.png` (as the lobby backdrop). Adapted to five Vanguard personas; Wren's sprite and every other screen are new.
 
+- 2026-11-21: `backend/vanguard/metrics/stats.py`, from Synthetic Users' `synthusers/analyze.py` (`wilson_interval`, and the entropy calculation in `compute_metrics`). Adapted: proportions instead of percent, typed, entropy as its own function.
+
+- 2026-11-21: `backend/vanguard/batch.py`, the balanced and resumable run pattern from Synthetic Users' `synthusers/generate.py` (`plan_next_job`, `run_generation`). Rewritten as a generic `next_group` over any batch groups.
+
+- 2026-11-21: `backend/vanguard/explain/__init__.py`, the system prompt and response schema from Sentinel's `lib/ai/wick.ts` (the Wick verdict). Adapted to Vanguard's personas and findings; the coin purse and colour suggestions were dropped.
+
 Entries are added as each piece is committed.
 
 ## Datasets
