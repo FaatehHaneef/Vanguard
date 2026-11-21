@@ -16,5 +16,5 @@
 
 ## Before you push
 ```bash
-cd backend && ruff check . && pytest -q
+cd backend && ruff format . && ruff check . && pytest -q
 ```
