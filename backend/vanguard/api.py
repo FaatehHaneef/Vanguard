@@ -147,7 +147,8 @@ def get_screenshot(
     root = (Path(settings.data_dir) / "screenshots").resolve()
     if not file.is_relative_to(root) or not file.is_file():
         raise HTTPException(404, "no screenshot for this step")
-    return FileResponse(file, media_type="image/png")
+    media = "image/jpeg" if file.suffix.lower() in (".jpg", ".jpeg") else "image/png"
+    return FileResponse(file, media_type=media)
 
 
 @app.get("/batches/{batch_id}/metrics")
