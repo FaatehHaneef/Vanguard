@@ -309,8 +309,10 @@ Against the rubric, this also needs: functional tests with a pass rate (D6), at 
 | Member | Builds |
 |---|---|
 | Faateh | foundation (all of the above), agent loop and prompts, run controller, the A3 comparison runs |
-| Hadi | explanation / verdict generator (alternative c), preview personas' perception and prompts, results page and live-view polish |
-| Ibrahim | leakage checker, metrics and results-table script, labelling workspace and kappa, functional tests, failure analysis, latency and cost |
+| Hadi | explanation / verdict generator (alternative c), preview personas' perception and prompts, results page and live-view polish; **2–4 test sites** |
+| Ibrahim | leakage checker, metrics and results-table script, labelling workspace and kappa, functional tests, failure analysis, latency and cost; **2–4 test sites** |
+
+The 4–8 test sites (A4 scope, can start now) follow [docs/test-site-kit.md](docs/test-site-kit.md): a different framework per site, domains beyond shopping, 2–4 tasks with deterministic success checks, at least one planted barrier and one honeytoken per limit, and a manifest kept out of the served site. Because team members build them knowing the project, documents call them "built separately from Vanguard's code, to a written specification", not "independent".
 
 | # | Part | A3 (due 2026-11-22) | A4 | Stretch |
 |---|---|---|---|---|
