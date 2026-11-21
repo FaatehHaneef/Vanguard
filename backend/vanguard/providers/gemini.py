@@ -6,6 +6,7 @@ ProviderUnavailable and records the step as a model failure; there is no silent 
 to a different behaviour, because that would change what is being measured.
 """
 
+import asyncio
 import json
 import time
 
@@ -17,7 +18,9 @@ from vanguard.contracts import Tool
 from .base import JsonReply, ModelReply, ModelRequest, ProviderUnavailable
 from .tools import description, json_schema, to_action
 
-KEY_REST_SECONDS = 600
+AUTH_REST_SECONDS = 600  # a key refused outright (401/403) is left alone for a while
+RATE_REST_SECONDS = 65  # a key over its per-minute quota (429) is tried again after a minute
+MAX_WAIT_SECONDS = 150  # how long to wait for a key to come back before giving up
 
 
 class GeminiProvider:
@@ -28,7 +31,9 @@ class GeminiProvider:
             raise ProviderUnavailable("No Gemini API key is configured (VANGUARD_GEMINI_API_KEYS).")
         self.keys = list(api_keys)
         self.models = list(models)
-        self.resting: dict[str, float] = {}
+        # (model, key) -> time it may be used again. Quotas are per model and project.
+        self.resting: dict[tuple[str, str], float] = {}
+        self._next = 0  # round-robin position, so load spreads over all keys
 
     def _declarations(self, names: list[str]) -> list[types.FunctionDeclaration]:
         return [
@@ -79,27 +84,43 @@ class GeminiProvider:
         )
 
     async def _generate(self, contents: str, config: types.GenerateContentConfig):
-        """Try each model with each rested key; return (response, model, latency_ms)."""
-        last_problem = "no model answered"
-        for model in self.models:
-            for key in self.keys:
-                if self.resting.get(key, 0) > time.time():
-                    continue
-                started = time.perf_counter()
-                try:
-                    client = genai.Client(api_key=key)
-                    response = await client.aio.models.generate_content(
-                        model=model, contents=contents, config=config
-                    )
-                except errors.APIError as error:
-                    if error.code in (401, 403, 429):
-                        self.resting[key] = time.time() + KEY_REST_SECONDS
-                        last_problem = f"key refused ({error.code})"
+        """Try each model with the keys in round-robin order; return (response, model, ms).
+
+        Keys over their per-minute quota rest briefly. If every key of every model is
+        resting, wait for the first to come back (up to MAX_WAIT_SECONDS) rather than
+        failing the run on a short burst.
+        """
+        deadline = time.time() + MAX_WAIT_SECONDS
+        while True:
+            last_problem = "no model answered"
+            for model in self.models:
+                for offset in range(len(self.keys)):
+                    key = self.keys[(self._next + offset) % len(self.keys)]
+                    if self.resting.get((model, key), 0) > time.time():
                         continue
-                    last_problem = f"{model} error {error.code}"
-                    break  # try the next model
-                return response, model, (time.perf_counter() - started) * 1000
-        raise ProviderUnavailable(last_problem)
+                    started = time.perf_counter()
+                    try:
+                        client = genai.Client(api_key=key)
+                        response = await client.aio.models.generate_content(
+                            model=model, contents=contents, config=config
+                        )
+                    except errors.APIError as error:
+                        if error.code in (429, 503):  # quota, or the model is overloaded
+                            self.resting[(model, key)] = time.time() + RATE_REST_SECONDS
+                            last_problem = f"all keys over quota or busy ({error.code})"
+                            continue
+                        if error.code in (401, 403):
+                            self.resting[(model, key)] = time.time() + AUTH_REST_SECONDS
+                            last_problem = f"key refused ({error.code})"
+                            continue
+                        last_problem = f"{model} error {error.code}"
+                        break  # try the next model
+                    self._next = (self.keys.index(key) + 1) % len(self.keys)
+                    return response, model, (time.perf_counter() - started) * 1000
+            soonest = min(self.resting.values(), default=0)
+            if not self.resting or soonest > deadline or "error" in last_problem:
+                raise ProviderUnavailable(last_problem)
+            await asyncio.sleep(max(1.0, soonest - time.time()))
 
     @staticmethod
     def _reply(response: types.GenerateContentResponse, model: str, latency: float) -> ModelReply:

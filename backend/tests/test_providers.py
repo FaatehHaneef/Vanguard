@@ -36,3 +36,44 @@ def test_disabled_provider_is_refused():
 def test_gemini_without_keys_is_unavailable():
     with pytest.raises(ProviderUnavailable):
         make_provider("gemini", Settings(enabled_providers=["gemini"], gemini_api_keys=[]))
+
+
+def test_gemini_rotates_keys_rests_on_429_and_waits(monkeypatch):
+    from google.genai import errors
+
+    from vanguard.providers import gemini
+
+    calls = []
+
+    class FakeModels:
+        def __init__(self, key):
+            self.key = key
+
+        async def generate_content(self, model, contents, config):
+            calls.append((model, self.key))
+            if self.key == "k1" and len(calls) == 1:
+                raise errors.APIError(429, {"error": {"message": "slow down"}})
+            return "response"
+
+    class FakeClient:
+        def __init__(self, api_key):
+            self.aio = type("Aio", (), {"models": FakeModels(api_key)})()
+
+    monkeypatch.setattr(gemini.genai, "Client", FakeClient)
+    provider = gemini.GeminiProvider(["k1", "k2"], ["m"])
+    response, model, _ = asyncio.run(provider._generate("hi", None))
+    assert response == "response" and calls == [("m", "k1"), ("m", "k2")]
+    assert provider.resting[("m", "k1")] > 0
+    # Round robin: the next request starts at k1 again, which is resting, so k2 answers.
+    asyncio.run(provider._generate("hi", None))
+    assert calls[-1] == ("m", "k2") and len(calls) == 3
+
+    # When every key is resting beyond the wait limit, the provider gives up.
+    monkeypatch.setattr(gemini, "MAX_WAIT_SECONDS", 0)
+    provider.resting = {("m", "k1"): 1e12, ("m", "k2"): 1e12}
+    try:
+        asyncio.run(provider._generate("hi", None))
+    except gemini.ProviderUnavailable:
+        pass
+    else:
+        raise AssertionError("expected ProviderUnavailable")

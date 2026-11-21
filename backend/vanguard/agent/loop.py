@@ -120,6 +120,7 @@ async def run_once(
                 focus_after=result.focus_after if result else None,
                 target_box=result.target_box if result else None,
                 latency_ms=(time.perf_counter() - began) * 1000,
+                model=reply.model,
                 input_tokens=reply.input_tokens,
                 output_tokens=reply.output_tokens,
             )

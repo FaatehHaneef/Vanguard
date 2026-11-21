@@ -69,6 +69,7 @@ class StepRecord(BaseModel):
         None, description="Target element's box in document (page) CSS pixels"
     )
     latency_ms: float = 0
+    model: str | None = Field(None, description="The model that proposed the action")
     input_tokens: int = 0
     output_tokens: int = 0
     cost_usd: float = 0
