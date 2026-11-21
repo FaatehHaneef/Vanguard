@@ -297,6 +297,14 @@ Against the rubric, this also needs: functional tests with a pass rate (D6), at 
 
 **Foundation status (2026-11-21, evening):** done and committed in `backend/`: contracts, catalog (5 personas, Tallowmere tasks), shared hard and safety rules (S0, H1, H4a), action gate, provider interface (Gemini + scripted fake), executor interface + fake browser, agent loop with deterministic success and stuck checks, trace store, run service and API. 27 tests pass offline. Checker and metrics have defined interfaces only. `apps/web` and `apps/tallowmere` have handover notes only. Next: the Playwright executor and the worker (Faateh).
 
+**Status (2026-11-22):** the foundation is complete and the old clones are no longer needed (every reused piece is copied, with provenance in `NOTICE.md`). Done on top of it, at the user's request to push as much development as possible before the team split takes effect:
+- Playwright executor and worker image: real input, full-view observation, trusted-event recording, network allow-list, screenshots, link-navigation waits; focus shown only when visible (spec v0.2). Verified on Tallowmere: the cart's `+`, `-` and `remove` are skipped by Tab, and "Add to cart" focus is hidden.
+- Character overlay (`apps/hud`, bundled with esbuild): decoration only, outside observations, the accessibility tree and recorded events.
+- Leakage checker (H1 with browser evidence, H4a), run and group metrics (Wilson intervals, latency percentiles, cost from a configured price), balanced and resumable batches (API and CLI), blind labelling with Cohen's kappa and checker precision/recall, a labelling guide.
+- Web: live view with screenshots, checker metrics and leak badges per run, comparison table per trial, labelling desk.
+- 55 backend tests pass, including 5 against real Chromium; CI runs them.
+- Waiting on: a Gemini key and Braintree sandbox keys (the user will add them) for the first real baseline batch. Hadi's and Ibrahim's parts were started from the foundation (checker, metrics, labelling first versions; explain prompt and schema); they extend these.
+
 **What "foundation complete" means (decided 2026-11-21).** The foundation is finished when nobody ever needs `sentinel/` or `synthetic-users/` again: every reused piece has been copied into this repo, adapted and committed, so the two clones can be treated as gone. Teammates never clone or extract from them. Faateh (with Claude Code) builds the whole foundation:
 1. Backend core: ✅ done (above).
 2. **Tallowmere** extracted into `apps/tallowmere`, running standalone on port 3100, with a Dockerfile.
