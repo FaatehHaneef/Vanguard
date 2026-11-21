@@ -74,6 +74,7 @@ VIEWPORT = {"width": 1280, "height": 720}
 ACTION_TIMEOUT_MS = 5000
 SETTLE_MS = 400
 IDLE_TIMEOUT_MS = 2500
+NAVIGATION_MS = 8000
 MAX_OBSERVATION_CHARS = 9000
 
 UNSUPPORTED = {
@@ -301,10 +302,19 @@ class PlaywrightExecutor:
             ahead = await self._box(await self._element(action.ref)) if action.ref else None
             await self._show(ahead or await self._focus_box(), _caption(action), "act")
             self._events = []  # the walk is not part of the step
+        before = self.page.url
+        link = await self._link_target(action)
         try:
             target_box, error = await self._perform(action)
         except Exception as exc:  # reported to the agent as a failed step
             error = f"{type(exc).__name__}: {str(exc).splitlines()[0][:200]}"
+        if link and error is None and link.split("#")[0] != before.split("#")[0]:
+            # A link was activated: client-side routing (and a dev server compiling the
+            # route) can take longer than the settle time, so wait for the URL to change.
+            try:
+                await self.page.wait_for_url(lambda url: url != before, timeout=NAVIGATION_MS)
+            except Exception:  # the link may be handled by script; the step still counts
+                pass
         await self._settle()
         if self._character is not None and action.group is ToolGroup.KEYBOARD:
             await self._show(await self._focus_box(), _caption(action), "act")
@@ -321,6 +331,22 @@ class PlaywrightExecutor:
             target_box=target_box,
             error=error,
         )
+
+    async def _link_target(self, action: Action) -> str | None:
+        """The same-origin link this action will activate, if any (click, or Enter on focus)."""
+        script = (
+            "(el) => { const a = el && el.closest && el.closest('a[href]');"
+            " return a && a.origin === location.origin ? a.href : null; }"
+        )
+        try:
+            if action.tool is Tool.CLICK:
+                element = await self._element(action.ref)
+                return await element.evaluate(script) if element else None
+            if action.tool is Tool.PRESS and action.key == "Enter":
+                return await self.page.evaluate(f"({script})(document.activeElement)")
+        except Exception:
+            return None
+        return None
 
     async def _perform(self, action: Action) -> tuple[Rect | None, str | None]:
         page = self.page
