@@ -50,6 +50,7 @@ async def run_once(
     use_verifier = EnforcementOption.VERIFIER in config.enforcement
     history: list[StepRecord] = []
     seen_links: set[str] = set()
+    seen_text = "\n".join([task.instruction, *persona.knowledge.knows])
     start_url = site.origin + task.start_path
     system = system_prompt(persona)
     store.mark_running(run_id)
@@ -59,6 +60,7 @@ async def run_once(
         for index in range(max_steps):
             observation = await executor.observe()
             seen_links.update(observation.links)
+            seen_text += "\n" + observation.content
             request = ModelRequest(
                 system=system,
                 user=user_prompt(task, history, observation),
@@ -73,6 +75,8 @@ async def run_once(
                 start_url=start_url,
                 allowed_origins=allowed_origins,
                 seen_links=set(seen_links),
+                seen_text=seen_text,
+                site_tokens=site.site_tokens,
             )
 
             action: Action | None = reply.action
