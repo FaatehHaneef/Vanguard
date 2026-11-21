@@ -33,3 +33,4 @@ CLAUDE.md
 .ruff_cache/
 *.db
 .venv/
+test-results.xml
