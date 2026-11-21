@@ -12,7 +12,14 @@ from datetime import UTC, datetime
 from sqlalchemy import JSON, DateTime, ForeignKey, Integer, String, Text, create_engine, select
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, sessionmaker
 
-from vanguard.contracts import RunConfig, RunOutcome, RunStatus, RunSummary, StepRecord
+from vanguard.contracts import (
+    BatchRequest,
+    RunConfig,
+    RunOutcome,
+    RunStatus,
+    RunSummary,
+    StepRecord,
+)
 
 
 class Base(DeclarativeBase):
@@ -39,6 +46,13 @@ class StepRow(Base):
     run_id: Mapped[str] = mapped_column(ForeignKey("runs.id"), primary_key=True)
     index: Mapped[int] = mapped_column(Integer, primary_key=True)
     record: Mapped[dict] = mapped_column(JSON)
+
+
+class BatchRow(Base):
+    __tablename__ = "batches"
+    id: Mapped[str] = mapped_column(String(32), primary_key=True)
+    request: Mapped[dict] = mapped_column(JSON)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
 
 def _now() -> datetime:
@@ -125,3 +139,29 @@ class RunStore:
         query = select(StepRow).where(StepRow.run_id == run_id).order_by(StepRow.index)
         with self._session() as session:
             return [StepRecord.model_validate(row.record) for row in session.scalars(query)]
+
+    def save_batch(self, request: BatchRequest) -> None:
+        """Store (or replace) a batch request, so its progress can be reported later."""
+        assert request.batch_id is not None
+        with self._session() as session, session.begin():
+            row = session.get(BatchRow, request.batch_id)
+            if row is None:
+                session.add(
+                    BatchRow(
+                        id=request.batch_id,
+                        request=request.model_dump(mode="json"),
+                        created_at=_now(),
+                    )
+                )
+            else:
+                row.request = request.model_dump(mode="json")
+
+    def get_batch(self, batch_id: str) -> BatchRequest | None:
+        with self._session() as session:
+            row = session.get(BatchRow, batch_id)
+            return BatchRequest.model_validate(row.request) if row else None
+
+    def list_batches(self, limit: int = 100) -> list[BatchRequest]:
+        query = select(BatchRow).order_by(BatchRow.created_at.desc()).limit(limit)
+        with self._session() as session:
+            return [BatchRequest.model_validate(row.request) for row in session.scalars(query)]
