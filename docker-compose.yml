@@ -1,6 +1,6 @@
 # Start everything with: docker compose up --build
-# The web frontend (apps/web) and further test sites (sites/*) join this file as they
-# are built.
+# Further test sites (sites/*) join this file as they are built.
+# Then open http://localhost:3000.
 
 services:
   db:
@@ -31,6 +31,16 @@ services:
     depends_on:
       db:
         condition: service_healthy
+
+  web:
+    build:
+      context: ./apps/web
+      args:
+        NEXT_PUBLIC_VANGUARD_API: http://localhost:8000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
 
   # Test sites. Each is an ordinary website with no knowledge of Vanguard.
   tallowmere:
