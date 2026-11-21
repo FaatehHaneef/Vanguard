@@ -46,6 +46,11 @@ class Settings(BaseSettings):
     screenshots: bool = True
     cors_origins: list[str] = ["http://localhost:3000"]
 
+    # Model price per million tokens, for cost per run. 0 means free tier; set from the
+    # provider's current price list, never guessed.
+    price_in_per_mtok: float = 0.0
+    price_out_per_mtok: float = 0.0
+
     max_steps_per_run: int = 40
     stuck_after_steps: int = 5
 
