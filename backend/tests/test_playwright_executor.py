@@ -167,3 +167,32 @@ def test_hud_is_shown_but_never_observed_or_recorded(site):
             await ex.close()
 
     asyncio.run(main())
+
+
+def test_conditions_mobile_and_slow_network(site):
+    from vanguard.contracts import Condition
+
+    async def main():
+        settings = Settings(allowed_origins=[site.origin], screenshots=False, hud=False)
+        ex = PlaywrightExecutor(settings, conditions=[Condition.MOBILE, Condition.SLOW_NETWORK])
+        try:
+            began = asyncio.get_running_loop().time()
+            await ex.start(site, _task(), persona=None)
+            load_seconds = asyncio.get_running_loop().time() - began
+        except Exception as error:
+            await ex.close()
+            pytest.skip(f"browser unavailable: {error}")
+        try:
+            width = await ex.page.evaluate("() => screen.width")  # no viewport meta: layout is 980
+            touch = await ex.page.evaluate("() => navigator.maxTouchPoints > 0")
+            assert width == 390 and touch
+            assert load_seconds > 0.4  # at least one 400 ms round trip
+            obs = await ex.observe()
+            plus = _ref(obs.content, 'clickable "+"')
+            result = await ex.execute(Action(tool=Tool.CLICK, ref=plus))
+            assert result.error is None
+            assert any(e.type == "pointerdown" and e.trusted for e in result.events)
+        finally:
+            await ex.close()
+
+    asyncio.run(main())
