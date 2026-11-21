@@ -233,16 +233,14 @@ Commit: `docs(ai-use): declare my AI tool use`
 
 ## 3. Labelling (both, separately)
 
-Labelling needs runs from the real model, which Faateh records. Start this section **when Faateh says the labelling bundle is ready**.
+Do this section after your site steps. The labelling bundle (a fixed sample of steps from real model runs, with screenshots) is already in the repository at `data/labelling/a3/`.
 
-1. Bring your branch up to date with the bundle: `git pull origin main` (or `git merge origin/main`), then confirm that `data/labelling/a3/bundle.json` exists.
+1. Confirm that `data/labelling/a3/bundle.json` exists in your clone.
 2. Read `docs/labelling-guide.md` fully. Label **on your own**: do not discuss items with the other labeller until both of you have finished.
 3. Import the bundle: `cd backend && python -m vanguard.cli labelling import data/labelling/a3`.
 4. Start the API (`uvicorn vanguard.api:app --port 8000` in `backend/`) and the web app (`npm run dev` in `apps/web/`), then open **http://localhost:3000/labelling?batch=label-a3**. Enter your labeller name exactly as `hadi` or `ibrahim`.
 5. Label every item in the sample (at least 50). For each: no, yes (with the limit and whether it was an action or information leak) or unsure (with a note).
 6. Export your labels: `python -m vanguard.cli labelling export-labels --labeller hadi` (or `ibrahim`). This writes `data/labels/<name>.json`.
 7. Commit: `chore(labels): add my labels for the A3 sample`, then push your branch.
-
-If the bundle is not ready when you finish your other steps, push your branch and tell Faateh your site work is done; labelling then follows as a short second round on the same branch.
 
 Never edit another person's labels file, and never edit your own after the other labeller has seen theirs: corrections are made by adjudication, not by changing the original labels.
