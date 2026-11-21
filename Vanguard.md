@@ -263,7 +263,7 @@ Four enforcement options on identical tasks and repeated runs: (1) prompt-only b
 
 **Our own traces** are the main dataset. Every run writes step records with the fields the checker needs (observation, proposed action and rationale, gate decision, executed action, browser input events, URL, focus, magnifier window, target bounding box, cumulative seen text and links). Records are split by site (train / dev / test, see `docs/leakage-spec.md` Section 8) into: an evaluation set (human-labelled test-site steps), a fine-tuning SFT set (allowed, progress-making steps from train sites), and a preference (DPO) set (blocked vs allowed proposals at the same state, from train sites).
 
-**Public datasets**, stored outside the repo and outside OneDrive in `C:\Users\sfate\vanguard-data\` (sizes from the Hugging Face API, 2026-11-21):
+**Public datasets**, stored outside the repo in `D:\VanguardData\` (sizes from the Hugging Face API, 2026-11-21):
 
 | Dataset | Licence | Size | Local copy | Possible use |
 |---|---|---|---|---|
@@ -275,7 +275,7 @@ Four enforcement options on identical tasks and repeated runs: (1) prompt-only b
 | berkeley-hci/A11y-CUA (full) | cc-by-4.0 | 176 GB | not pulled | includes agent runs (e.g. Claude Sonnet 4.5, Qwen3-VL) under screen-reader and magnifier conditions; pull selected logs only |
 | princeton-nlp/WebShop | unconfirmed | — | not pulled | candidate independent test site (simulated shop) |
 
-Disk constraint: about 37 GB were free on C: before the downloads. **Permanent home: `D:\VanguardData\`** (645 GB free; decided 2026-11-21). When the downloads finish, each dataset is verified (file counts and sizes against the Hugging Face listing, every JSON/JSONL/parquet file parses, the schema is inspected, a short data card is written for each), then moved from `C:\Users\sfate\vanguard-data\` to `D:\VanguardData\`, and the C: copy is deleted. All future code reads the path from an environment variable (`VANGUARD_DATA_DIR`, default `D:\VanguardData`) and never from a path hard-coded in the repo.
+Disk constraint: about 37 GB were free on C: before the downloads. **Permanent home: `D:\VanguardData\`** (645 GB free; decided 2026-11-21). The partial download was moved from C: to D: on 2026-11-21 and resumed there, so nothing remains on C:. When the downloads finish, each dataset is verified: file counts and sizes are checked against the Hugging Face listing, every JSON/JSONL/parquet file is parsed, the schema is inspected, and a short data card is written for each. All future code reads the path from an environment variable (`VANGUARD_DATA_DIR`, default `D:\VanguardData`) and never from a path hard-coded in the repo.
 
 ### 4.6b Git workflow (decided 2026-11-21)
 - Many small, meaningful commits as work progresses; never one big dump. Conventional style messages (`feat:`, `fix:`, `docs:`, `test:`, `chore:`).
