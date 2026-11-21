@@ -1,0 +1,14 @@
+{
+  "name": "vanguard-hud",
+  "version": "0.1.0",
+  "private": true,
+  "description": "The decorative character overlay the Playwright executor adds to a test browser",
+  "scripts": {
+    "build": "esbuild src/hud.ts --bundle --format=iife --target=es2020 --minify --legal-comments=none --outfile=../../backend/vanguard/executor/js/hud.js",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.0",
+    "typescript": "5.6.3"
+  }
+}
