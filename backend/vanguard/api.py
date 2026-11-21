@@ -7,7 +7,7 @@ from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 
-from vanguard import __version__, batch, catalog, failures, labels, results, service
+from vanguard import __version__, batch, catalog, explain, failures, labels, results, service
 from vanguard.agent import PROMPT_VERSION
 from vanguard.catalog import CatalogError
 from vanguard.contracts import (
@@ -21,6 +21,7 @@ from vanguard.contracts import (
     StepRecord,
     Task,
 )
+from vanguard.providers import ProviderUnavailable, make_provider
 from vanguard.settings import Settings, get_settings
 from vanguard.store import RunStore
 
@@ -237,3 +238,35 @@ def get_batch_failures(
         {"cause": cause, "meaning": meaning, "count": count, "runs": [vars(r) for r in runs]}
         for cause, meaning, count, runs in failures.group(items)
     ]
+
+
+@app.get("/runs/{run_id}/explanation")
+async def get_explanation(
+    run_id: str,
+    mode: str = "checked",
+    settings: Settings = Depends(get_settings),
+    store: RunStore = Depends(get_store),
+) -> explain.Explanation:
+    """Plain-language write-up. Facts come from code; the model only words them.
+    mode: template (no model), llm (unchecked) or checked (numbers verified)."""
+    summary = store.get_run(run_id)
+    if summary is None:
+        raise HTTPException(404, "run not found")
+    if mode not in explain.MODES:
+        raise HTTPException(422, f"mode must be one of {', '.join(explain.MODES)}")
+    steps = store.steps(run_id)
+    leakage, _ = results.score(summary, steps, settings)
+    facts = explain.build_facts(
+        summary,
+        steps,
+        leakage,
+        catalog.persona(summary.config.persona_id),
+        catalog.task(summary.config.task_id),
+    )
+    provider = None
+    if mode != "template":
+        try:
+            provider = make_provider(settings.default_provider, settings)
+        except ProviderUnavailable:
+            provider = None
+    return await explain.explain_run(facts, provider, mode)

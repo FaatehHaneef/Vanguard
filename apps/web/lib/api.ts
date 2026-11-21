@@ -3,15 +3,12 @@
  * the API's OpenAPI document (/openapi.json) is the source of truth.
  */
 
-export const API_BASE = process.env.NEXT_PUBLIC_VANGUARD_API ?? "http://localhost:8000";
+export const API_BASE =
+  process.env.NEXT_PUBLIC_VANGUARD_API ?? "http://localhost:8000";
 
 export type PersonaStatus = "full" | "preview";
 export type EnforcementOption =
-  | "prompt_only"
-  | "gate"
-  | "bounded_perception"
-  | "verifier"
-  | "finetuned";
+  "prompt_only" | "gate" | "bounded_perception" | "verifier" | "finetuned";
 
 export type Persona = {
   id: string;
@@ -24,9 +21,20 @@ export type Persona = {
   is_control: boolean;
 };
 
-export type Site = { id: string; name: string; origin: string; kind: string; description: string };
+export type Site = {
+  id: string;
+  name: string;
+  origin: string;
+  kind: string;
+  description: string;
+};
 
-export type Task = { id: string; site_id: string; instruction: string; start_path: string };
+export type Task = {
+  id: string;
+  site_id: string;
+  instruction: string;
+  start_path: string;
+};
 
 export type RunConfig = {
   site_id: string;
@@ -59,7 +67,11 @@ export type Action = {
 export type Step = {
   run_id: string;
   index: number;
-  observation: { url: string; content: string; screenshot_path?: string | null };
+  observation: {
+    url: string;
+    content: string;
+    screenshot_path?: string | null;
+  };
   proposed: Action | null;
   model_error: string | null;
   gate: { allowed: boolean; rule: string | null; message: string | null };
@@ -71,7 +83,12 @@ export type Step = {
   latency_ms: number;
 };
 
-export type Violation = { rule: string; limit: string | null; kind: string; message: string };
+export type Violation = {
+  rule: string;
+  limit: string | null;
+  kind: string;
+  message: string;
+};
 
 export type RunMetrics = {
   success: boolean;
@@ -139,6 +156,16 @@ export type LabelItem = {
   step: Step;
 };
 
+export type Explanation = {
+  source: "ai" | "builtin";
+  mode: string;
+  rejected: string | null;
+  headline: string;
+  story: string;
+  notes: { index: number; why: string }[];
+  prompt_version: string;
+};
+
 export type Health = { status: string; providers: string[]; executor: string };
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
@@ -150,7 +177,8 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   if (!response.ok) {
     let detail = `${response.status}`;
     try {
-      detail = ((await response.json()) as { detail?: string }).detail ?? detail;
+      detail =
+        ((await response.json()) as { detail?: string }).detail ?? detail;
     } catch {
       // The body was not JSON: keep the status code.
     }
@@ -163,14 +191,26 @@ export const api = {
   health: () => request<Health>("/health"),
   personas: () => request<Persona[]>("/personas"),
   sites: () => request<Site[]>("/sites"),
-  tasks: (siteId: string) => request<Task[]>(`/sites/${encodeURIComponent(siteId)}/tasks`),
+  tasks: (siteId: string) =>
+    request<Task[]>(`/sites/${encodeURIComponent(siteId)}/tasks`),
   startRun: (config: RunConfig) =>
-    request<RunSummary>("/runs", { method: "POST", body: JSON.stringify(config) }),
+    request<RunSummary>("/runs", {
+      method: "POST",
+      body: JSON.stringify(config),
+    }),
   runs: (batchId?: string) =>
-    request<RunSummary[]>(batchId ? `/runs?batch_id=${encodeURIComponent(batchId)}` : "/runs"),
+    request<RunSummary[]>(
+      batchId ? `/runs?batch_id=${encodeURIComponent(batchId)}` : "/runs",
+    ),
   run: (id: string) => request<RunSummary>(`/runs/${encodeURIComponent(id)}`),
-  steps: (id: string) => request<Step[]>(`/runs/${encodeURIComponent(id)}/steps`),
-  report: (id: string) => request<RunReport>(`/runs/${encodeURIComponent(id)}/report`),
+  steps: (id: string) =>
+    request<Step[]>(`/runs/${encodeURIComponent(id)}/steps`),
+  explanation: (id: string, mode = "checked") =>
+    request<Explanation>(
+      `/runs/${encodeURIComponent(id)}/explanation?mode=${encodeURIComponent(mode)}`,
+    ),
+  report: (id: string) =>
+    request<RunReport>(`/runs/${encodeURIComponent(id)}/report`),
   screenshotUrl: (id: string, index: number) =>
     `${API_BASE}/runs/${encodeURIComponent(id)}/steps/${index}/screenshot`,
   batchMetrics: (batchId: string) =>

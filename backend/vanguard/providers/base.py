@@ -38,7 +38,21 @@ class ModelReply:
     output_tokens: int = 0
 
 
+@dataclass
+class JsonReply:
+    """A structured (non-action) answer, used by the explanation generator."""
+
+    value: dict | None
+    model: str
+    error: str | None = None
+    latency_ms: float = 0
+    input_tokens: int = 0
+    output_tokens: int = 0
+
+
 class Provider(Protocol):
     name: str
 
     async def next_action(self, request: ModelRequest) -> ModelReply: ...
+
+    async def generate_json(self, system: str, user: str, schema: dict) -> JsonReply: ...
