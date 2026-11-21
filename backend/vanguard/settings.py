@@ -10,9 +10,14 @@ from pathlib import Path
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+REPO_ROOT = Path(__file__).resolve().parents[2]
+
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", env_prefix="VANGUARD_", extra="ignore")
+    # The repository root's .env, wherever the command is run from; a local .env overrides it.
+    model_config = SettingsConfigDict(
+        env_file=(REPO_ROOT / ".env", ".env"), env_prefix="VANGUARD_", extra="ignore"
+    )
 
     env: str = Field("development", description="development, test or production")
     database_url: str = "sqlite:///./vanguard-dev.db"
