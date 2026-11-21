@@ -280,6 +280,7 @@ Disk constraint: about 37 GB were free on C: before the downloads. **Permanent h
 ### 4.6b Git workflow (decided 2026-11-21)
 - Many small, meaningful commits as work progresses; never one big dump. Conventional style messages (`feat:`, `fix:`, `docs:`, `test:`, `chore:`).
 - Feature branches for major parts, merged into `main` (A4 C1 asks for branches and pull requests).
+- **Few, broad branches (decided 2026-11-22):** about one per major area per person (roughly 5 to 6 for the foundation owner, plus each teammate's own), not one per small feature. A branch is deleted locally and on GitHub once merged; the `--no-ff` merge commit keeps its name and history. On 2026-11-22, 23 small merged branches were deleted this way.
 - Every member commits their own work from their own GitHub account. Nobody commits on behalf of another member (rubric C6/C1 count real contributions).
 - No AI attribution lines anywhere.
 
