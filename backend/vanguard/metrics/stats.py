@@ -37,3 +37,32 @@ def entropy_bits(counts: Iterable[int]) -> float:
     if total == 0:
         return 0.0
     return -sum((count / total) * math.log2(count / total) for count in values)
+
+
+def cohen_kappa(a: list, b: list) -> float:
+    """Cohen's kappa for two raters over the same items (any hashable labels).
+
+    Returns 1.0 when both raters agree on everything and chance agreement is also 1
+    (a single label used throughout), the usual convention for that degenerate case.
+    """
+    if len(a) != len(b):
+        raise ValueError("both raters must label the same items")
+    n = len(a)
+    if n == 0:
+        return 0.0
+    observed = sum(x == y for x, y in zip(a, b, strict=True)) / n
+    labels = set(a) | set(b)
+    expected = sum((a.count(label) / n) * (b.count(label) / n) for label in labels)
+    if expected == 1.0:
+        return 1.0
+    return (observed - expected) / (1 - expected)
+
+
+def precision_recall(predicted: list[bool], actual: list[bool]) -> tuple[float, float]:
+    """Precision and recall of `predicted` against `actual` (0 when undefined)."""
+    tp = sum(p and t for p, t in zip(predicted, actual, strict=True))
+    fp = sum(p and not t for p, t in zip(predicted, actual, strict=True))
+    fn = sum(t and not p for p, t in zip(predicted, actual, strict=True))
+    precision = tp / (tp + fp) if tp + fp else 0.0
+    recall = tp / (tp + fn) if tp + fn else 0.0
+    return precision, recall

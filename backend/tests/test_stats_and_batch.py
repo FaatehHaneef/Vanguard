@@ -37,3 +37,15 @@ def test_next_group_balances_and_resumes():
     # A stopped batch continues with the group that is behind.
     assert next_group({"prompt_only": 2, "gate": 0}, targets) == "gate"
     assert remaining({"prompt_only": 1}, targets) == 3
+
+
+def test_cohen_kappa_and_precision_recall():
+    from vanguard.metrics.stats import cohen_kappa, precision_recall
+
+    assert cohen_kappa(["y", "n", "y", "n"], ["y", "n", "y", "n"]) == 1.0
+    # Classic example: 20 items, agreement 0.7, chance 0.5 -> kappa 0.4
+    a = ["y"] * 10 + ["n"] * 10
+    b = ["y"] * 7 + ["n"] * 3 + ["y"] * 3 + ["n"] * 7
+    assert cohen_kappa(a, b) == pytest.approx(0.4)
+    assert cohen_kappa(["n", "n"], ["n", "n"]) == 1.0
+    assert precision_recall([True, True, False], [True, False, True]) == (0.5, 0.5)
