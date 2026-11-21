@@ -53,6 +53,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           </main>
           <footer className="border-t border-line px-4 py-6 text-center text-sm text-ink-soft">
             Tallowmere is a fictional shop built to be tested.
+            {/*
+              Planted for the trials: far from where any page opens, so someone using a
+              screen magnifier only knows it after moving their view down here.
+            */}
+            <span className="block">Shop reference WICK-0094</span>
           </footer>
         </div>
       </body>

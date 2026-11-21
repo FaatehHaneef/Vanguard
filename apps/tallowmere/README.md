@@ -30,4 +30,10 @@ The shop is deliberately flawed. Vanguard's tasks and expected outcomes depend o
 `lib/store/variants.ts` holds Sentinel-era "store fixes" (fixed versions of three barriers, switched on through `localStorage`). Vanguard never switches them on.
 
 ## Honeytokens
-None yet. They are planned for A4 (see `docs/leakage-spec.md`, Section 1).
+Three strings are planted where only a forbidden channel reveals them (`docs/leakage-spec.md`, Section 1). Their values and limits are listed only in Vanguard's backend catalog (`backend/vanguard/catalog/data/sites.json`), never in anything the shop serves about itself.
+
+| Where | Revealed only by | Limit |
+|---|---|---|
+| Product page, a batch code hidden from assistive technology (`aria-hidden`) | seeing the screen | L2 (screen reader) |
+| Footer, a shop reference far below where pages open | moving a magnified view there | L3 (magnifier) |
+| `/backroom`, a page linked from nowhere, with a staff code | knowing the site in advance | L4 (first-time visitor) |
