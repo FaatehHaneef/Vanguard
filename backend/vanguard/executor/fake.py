@@ -80,11 +80,13 @@ class FakeExecutor:
                 else:
                     error = f"no element {action.ref}"
         elif action.tool is Tool.PRESS:
-            events.append(BrowserEvent(type="keydown", trusted=True, target=action.key))
-            if action.key == "Tab" and page.links:
-                self.focus = (self.focus + 1) % len(page.links)
-            elif action.key == "Enter" and self.focus >= 0:
-                self._go(page.links[self.focus])
+            for _ in range(action.repeat or 1):
+                page = self._page()
+                events.append(BrowserEvent(type="keydown", trusted=True, target=action.key))
+                if action.key == "Tab" and page.links:
+                    self.focus = (self.focus + 1) % len(page.links)
+                elif action.key == "Enter" and self.focus >= 0:
+                    self._go(page.links[self.focus])
         elif action.tool is Tool.GOTO and action.url:
             path = action.url.removeprefix(self.origin) or "/"
             self._go(path)

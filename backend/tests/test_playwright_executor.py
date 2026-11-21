@@ -296,3 +296,13 @@ def test_magnifier_window_and_pan(site):
             await ex.close()
 
     asyncio.run(main())
+
+
+def test_press_repeat_presses_for_real(site):
+    async def body(ex):
+        result = await ex.execute(Action(tool=Tool.PRESS, key="Tab", repeat=2))
+        obs = await ex.observe()
+        assert result.focus_after == _ref(obs.content, "Add to cart")
+        assert [e.target for e in result.events if e.type == "keydown"] == ["Tab", "Tab"]
+
+    _run(site, body)

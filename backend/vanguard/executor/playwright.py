@@ -494,7 +494,9 @@ class PlaywrightExecutor:
             return (Rect(**box) if box else None), error
 
         if tool is Tool.PRESS:
-            await page.keyboard.press(action.key or "")
+            for _ in range(action.repeat or 1):  # each press is a real, recorded keypress
+                await page.keyboard.press(action.key or "")
+                await page.wait_for_timeout(60)
         elif tool is Tool.TYPE:
             await page.keyboard.type(action.text or "", delay=20)
         elif tool is Tool.CLICK_AT:

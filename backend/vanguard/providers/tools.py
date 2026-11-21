@@ -15,7 +15,8 @@ _NUMBER = {"type": "number"}
 
 TOOL_SPECS: dict[Tool, tuple[str, dict]] = {
     Tool.PRESS: (
-        "Press a key, e.g. Tab, Shift+Tab, Enter, Space, ArrowDown, Escape.",
+        "Press a key, e.g. Tab, Shift+Tab, Enter, Space, ArrowDown, Escape. Set repeat to "
+        "press it several times in a row (for example Tab 4 times); each press is real.",
         {"key": _STRING},
     ),
     Tool.TYPE: ("Type text into the element that currently has focus.", {"text": _STRING}),
@@ -49,9 +50,15 @@ TOOL_SPECS: dict[Tool, tuple[str, dict]] = {
 RATIONALE = {"type": "string", "description": "One short sentence: why this action."}
 
 
+# Optional arguments: offered to the model but not required.
+OPTIONAL_ARGS: dict[Tool, dict] = {
+    Tool.PRESS: {"repeat": {"type": "integer", "minimum": 1, "maximum": 10}},
+}
+
+
 def json_schema(tool: Tool) -> dict:
     _, args = TOOL_SPECS[tool]
-    properties = {**args, "rationale": RATIONALE}
+    properties = {**args, **OPTIONAL_ARGS.get(tool, {}), "rationale": RATIONALE}
     return {"type": "object", "properties": properties, "required": [*args, "rationale"]}
 
 
