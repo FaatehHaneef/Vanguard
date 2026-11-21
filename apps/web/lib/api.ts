@@ -269,9 +269,10 @@ export const api = {
     `${API_BASE}/runs/${encodeURIComponent(id)}/steps/${index}/screenshot`,
   batchMetrics: (batchId: string) =>
     request<GroupMetrics[]>(`/batches/${encodeURIComponent(batchId)}/metrics`),
-  nextToLabel: (labeller: string, count = 10) =>
+  nextToLabel: (labeller: string, count = 10, batchId?: string) =>
     request<LabelItem[]>(
-      `/labelling/next?labeller=${encodeURIComponent(labeller)}&count=${count}`,
+      `/labelling/next?labeller=${encodeURIComponent(labeller)}&count=${count}` +
+        (batchId ? `&batch_id=${encodeURIComponent(batchId)}` : ""),
     ),
   saveLabel: (label: Label) =>
     request<Label>("/labels", { method: "POST", body: JSON.stringify(label) }),

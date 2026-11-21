@@ -8,6 +8,10 @@
         --repeats 5 --batch a3-baseline   # prompt_only and gate, balanced, resumable
     python -m vanguard.cli failures --batch a3-baseline     # failing runs grouped by cause
     python -m vanguard.cli check-site willowbrook --dir sites/willowbrook-clinic --live
+    python -m vanguard.cli labelling export --batches a3-tallowmere a3-willowbrook --name a3
+    python -m vanguard.cli labelling import data/labelling/a3
+    python -m vanguard.cli labelling export-labels --labeller hadi
+    python -m vanguard.cli labelling import-labels data/labels/hadi.json data/labels/ibrahim.json
     python -m vanguard.cli report --batch knock-buy-two [--out results.md]
 
 Settings come from the environment and .env, as for the API (VANGUARD_EXECUTOR,
@@ -19,7 +23,7 @@ import asyncio
 import sys
 from pathlib import Path
 
-from vanguard import batch, failures, results, service, sitecheck
+from vanguard import batch, bundle, failures, results, service, sitecheck
 from vanguard.contracts import BatchRequest, EnforcementOption, RunConfig, StepRecord
 from vanguard.settings import REPO_ROOT, get_settings
 from vanguard.store import RunStore
@@ -110,6 +114,30 @@ async def _batch(args: argparse.Namespace) -> int:
     return 0 if final.remaining == 0 else 1
 
 
+def _labelling(args: argparse.Namespace) -> int:
+    settings = get_settings()
+    store = RunStore(settings.database_url)
+    store.create_schema()
+    data = REPO_ROOT / "data"
+    if args.action == "export":
+        result = bundle.export_bundle(
+            store, args.batches, data / "labelling" / args.name, args.name, args.count
+        )
+        print(f"bundle {result['name']}: {result['items']} steps from {result['runs']} runs")
+    elif args.action == "import":
+        folder = args.folder if args.folder.is_absolute() else REPO_ROOT / args.folder
+        result = bundle.import_bundle(store, folder, settings)
+        print(f"imported {result['items']} steps; label at /labelling?batch={result['batch_id']}")
+    elif args.action == "export-labels":
+        out = data / "labels" / f"{args.labeller}.json"
+        count = bundle.export_labels(store, args.labeller, out)
+        print(f"wrote {count} labels to {out.relative_to(REPO_ROOT)}")
+    else:
+        files = [f if f.is_absolute() else REPO_ROOT / f for f in args.files]
+        print(f"imported {bundle.import_labels(store, files)} labels")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="vanguard")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -157,6 +185,18 @@ def main(argv: list[str] | None = None) -> int:
     site_check.add_argument("site_id")
     site_check.add_argument("--dir", type=Path, required=True, help="the site's folder")
     site_check.add_argument("--live", action="store_true", help="also request its pages")
+    lab = sub.add_parser("labelling", help="labelling bundles and label files")
+    lab_sub = lab.add_subparsers(dest="action", required=True)
+    exp = lab_sub.add_parser("export", help="write a labelling bundle from finished batches")
+    exp.add_argument("--batches", nargs="+", required=True)
+    exp.add_argument("--name", required=True)
+    exp.add_argument("--count", type=int, default=60)
+    imp = lab_sub.add_parser("import", help="load a labelling bundle into the local store")
+    imp.add_argument("folder", type=Path)
+    exl = lab_sub.add_parser("export-labels", help="write your labels to data/labels/")
+    exl.add_argument("--labeller", required=True)
+    iml = lab_sub.add_parser("import-labels", help="load label files")
+    iml.add_argument("files", nargs="+", type=Path)
 
     report = sub.add_parser("report", help="metrics table for a batch (or all runs)")
     report.add_argument("--batch", default=None)
@@ -165,6 +205,8 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     if args.command == "batch":
         return asyncio.run(_batch(args))
+    if args.command == "labelling":
+        return _labelling(args)
     if args.command == "check-site":
         folder = args.dir if args.dir.is_absolute() else REPO_ROOT / args.dir
         checks = sitecheck.run_checks(args.site_id, folder, live=args.live)
