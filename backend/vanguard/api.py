@@ -1,11 +1,13 @@
 """HTTP API for the frontend. OpenAPI docs are served at /docs."""
 
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 
-from vanguard import __version__, catalog, service
+from vanguard import __version__, catalog, results, service
 from vanguard.agent import PROMPT_VERSION
 from vanguard.catalog import CatalogError
 from vanguard.contracts import (
@@ -112,3 +114,44 @@ def get_steps(run_id: str, store: RunStore = Depends(get_store)) -> list[StepRec
     if store.get_run(run_id) is None:
         raise HTTPException(404, "run not found")
     return store.steps(run_id)
+
+
+@app.get("/runs/{run_id}/report")
+def get_report(
+    run_id: str,
+    settings: Settings = Depends(get_settings),
+    store: RunStore = Depends(get_store),
+) -> dict:
+    """Metrics and per-step leakage verdicts, computed by code from the stored steps."""
+    report = results.run_report(store, run_id, settings)
+    if report is None:
+        raise HTTPException(404, "run not found")
+    return report
+
+
+@app.get("/runs/{run_id}/steps/{index}/screenshot")
+def get_screenshot(
+    run_id: str,
+    index: int,
+    settings: Settings = Depends(get_settings),
+    store: RunStore = Depends(get_store),
+) -> FileResponse:
+    steps = [step for step in store.steps(run_id) if step.index == index]
+    path = steps[0].observation.screenshot_path if steps else None
+    if not path:
+        raise HTTPException(404, "no screenshot for this step")
+    file = Path(path).resolve()
+    root = (Path(settings.data_dir) / "screenshots").resolve()
+    if not file.is_relative_to(root) or not file.is_file():
+        raise HTTPException(404, "no screenshot for this step")
+    return FileResponse(file, media_type="image/png")
+
+
+@app.get("/batches/{batch_id}/metrics")
+def get_batch_metrics(
+    batch_id: str,
+    settings: Settings = Depends(get_settings),
+    store: RunStore = Depends(get_store),
+) -> list[dict]:
+    """Metrics per persona x task x enforcement x provider group in one batch."""
+    return [group.as_dict() for group in results.batch_groups(store, batch_id, settings)]
