@@ -18,13 +18,21 @@ jobs:
           python-version: "3.11"
           cache: pip
           cache-dependency-path: backend/pyproject.toml
-      - run: pip install -e ".[dev]"
+      - run: pip install -e ".[dev,worker]"
+      # Chromium for the Playwright executor tests (they skip without it).
+      - run: python -m playwright install --with-deps chromium
       - run: ruff check .
       - run: ruff format --check .
-      - run: pytest -q
+      - run: pytest -q -rs --junitxml=test-results.xml
         env:
           VANGUARD_ENABLED_PROVIDERS: '["fake"]'
           VANGUARD_EXECUTOR: fake
+      # The functional test report (pass rate) for the evaluation write-up.
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: backend-test-results
+          path: backend/test-results.xml
 
   tallowmere:
     runs-on: ubuntu-latest
