@@ -302,7 +302,8 @@ Against the rubric, this also needs: functional tests with a pass rate (D6), at 
 - Character overlay (`apps/hud`, bundled with esbuild): decoration only, outside observations, the accessibility tree and recorded events.
 - Leakage checker (H1 with browser evidence, H4a), run and group metrics (Wilson intervals, latency percentiles, cost from a configured price), balanced and resumable batches (API and CLI), blind labelling with Cohen's kappa and checker precision/recall, a labelling guide.
 - Web: live view with screenshots, checker metrics and leak badges per run, comparison table per trial, labelling desk.
-- 55 backend tests pass, including 5 against real Chromium; CI runs them.
+- Later the same day: failure analysis by cause, mobile and slow-network conditions, the explanation generator in three modes (alternative c), the verifier agent with precision/recall against the hard rules (option 4), screen-reader perception and commands and the magnifier window for bounded perception (option 3), H3a, H4b and three honeytokens planted in Tallowmere, an OpenAI-compatible provider (alternative a, local runs), a results dashboard, and batches started from the site picker.
+- 80 backend tests pass, including 9 against real Chromium; CI runs them all on Linux.
 - Waiting on: a Gemini key and Braintree sandbox keys (the user will add them) for the first real baseline batch. Hadi's and Ibrahim's parts were started from the foundation (checker, metrics, labelling first versions; explain prompt and schema); they extend these.
 
 **What "foundation complete" means (decided 2026-11-21).** The foundation is finished when nobody ever needs `sentinel/` or `synthetic-users/` again: every reused piece has been copied into this repo, adapted and committed, so the two clones can be treated as gone. Teammates never clone or extract from them. Faateh (with Claude Code) builds the whole foundation:
