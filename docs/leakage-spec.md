@@ -120,3 +120,4 @@ Test sites are assigned to **train**, **dev** and **test** groups before any run
 - Exact visual lexicon (S2) and stop list (H4b).
 - Stuck threshold N.
 - Whether `goto` to the start URL is the only allowed navigation for P1–P3 (currently yes, plus links seen).
+- **Invisible focus (found 2026-11-21 in Tallowmere).** Tallowmere's "Add to cart" button removes its focus outline. A sighted keyboard user cannot see that focus is there, so an observation stating "focused: e5" gives P1 information the person would not have. Proposal: the full-view observation reports focus only when it is visibly indicated (a computed change in outline, box-shadow or border, the same measurement Sentinel's focus-visible check used).

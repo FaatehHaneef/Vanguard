@@ -1,31 +1,33 @@
-# Tallowmere: standalone test site
+# Tallowmere: test site
 
-Owner: foundation (Faateh). Status: **being extracted** from `sentinel/` (read-only reference clone; never edit it, copy out of it).
+A fictional candle shop with a Braintree **sandbox** checkout. It is one of Vanguard's test sites: Vanguard's simulated users shop here, driven from outside by Playwright. The shop itself contains no testing code and no knowledge of Vanguard.
 
-Tallowmere is the candle shop Vanguard's simulated users shop in. It becomes its own Next.js app with no knowledge of Vanguard, exactly like a customer's site. Vanguard drives it from outside with Playwright.
-
-## What to copy (all paths relative to `sentinel/`)
-
-| From | To | Notes |
-|---|---|---|
-| `app/store/**` | `app/**` | Serve the shop at the **root**: `/`, `/product/[id]`, `/cart`, `/checkout`, `/thanks/[id]`. The Vanguard tasks use these paths (`backend/vanguard/catalog/data/sites.json`) |
-| `components/store/**` | `components/**` | Update `/store/...` links to the new root paths (16 occurrences found by grep) |
-| `lib/store/**` | `lib/store/**` | `variants.ts` holds Sentinel's "store fixes"; keep the file but nothing in Vanguard switches fixes on |
-| `lib/payments/**`, `lib/guards/sandbox.ts`, the Braintree parts of `lib/env.ts` | same | Sandbox only; `assertSandboxOnly` must stay |
-| `app/api/checkout/**`, `app/api/braintree/webhook/**` | `app/api/**` | Server-side prices and order ids stay as they are |
-| `public/store/**`, store fonts and styles from `app/globals.css` | same | |
-
-**Do not copy** `engine/`, `lib/trial/`, `lib/ai/`, `components/sentinel/` or the loader: the shop must not contain any testing code.
-
-## Must stay exactly as it is
-- The **deliberate barriers**, especially the cart's `+`, `-` and `remove` controls, which are `div`s with click handlers and are not keyboard reachable (`sentinel/app/store/cart/page.tsx`, lines 40-65). The `buy-two` task depends on it.
-- The "Pay with the sandbox test card" button on the payment step.
-- Product names and prices (the `cheapest` task expects Moss Path at $16.00).
+Extracted on 2026-11-21 from the author's earlier project Sentinel (MIT; see the top-level `NOTICE.md`). Changes from the original: the shop is served at the root (`/`, `/product/[id]`, `/cart`, `/checkout`, `/thanks/[id]`) instead of under `/store`; Sentinel's loader script, app pages and links were removed; the store and root layouts were merged. Product images still live under `/store/` in `public/`.
 
 ## Run
-- Port **3100** (`next dev -p 3100`); this is the origin in `sites.json` and in `VANGUARD_ALLOWED_ORIGINS`.
-- Add a `Dockerfile` and a `tallowmere` service to `docker-compose.yml`.
-- Needs Braintree **sandbox** keys in its own `.env.local` (never committed).
+```bash
+npm install
+cp .env.example .env.local   # Braintree sandbox keys
+npm run dev                  # http://localhost:3100
+```
+Port 3100 is the origin Vanguard expects (`backend/vanguard/catalog/data/sites.json`, `VANGUARD_ALLOWED_ORIGINS`). Pay with the "sandbox test card" button, or card 4111 1111 1111 1111 with any future expiry and any CVV.
 
-## Provenance
-Add a line to the top-level `NOTICE.md` when the copy is committed.
+## Planted barriers
+The shop is deliberately flawed. Vanguard's tasks and expected outcomes depend on these, so **do not fix them**. Each is marked "Deliberate snag" in the source.
+
+| Where | Barrier | Who it affects | Source |
+|---|---|---|---|
+| Cart | `+`, `-` and `remove` are `div`s with click handlers: not focusable, no keyboard activation, tiny and packed together | keyboard-only, screen reader, tremor | `app/cart/page.tsx` |
+| Product page | "Add to cart" has its focus outline removed | keyboard-only (cannot see where focus is) | `components/AddToCart.tsx` |
+| Header | Cart link is an icon with no accessible name | screen reader | `components/CartLink.tsx` |
+| Everywhere | Candle pictures have no text description | screen reader | `components/CandleArt.tsx` |
+| Checkout | Fields have no labels (placeholder only), faint help text, no autocomplete hints, low-contrast button | screen reader, low vision, phone | `app/checkout/page.tsx` |
+| Product page | A line that does not wrap below 640 px, so the page scrolls sideways | magnifier, phone | `app/product/[id]/page.tsx` |
+| Home | Club popup covers most of a phone screen on arrival | magnifier, phone | `components/ClubPopup.tsx` |
+| Home | Banner is a 1600 px PNG over 1 MB shown at 1000 px | slow network | `components/Banner.tsx` |
+| Product page | No machine-readable product data | AI agents | `components/ProductData.tsx` |
+
+`lib/store/variants.ts` holds Sentinel-era "store fixes" (fixed versions of three barriers, switched on through `localStorage`). Vanguard never switches them on.
+
+## Honeytokens
+None yet. They are planned for A4 (see `docs/leakage-spec.md`, Section 1).

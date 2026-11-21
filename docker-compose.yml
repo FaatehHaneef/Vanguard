@@ -1,6 +1,6 @@
 # Start everything with: docker compose up --build
-# The web frontend (apps/web) and the Tallowmere test site (apps/tallowmere) join this
-# file as their services are built.
+# The web frontend (apps/web) and further test sites (sites/*) join this file as they
+# are built.
 
 services:
   db:
@@ -31,6 +31,15 @@ services:
     depends_on:
       db:
         condition: service_healthy
+
+  # Test sites. Each is an ordinary website with no knowledge of Vanguard.
+  tallowmere:
+    build: ./apps/tallowmere
+    env_file:
+      - path: apps/tallowmere/.env.local
+        required: false
+    ports:
+      - "3100:3100"
 
 volumes:
   db-data:
