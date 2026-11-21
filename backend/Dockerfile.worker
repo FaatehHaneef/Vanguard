@@ -1,0 +1,14 @@
+# Vanguard worker: the backend plus Playwright and Chromium, so runs drive a real browser.
+# The base image's Playwright version must match the pinned Python package below.
+FROM mcr.microsoft.com/playwright/python:v1.65.2-noble
+
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
+WORKDIR /app
+
+COPY pyproject.toml ./
+COPY vanguard ./vanguard
+RUN pip install --no-cache-dir ".[worker]" "playwright==1.65.2"
+
+ENV VANGUARD_EXECUTOR=playwright
+EXPOSE 8000
+CMD ["uvicorn", "vanguard.api:app", "--host", "0.0.0.0", "--port", "8000"]

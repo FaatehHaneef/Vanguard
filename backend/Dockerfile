@@ -1,4 +1,4 @@
-# Vanguard backend (API). The worker image, with Playwright and Chromium, is added with the executor.
+# Vanguard backend (API) without a browser. Dockerfile.worker adds Playwright and Chromium.
 FROM python:3.11-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1

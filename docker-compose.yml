@@ -18,19 +18,30 @@ services:
       interval: 5s
       retries: 10
 
+  # The API runs trials in-process for A3, so it uses the worker image (Playwright and
+  # Chromium). A separate queue-fed worker process takes runs over later.
   api:
-    build: ./backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.worker
     env_file:
       - path: .env
         required: false
     environment:
       VANGUARD_DATABASE_URL: postgresql+psycopg://vanguard:vanguard@db:5432/vanguard
       VANGUARD_DATA_DIR: /data
+      VANGUARD_EXECUTOR: playwright
+      # Sites keep their localhost addresses; the browser's requests go to the containers.
+      VANGUARD_ORIGIN_REWRITES: '{"http://localhost:3100": "http://tallowmere:3100"}'
     ports:
       - "8000:8000"
+    volumes:
+      - run-data:/data
     depends_on:
       db:
         condition: service_healthy
+      tallowmere:
+        condition: service_started
 
   web:
     build:
@@ -53,3 +64,4 @@ services:
 
 volumes:
   db-data:
+  run-data:
