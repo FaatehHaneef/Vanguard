@@ -2,7 +2,14 @@
 
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { api, type Action, type Persona, type RunSummary, type Step } from "@/lib/api";
+import {
+  api,
+  type Action,
+  type Persona,
+  type RunReport,
+  type RunSummary,
+  type Step,
+} from "@/lib/api";
 import { characterFor } from "@/lib/cast";
 import { Sprite } from "./Sprite";
 import { outcomeText } from "./TrialBoard";
@@ -14,6 +21,44 @@ function describe(action: Action): string {
   return `${action.tool}(${args.join(", ")})`;
 }
 
+function percent(value: number): string {
+  return `${Math.round(value * 100)}%`;
+}
+
+function limits(list: { limit: string | null; rule: string }[]): string {
+  return list.map((v) => v.limit ?? v.rule).join(", ");
+}
+
+/** Numbers for a finished run. All of them are computed by the backend's code. */
+function Metrics({ report }: { report: RunReport }) {
+  const m = report.metrics;
+  const tiles: [string, string][] = [
+    ["Steps", String(m.steps)],
+    ["Refused by the gate", String(m.blocked)],
+    ["Tried to break a limit", `${m.attempted_leak_steps} (${percent(m.attempted_leak_rate)})`],
+    ["Broke a limit", `${m.executed_leak_steps} (${percent(m.executed_leak_rate)})`],
+    ["Real pointer input seen", String(m.pointer_evidence_steps)],
+    ["Step time p50 / p95", `${Math.round(m.latency_p50_ms)} / ${Math.round(m.latency_p95_ms)} ms`],
+    ["Tokens in / out", `${m.input_tokens} / ${m.output_tokens}`],
+    ["Cost", `$${m.cost_usd.toFixed(4)}`],
+  ];
+  return (
+    <section className="pixel-panel grid gap-3" aria-labelledby="metrics-title">
+      <h2 id="metrics-title" className="font-display text-xl font-bold text-amber">
+        What the checker found
+      </h2>
+      <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {tiles.map(([label, value]) => (
+          <div key={label} className="grid gap-1">
+            <dt className="text-sm text-mist">{label}</dt>
+            <dd className="font-display text-lg text-parchment">{value}</dd>
+          </div>
+        ))}
+      </dl>
+    </section>
+  );
+}
+
 /** One run, step by step: what the persona perceived, proposed, and what the gate decided. */
 export function RunFeed() {
   const { id: runId } = useParams<{ id: string }>();
@@ -21,6 +66,7 @@ export function RunFeed() {
   const [steps, setSteps] = useState<Step[]>([]);
   const [persona, setPersona] = useState<Persona | null>(null);
   const [open, setOpen] = useState<number | null>(null);
+  const [report, setReport] = useState<RunReport | null>(null);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -41,6 +87,12 @@ export function RunFeed() {
     return () => window.clearTimeout(timer);
   }, [runId]);
 
+  const finished = run?.status === "finished" || run?.status === "failed";
+  useEffect(() => {
+    if (!finished) return;
+    api.report(runId).then(setReport).catch(() => undefined);
+  }, [finished, runId]);
+
   useEffect(() => {
     if (!run) return;
     api
@@ -54,6 +106,8 @@ export function RunFeed() {
 
   const character = characterFor(run.config.persona_id);
   const done = run.status === "finished" || run.status === "failed";
+  const latest = [...steps].reverse().find((step) => step.observation.screenshot_path);
+  const verdicts = new Map(report?.steps.map((entry) => [entry.index, entry]) ?? []);
 
   return (
     <div className="grid gap-6">
@@ -87,9 +141,27 @@ export function RunFeed() {
         </div>
       </header>
 
+      {latest ? (
+        <figure className="pixel-panel grid gap-2">
+          {/* eslint-disable-next-line @next/next/no-img-element -- served by the API */}
+          <img
+            src={api.screenshotUrl(run.id, latest.index)}
+            alt={`What the browser showed before step ${latest.index + 1}`}
+            className="w-full rounded border border-line"
+          />
+          <figcaption className="text-sm text-mist">
+            {done ? "Last view" : "Live view"} before step {latest.index + 1} ·{" "}
+            {latest.observation.url}
+          </figcaption>
+        </figure>
+      ) : null}
+
+      {report ? <Metrics report={report} /> : null}
+
       <ol className="grid gap-2" aria-live="polite">
         {steps.map((step) => {
           const refused = !step.gate.allowed;
+          const verdict = verdicts.get(step.index);
           return (
             <li key={step.index} className={`pixel-panel p-3 ${refused ? "step-refused" : ""}`}>
               <button
@@ -105,6 +177,11 @@ export function RunFeed() {
                 <span className={refused ? "font-bold text-rose" : "text-moss"}>
                   {refused ? `Refused ${step.gate.rule ?? ""}` : step.executed ? "Done" : "Ended"}
                 </span>
+                {verdict && verdict.executed.length > 0 ? (
+                  <span className="leak-badge executed">Broke {limits(verdict.executed)}</span>
+                ) : verdict && verdict.attempted.length > 0 ? (
+                  <span className="leak-badge attempted">Tried {limits(verdict.attempted)}</span>
+                ) : null}
               </button>
               {step.proposed?.rationale ? (
                 <p className="mt-1 text-sm italic text-mist">&ldquo;{step.proposed.rationale}&rdquo;</p>
