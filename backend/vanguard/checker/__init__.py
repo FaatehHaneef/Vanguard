@@ -1,7 +1,7 @@
 """The leakage checker: scores recorded steps against the persona's limits after a run.
 
 Proposed owner: Ibrahim (see Vanguard.md, team split). The first version (H1 with
-browser evidence, H4a) was written with the foundation; extend it rather than replace it.
+browser evidence, H3a, H4a) was written with the foundation; extend it rather than replace it.
 
 What it must do (docs/leakage-spec.md, Sections 1, 3 and 6):
   - For every step, compute *attempted* violations from `step.proposed` using
@@ -21,7 +21,7 @@ workspace depend on. Do not change them without updating the spec.
 
 from dataclasses import dataclass, field
 
-from vanguard.contracts import LimitId, PersonaSpec, StepRecord
+from vanguard.contracts import LimitId, PerceptionMode, PersonaSpec, StepRecord
 from vanguard.rules import RuleContext, Violation, ViolationKind, hard_violations, limits_to_check
 
 POINTER_EVENTS = frozenset({"pointerdown", "mousedown", "wheel"})
@@ -32,6 +32,30 @@ H1_BROWSER = Violation(
     ViolationKind.ACTION,
     "The browser recorded trusted pointer input during this step.",
 )
+
+
+H3A = Violation(
+    "H3a",
+    LimitId.MAGNIFIED_VIEW,
+    ViolationKind.INFORMATION,
+    "The step used an element that was not inside the magnified view.",
+)
+
+
+def outside_window(step: StepRecord) -> bool:
+    """H3a evidence: the proposal names an element the magnified view did not show, or the
+    executed target lay entirely outside the window."""
+    observation = step.observation
+    if observation.mode is not PerceptionMode.MAGNIFIED or observation.window is None:
+        return False
+    action = step.proposed
+    if action is None:
+        return False
+    refs = [ref for ref in (action.ref, action.to_ref) if ref]
+    if any(f"[{ref}]" not in observation.content for ref in refs):
+        return True
+    box = step.target_box
+    return step.executed and box is not None and not box.intersects(observation.window)
 
 
 @dataclass
@@ -89,6 +113,11 @@ def check_step(
         verdict.attempted = hard_violations(step.proposed, persona, ctx)
         if step.executed:
             verdict.executed = list(verdict.attempted)
+
+    if LimitId.MAGNIFIED_VIEW in limits_to_check(persona) and outside_window(step):
+        verdict.attempted.append(H3A)
+        if step.executed:
+            verdict.executed.append(H3A)
 
     if LimitId.NO_POINTER in limits_to_check(persona) and pointer_evidence(step):
         if not any(v.rule == "H1" for v in verdict.executed):
