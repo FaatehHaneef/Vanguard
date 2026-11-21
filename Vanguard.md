@@ -267,15 +267,15 @@ Four enforcement options on identical tasks and repeated runs: (1) prompt-only b
 
 | Dataset | Licence | Size | Local copy | Possible use |
 |---|---|---|---|---|
-| osunlp/Mind2Web | cc-by-4.0 | 6.74 GB | full | general web-navigation SFT before our traces; action-mix statistics (mostly click/type) |
-| berkeley-hci/Reduced-A11y-CUA | cc-by-4.0 | 3.86 GB | full | reference statistics; contains `web_logs` with accessibility trees, so it is not only Windows desktop data `[repo: HF file listing]`. Decided earlier as reference-only, not training |
-| Qwen/WebWorldData | apache-2.0 | 52.2 GB (one JSONL) | first 300 MB sample | accessibility-tree trajectories; check fit before a bigger pull |
+| osunlp/Mind2Web | cc-by-4.0 | 6.74 GB | full, verified 2026-11-22 (1,009 tasks) | general web-navigation SFT before our traces; action-mix statistics (mostly click/type) |
+| berkeley-hci/Reduced-A11y-CUA | cc-by-4.0 | 3.86 GB | full, verified 2026-11-22 (13,881 files) | reference statistics; contains `web_logs` with accessibility trees, so it is not only Windows desktop data `[repo: HF file listing]`. Decided earlier as reference-only, not training |
+| Qwen/WebWorldData | apache-2.0 | 52.2 GB (one JSONL) | first 300 MB sample, verified (4,211 records) | accessibility-tree trajectories; check fit before a bigger pull |
 | webagentlab/webchain | cc-by-4.0 | 386 GB | card only | screenshot + DOM + AX-tree trajectories; pull single parts later if needed |
 | osunlp/Multimodal-Mind2Web | openrail | 13.6 GB | not pulled | screenshots for perception alternative "b" |
 | berkeley-hci/A11y-CUA (full) | cc-by-4.0 | 176 GB | not pulled | includes agent runs (e.g. Claude Sonnet 4.5, Qwen3-VL) under screen-reader and magnifier conditions; pull selected logs only |
 | princeton-nlp/WebShop | unconfirmed | — | not pulled | candidate independent test site (simulated shop) |
 
-Disk constraint: about 37 GB were free on C: before the downloads. **Permanent home: `D:\VanguardData\`** (645 GB free; decided 2026-11-21). The partial download was moved from C: to D: on 2026-11-21 and resumed there, so nothing remains on C:. When the downloads finish, each dataset is verified: file counts and sizes are checked against the Hugging Face listing, every JSON/JSONL/parquet file is parsed, the schema is inspected, and a short data card is written for each. All future code reads the path from an environment variable (`VANGUARD_DATA_DIR`, default `D:\VanguardData`) and never from a path hard-coded in the repo.
+Disk constraint: about 37 GB were free on C: before the downloads. **Permanent home: `D:\VanguardData\`** (645 GB free; decided 2026-11-21). The partial download was moved from C: to D: on 2026-11-21 and resumed there, so nothing remains on C:. **Verified 2026-11-22; data cards in [docs/data-cards.md](docs/data-cards.md).** When the downloads finish, each dataset is verified: file counts and sizes are checked against the Hugging Face listing, every JSON/JSONL/parquet file is parsed, the schema is inspected, and a short data card is written for each. All future code reads the path from an environment variable (`VANGUARD_DATA_DIR`, default `D:\VanguardData`) and never from a path hard-coded in the repo.
 
 ### 4.6b Git workflow (decided 2026-11-21)
 - Many small, meaningful commits as work progresses; never one big dump. Conventional style messages (`feat:`, `fix:`, `docs:`, `test:`, `chore:`).
