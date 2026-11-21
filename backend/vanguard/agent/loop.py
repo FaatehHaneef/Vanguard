@@ -7,8 +7,10 @@ still leaves a complete trace up to the failure.
 import time
 from datetime import UTC, datetime
 
+from vanguard import verifier as verifier_agent
 from vanguard.contracts import (
     Action,
+    EnforcementOption,
     GateDecision,
     PersonaSpec,
     RunConfig,
@@ -45,6 +47,7 @@ async def run_once(
     stuck_after: int,
 ) -> RunSummary:
     gate = ActionGate(persona, config.enforcement)
+    use_verifier = EnforcementOption.VERIFIER in config.enforcement
     history: list[StepRecord] = []
     seen_links: set[str] = set()
     start_url = site.origin + task.start_path
@@ -78,6 +81,17 @@ async def run_once(
             else:
                 decision = gate.decide(action, ctx)
 
+            verified = None
+            if (
+                use_verifier
+                and action is not None
+                and decision.allowed
+                and action.tool not in (Tool.DONE, Tool.GIVE_UP)
+            ):
+                verified = await verifier_agent.verify(provider, action, persona, observation)
+                if not verified.allowed:
+                    decision = verified
+
             result = None
             if (
                 action is not None
@@ -94,6 +108,7 @@ async def run_once(
                 proposed=action,
                 model_error=reply.error,
                 gate=decision,
+                verifier=verified,
                 executed=result is not None,
                 execution_error=result.error if result else None,
                 events=result.events if result else [],
