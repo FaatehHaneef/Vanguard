@@ -21,6 +21,7 @@ from vanguard.contracts import (
     BatchRequest,
     BatchStatus,
     EnforcementOption,
+    PersonaStatus,
     RunConfig,
     RunOutcome,
     RunStatus,
@@ -51,13 +52,22 @@ def remaining(done: Mapping[Group, int], targets: Mapping[Group, int]) -> int:
 BatchKey = tuple[str, str, tuple[EnforcementOption, ...]]  # task, persona, enforcement
 
 
+def _options_for(persona_id: str, request: BatchRequest) -> list[list[EnforcementOption]]:
+    """Preview personas only run prompt-only: their limits are not enforced or checked."""
+    from vanguard import catalog
+
+    if catalog.persona(persona_id).status is PersonaStatus.PREVIEW:
+        return [[EnforcementOption.PROMPT_ONLY]]
+    return request.enforcements
+
+
 def targets_for(request: BatchRequest) -> dict[BatchKey, int]:
     """Every group in the batch, ordered task -> persona -> enforcement."""
     return {
         (task, persona, tuple(option)): request.repeats
         for task in request.task_ids
         for persona in request.persona_ids
-        for option in request.enforcements
+        for option in _options_for(persona, request)
     }
 
 
@@ -111,6 +121,7 @@ def _config(request: BatchRequest, task, persona, option, repeat: int) -> RunCon
         persona_id=persona,
         enforcement=list(option),
         provider=request.provider,
+        conditions=request.conditions,
         seed=request.seed + repeat,
         repeat_index=repeat,
         max_steps=request.max_steps,

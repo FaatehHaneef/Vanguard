@@ -44,13 +44,16 @@ export function TrialBoard() {
     let timer = 0;
     const load = async () => {
       try {
-        const found = await api.runs(batchId);
+        const [found, status] = await Promise.all([
+          api.runs(batchId),
+          api.batch(batchId).catch(() => null),
+        ]);
         setRuns(found);
-        if (
-          found.some(
-            (run) => run.status === "queued" || run.status === "running",
-          )
-        ) {
+        const active = found.some(
+          (run) => run.status === "queued" || run.status === "running",
+        );
+        // A batch runs one run at a time: keep watching until it has nothing left to do.
+        if (active || (status !== null && status.remaining > 0 && !status.stopped)) {
           timer = window.setTimeout(load, 1500);
         }
       } catch {

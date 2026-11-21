@@ -3,28 +3,50 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { api, type EnforcementOption, type Persona, type Site, type Task } from "@/lib/api";
+import {
+  api,
+  type Condition,
+  type EnforcementOption,
+  type Persona,
+  type Site,
+  type Task,
+} from "@/lib/api";
 import { characterFor } from "@/lib/cast";
 import { Sprite } from "./Sprite";
 
-const OPTIONS: { id: EnforcementOption; label: string; help: string }[] = [
+type Choice = "prompt_only" | "gate" | "verifier" | "compare";
+
+const OPTIONS: { id: Choice; label: string; help: string; runs: EnforcementOption[][] }[] = [
+  {
+    id: "compare",
+    label: "Compare",
+    help: "Runs every persona both ways, prompt only and with the gate, side by side.",
+    runs: [["prompt_only"], ["gate"]],
+  },
   {
     id: "prompt_only",
     label: "Prompt only",
     help: "The limits are only described to the model. The baseline.",
+    runs: [["prompt_only"]],
   },
   {
     id: "gate",
     label: "Gate",
     help: "Code refuses any action outside the limits before it reaches the page.",
+    runs: [["gate"]],
+  },
+  {
+    id: "verifier",
+    label: "Verifier",
+    help: "A second AI call checks each action against the limits before it runs.",
+    runs: [["verifier"]],
   },
 ];
 
-function newBatchId(): string {
-  return Array.from(crypto.getRandomValues(new Uint8Array(8)), (b) =>
-    b.toString(16).padStart(2, "0"),
-  ).join("");
-}
+const CONDITIONS: { id: Condition; label: string }[] = [
+  { id: "mobile", label: "On a phone (390 by 844, touch)" },
+  { id: "slow_network", label: "On a slow connection (about 3G)" },
+];
 
 /** Step two of a trial: where the chosen party goes, with which task and settings. */
 export function SitePicker() {
@@ -41,7 +63,8 @@ export function SitePicker() {
   const [siteId, setSiteId] = useState("");
   const [tasks, setTasks] = useState<Task[]>([]);
   const [taskId, setTaskId] = useState("");
-  const [option, setOption] = useState<EnforcementOption>("gate");
+  const [option, setOption] = useState<Choice>("compare");
+  const [conditions, setConditions] = useState<Condition[]>([]);
   const [provider, setProvider] = useState("");
   const [repeats, setRepeats] = useState(1);
   const [starting, setStarting] = useState(false);
@@ -73,25 +96,19 @@ export function SitePicker() {
   async function start() {
     setStarting(true);
     setError("");
-    const batch = newBatchId();
     try {
-      for (const persona of personas) {
-        // Preview personas only run with their limits described in the prompt.
-        const enforcement: EnforcementOption[] =
-          persona.status === "preview" ? ["prompt_only"] : [option];
-        for (let repeat = 0; repeat < repeats; repeat++) {
-          await api.startRun({
-            site_id: siteId,
-            task_id: taskId,
-            persona_id: persona.id,
-            enforcement,
-            provider,
-            repeat_index: repeat,
-            batch_id: batch,
-          });
-        }
-      }
-      router.push(`/trials/${batch}`);
+      // One balanced batch, run one at a time by the backend. Preview personas are
+      // given prompt-only runs there, whatever is chosen here.
+      const status = await api.startBatch({
+        site_id: siteId,
+        task_ids: [taskId],
+        persona_ids: personas.map((persona) => persona.id),
+        enforcements: OPTIONS.find((entry) => entry.id === option)?.runs ?? [["gate"]],
+        conditions,
+        provider,
+        repeats,
+      });
+      router.push(`/trials/${status.batch_id}`);
     } catch (problem) {
       setError(problem instanceof Error ? problem.message : "The trial could not start.");
       setStarting(false);
@@ -184,6 +201,25 @@ export function SitePicker() {
               </label>
             ))}
           </div>
+          <fieldset className="mt-4 grid gap-2">
+            <legend className="font-bold text-parchment">Conditions (optional)</legend>
+            {CONDITIONS.map((entry) => (
+              <label key={entry.id} className="flex cursor-pointer items-center gap-3">
+                <input
+                  type="checkbox"
+                  checked={conditions.includes(entry.id)}
+                  onChange={(event) =>
+                    setConditions((current) =>
+                      event.target.checked
+                        ? [...current, entry.id]
+                        : current.filter((id) => id !== entry.id),
+                    )
+                  }
+                />
+                <span className="text-mist">{entry.label}</span>
+              </label>
+            ))}
+          </fieldset>
           {previews.length > 0 ? (
             <p className="mt-3 text-sm text-mist">
               {previews.map((persona) => persona.name).join(", ")}{" "}

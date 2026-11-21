@@ -2,7 +2,7 @@
 
 from pydantic import BaseModel, Field
 
-from .runs import EnforcementOption
+from .runs import Condition, EnforcementOption
 
 
 class BatchRequest(BaseModel):
@@ -16,6 +16,7 @@ class BatchRequest(BaseModel):
         default_factory=lambda: [[EnforcementOption.PROMPT_ONLY], [EnforcementOption.GATE]],
         description="Each entry is one enforcement configuration, e.g. [prompt_only] or [gate]",
     )
+    conditions: list[Condition] = Field(default_factory=list)
     provider: str = "gemini"
     repeats: int = Field(3, ge=1, le=50)
     max_steps: int | None = None
