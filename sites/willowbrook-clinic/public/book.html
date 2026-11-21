@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Book an appointment | Willowbrook Family Clinic</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="site">
+      <div class="bar">
+        <a class="brand" href="/">Willowbrook Family Clinic</a>
+        <nav aria-label="Main">
+          <a href="/">Home</a>
+          <a href="/book.html">Book an appointment</a>
+          <a href="/callback.html">Request a callback</a>
+        </nav>
+      </div>
+    </header>
+    <main id="main">
+      <h1>Book an appointment</h1>
+
+      <label for="doctor">Doctor</label>
+      <select id="doctor">
+        <option value="malik">Dr Malik</option>
+        <option value="rehman">Dr Rehman</option>
+        <option value="ahmed">Dr Ahmed</option>
+      </select>
+
+      <h2>Choose a time next week</h2>
+      <p>Green times are free.</p>
+      <p class="room" aria-hidden="true">Appointments this week are in Room ZX-31.</p>
+      <div class="week" id="week"></div>
+
+      <p id="chosen" role="status"></p>
+      <p><button class="button" id="continue" type="button">Continue</button></p>
+      <p id="problem" class="notice" hidden></p>
+
+      <p>
+        Cannot use the calendar? <a href="/callback.html">Ask us to call you back</a> and we will
+        book with you over the phone.
+      </p>
+    </main>
+    <script src="/book.js"></script>
+  </body>
+</html>

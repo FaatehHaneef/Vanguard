@@ -29,7 +29,7 @@ class Settings(BaseSettings):
     openai_compatible: dict[str, dict[str, str]] = {}
 
     # Where the worker is allowed to send the browser. Anything else is blocked by the gate.
-    allowed_origins: list[str] = ["http://localhost:3100"]
+    allowed_origins: list[str] = ["http://localhost:3100", "http://localhost:3101"]
     # Payment providers the agent may reach, sandbox hosts only.
     allowed_payment_hosts: list[str] = [
         "sandbox.braintreegateway.com",
