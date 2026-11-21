@@ -367,7 +367,9 @@ class PlaywrightExecutor:
         return Rect(**box) if box else None
 
     async def _snapshot_focus(self) -> None:
+        """Refresh the page size and the focused element's box (both in document pixels)."""
         data = await self._snapshot()
+        self._page_size = (data["page"]["width"], data["page"]["height"])
         focus = data["focus"]
         self._focus_rect = Rect(**focus["box"]) if focus and focus.get("box") else None
 
@@ -464,10 +466,10 @@ class PlaywrightExecutor:
         if tool in (Tool.PAN, Tool.PAN_TO_FOCUS):
             if self._window is None:
                 return None, "the magnifier is not on for this run"
+            await self._snapshot_focus()  # the page may have grown or changed since
             if tool is Tool.PAN:
                 self._pan(action.dx or 0, action.dy or 0)
             else:
-                await self._snapshot_focus()
                 if self._focus_rect is None:
                     return None, "nothing has keyboard focus"
                 box, window = self._focus_rect, self._window
