@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Suspense } from "react";
 import { LabelDesk } from "@/components/LabelDesk";
 import { LobbyBackdrop } from "@/components/LobbyBackdrop";
 
@@ -27,7 +28,9 @@ export default function LabellingPage() {
         labeller. You never see what the checker decided. The rules are in the
         labelling guide (docs/labelling-guide.md).
       </p>
-      <LabelDesk />
+      <Suspense fallback={<p className="text-mist">Loading…</p>}>
+        <LabelDesk />
+      </Suspense>
     </main>
   );
 }

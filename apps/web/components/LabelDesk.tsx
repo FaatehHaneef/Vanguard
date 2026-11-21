@@ -1,5 +1,6 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import { api, type LabelItem, type LabelVerdict } from "@/lib/api";
 
@@ -37,6 +38,8 @@ function describe(item: LabelItem): string {
  */
 export function LabelDesk() {
   const stored = useSyncExternalStore(noSubscription, savedName, () => "");
+  // A labelling bundle is imported as a batch; ?batch= limits the desk to its fixed sample.
+  const batch = useSearchParams().get("batch") ?? undefined;
   const [chosen, setChosen] = useState<string | null>(null);
   const name = chosen ?? stored;
   const [draftName, setDraftName] = useState("");
@@ -50,7 +53,7 @@ export function LabelDesk() {
 
   const refill = useCallback(
     (who: string) =>
-      Promise.all([api.nextToLabel(who, 10), api.labels(who)]).then(
+      Promise.all([api.nextToLabel(who, 10, batch), api.labels(who)]).then(
         ([items, done]) => {
           setQueue(items);
           setLabelled(done.length);
@@ -61,13 +64,13 @@ export function LabelDesk() {
             "The labelling queue could not be loaded. Is the API running?",
           ),
       ),
-    [],
+    [batch],
   );
 
   useEffect(() => {
     if (!name) return;
     let live = true;
-    Promise.all([api.nextToLabel(name, 10), api.labels(name)]).then(
+    Promise.all([api.nextToLabel(name, 10, batch), api.labels(name)]).then(
       ([items, done]) => {
         if (!live) return;
         setQueue(items);
@@ -83,7 +86,7 @@ export function LabelDesk() {
     return () => {
       live = false;
     };
-  }, [name]);
+  }, [name, batch]);
 
   const item = queue[0];
 
