@@ -313,6 +313,8 @@ Against the rubric, this also needs: functional tests with a pass rate (D6), at 
 - 80 backend tests pass, including 8 against real Chromium; CI runs them all on Linux.
 - Waiting on: a Gemini key and Braintree sandbox keys (the user will add them) for the first real baseline batch. Hadi's and Ibrahim's parts were started from the foundation (checker, metrics, labelling first versions; explain prompt and schema); they extend these.
 
+**Model budget (decided 2026-11-22).** Runs on Gemini API keys (free tier: about 20 requests per day per project for Gemini 3.6 Flash) use only short tasks that an efficient agent completes in at most 12 model calls, with a 12-step cap: for A3, Tallowmere `cheapest` and Willowbrook `wb-callback`, for both full personas and both prompt-only and gate. Long tasks (Tallowmere `buy-two`, Willowbrook `wb-book-tuesday`) run only on local models (A4). `press` may repeat a key within one call, so a keyboard user's run needs far fewer calls; every press is still real and checked. Next, to cut calls further: several actions per call, then a live in-app view of the walkthrough.
+
 **What "foundation complete" means (decided 2026-11-21).** The foundation is finished when nobody ever needs `sentinel/` or `synthetic-users/` again: every reused piece has been copied into this repo, adapted and committed, so the two clones can be treated as gone. Teammates never clone or extract from them. Faateh (with Claude Code) builds the whole foundation:
 1. Backend core: ✅ done (above).
 2. **Tallowmere** extracted into `apps/tallowmere`, running standalone on port 3100, with a Dockerfile.
