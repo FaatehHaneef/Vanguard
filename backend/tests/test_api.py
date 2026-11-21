@@ -60,3 +60,23 @@ def test_task_must_match_site(client):
         "provider": "fake",
     }
     assert client.post("/runs", json=body).status_code == 422
+
+
+def test_report_and_batch_metrics(client):
+    body = {
+        "site_id": "tallowmere",
+        "task_id": "buy-one",
+        "persona_id": "keyboard-only",
+        "enforcement": ["gate"],
+        "provider": "fake",
+        "batch_id": "b1",
+    }
+    run_id = client.post("/runs", json=body).json()["id"]
+    report = client.get(f"/runs/{run_id}/report").json()
+    assert report["metrics"]["executed_leak_steps"] == 0
+    assert len(report["steps"]) == report["metrics"]["steps"]
+    groups = client.get("/batches/b1/metrics").json()
+    assert [g["key"] for g in groups] == ["keyboard-only/buy-one/gate/fake"]
+    assert client.get("/runs/nope/report").status_code == 404
+    # The fake executor takes no screenshots.
+    assert client.get(f"/runs/{run_id}/steps/0/screenshot").status_code == 404

@@ -4,6 +4,7 @@
     python -m vanguard.cli run --persona keyboard-only --task buy-two --enforcement prompt_only \
         --repeats 3 --batch knock-buy-two
     python -m vanguard.cli show <run_id>
+    python -m vanguard.cli report --batch knock-buy-two [--out results.md]
 
 Settings come from the environment and .env, as for the API (VANGUARD_EXECUTOR,
 VANGUARD_DATABASE_URL, VANGUARD_GEMINI_API_KEYS, ...).
@@ -12,8 +13,9 @@ VANGUARD_DATABASE_URL, VANGUARD_GEMINI_API_KEYS, ...).
 import argparse
 import asyncio
 import sys
+from pathlib import Path
 
-from vanguard import service
+from vanguard import results, service
 from vanguard.contracts import EnforcementOption, RunConfig, StepRecord
 from vanguard.settings import get_settings
 from vanguard.store import RunStore
@@ -98,7 +100,19 @@ def main(argv: list[str] | None = None) -> int:
     show = sub.add_parser("show", help="print a run and its steps")
     show.add_argument("run_id")
 
+    report = sub.add_parser("report", help="metrics table for a batch (or all runs)")
+    report.add_argument("--batch", default=None)
+    report.add_argument("--out", type=Path, default=None)
+
     args = parser.parse_args(argv)
+    if args.command == "report":
+        settings = get_settings()
+        groups = results.batch_groups(RunStore(settings.database_url), args.batch, settings)
+        table = results.markdown_table(groups)
+        if args.out:
+            args.out.write_text(table + "\n", encoding="utf-8")
+        print(table)
+        return 0
     if args.command == "show":
         settings = get_settings()
         _print_run(RunStore(settings.database_url), args.run_id)
