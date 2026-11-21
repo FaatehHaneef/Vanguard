@@ -135,3 +135,35 @@ def test_navigation_and_missing_ref(site):
         assert result.url_after == site.origin + "/"
 
     _run(site, body)
+
+
+def test_hud_is_shown_but_never_observed_or_recorded(site):
+    from vanguard import catalog
+
+    knock = catalog.persona("keyboard-only")
+
+    async def main():
+        settings = Settings(allowed_origins=[site.origin], screenshots=False, hud=True)
+        ex = PlaywrightExecutor(settings)
+        try:
+            await ex.start(site, _task(), knock)
+        except Exception as error:
+            await ex.close()
+            pytest.skip(f"browser unavailable: {error}")
+        try:
+            result = await ex.execute(Action(tool=Tool.PRESS, key="Tab"))
+            host = await ex.page.evaluate(
+                "() => { const h = document.querySelector('[data-vanguard-hud]');"
+                " return h && [h.getAttribute('aria-hidden'), h.hasAttribute('inert')]; }"
+            )
+            assert host == ["true", True]
+            obs = await ex.observe()
+            assert "Vanguard test" not in obs.content and "press" not in obs.content
+            assert [e.type for e in result.events if e.trusted] == ["keydown", "focusin"]
+            snapshot = await ex.page.locator("html").aria_snapshot()
+            assert "Vanguard" not in snapshot
+            await ex.announce(Action(tool=Tool.CLICK, ref="e3"), "Refused", "refused")
+        finally:
+            await ex.close()
+
+    asyncio.run(main())
