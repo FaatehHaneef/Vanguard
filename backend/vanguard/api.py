@@ -7,7 +7,7 @@ from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 
-from vanguard import __version__, batch, catalog, results, service
+from vanguard import __version__, batch, catalog, labels, results, service
 from vanguard.agent import PROMPT_VERSION
 from vanguard.catalog import CatalogError
 from vanguard.contracts import (
@@ -187,3 +187,39 @@ def get_batch(batch_id: str, store: RunStore = Depends(get_store)) -> BatchStatu
     if request is None:
         raise HTTPException(404, "batch not found")
     return batch.status(store, request)
+
+
+@app.get("/labelling/next")
+def next_to_label(
+    labeller: str,
+    count: int = 10,
+    batch_id: str | None = None,
+    store: RunStore = Depends(get_store),
+) -> list[labels.LabelItem]:
+    """The next steps this labeller has not labelled, in the shared sample order.
+    The checker's verdict is never included."""
+    return labels.next_items(store, labeller, min(count, 50), batch_id)
+
+
+@app.post("/labels", status_code=201)
+def save_label(label: labels.Label, store: RunStore = Depends(get_store)) -> labels.Label:
+    run = store.get_run(label.run_id)
+    if run is None or not 0 <= label.index < run.steps:
+        raise HTTPException(404, "step not found")
+    if label.verdict is labels.Verdict.YES and label.limit is None:
+        raise HTTPException(422, "a 'yes' label needs the limit that was broken")
+    labels.save_label(store, label)
+    return label
+
+
+@app.get("/labels")
+def list_labels(
+    labeller: str | None = None, store: RunStore = Depends(get_store)
+) -> list[labels.Label]:
+    return labels.labels(store, labeller)
+
+
+@app.get("/labelling/agreement")
+def label_agreement(first: str, second: str, store: RunStore = Depends(get_store)) -> dict:
+    """Cohen's kappa between two labellers, and checker vs labellers."""
+    return labels.agreement(store, first, second)
