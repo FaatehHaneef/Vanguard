@@ -116,7 +116,7 @@ Agreement between the labellers is reported as Cohen's kappa. Then checker vs ea
 Test sites are assigned to **train**, **dev** and **test** groups before any run. Prompts are written against train/dev sites only. Fine-tuning data comes from train sites only. Human-labelled evaluation steps and the headline results come from test sites only. Tallowmere is a dev site (it was written by the team, so it is the least independent).
 
 ## 9. Open points
-- Magnifier zoom level and whether its perception is a cropped screenshot or window-filtered accessibility nodes.
+- Magnifier zoom level and whether its perception is a cropped screenshot or window-filtered accessibility nodes. *Implemented with the drafts (2026-11-22), still open for confirmation:* 400% on 1280x720; the perception is the full-view element and text lines whose boxes intersect the window, in document coordinates; screenshots are cropped to the window for people. H3a is checked from the proposal (an id the window did not show) and from the executed target box.
 - Exact visual lexicon (S2) and stop list (H4b).
 - Stuck threshold N.
 - Whether `goto` to the start URL is the only allowed navigation for P1–P3 (currently yes, plus links seen).

@@ -97,10 +97,7 @@ IDLE_TIMEOUT_MS = 2500
 NAVIGATION_MS = 8000
 MAX_OBSERVATION_CHARS = 9000
 
-UNSUPPORTED = {
-    Tool.PAN,
-    Tool.PAN_TO_FOCUS,
-}
+DEFAULT_ZOOM = 4.0
 
 
 def _caption(action: Action) -> str:
@@ -128,6 +125,10 @@ class PlaywrightExecutor:
         self.bounded_perception = bounded_perception
         self._reader: ScreenReader | None = None
         self._perception = PerceptionMode.FULL
+        self._window: Rect | None = None  # the magnifier's view, document coordinates
+        self._zoom = DEFAULT_ZOOM
+        self._page_size = (0.0, 0.0)
+        self._focus_rect: Rect | None = None
         self.conditions = set(conditions or [])
         self.allowed_origins = {_origin(origin) for origin in settings.allowed_origins}
         self.payment_hosts = {host.lower() for host in settings.allowed_payment_hosts}
@@ -179,6 +180,17 @@ class PlaywrightExecutor:
             and persona.perception is PerceptionMode.ACCESSIBILITY_TREE
         ):
             self._perception = PerceptionMode.ACCESSIBILITY_TREE
+        if (
+            self.bounded_perception
+            and persona is not None
+            and persona.perception is PerceptionMode.MAGNIFIED
+        ):
+            self._perception = PerceptionMode.MAGNIFIED
+            self._zoom = persona.magnification or DEFAULT_ZOOM
+            size = self._page.viewport_size or VIEWPORT
+            self._window = Rect(
+                x=0, y=0, width=size["width"] / self._zoom, height=size["height"] / self._zoom
+            )
         if Condition.SLOW_NETWORK in self.conditions:
             cdp = await self._context.new_cdp_session(self._page)
             await cdp.send("Network.enable")
@@ -257,11 +269,16 @@ class PlaywrightExecutor:
         lines = [f"Page title: {data['title']}"] if data["title"] else []
         lines += data["lines"]
         focus = data["focus"]
+        self._page_size = (data["page"]["width"], data["page"]["height"])
+        self._focus_rect = Rect(**focus["box"]) if focus and focus.get("box") else None
+        links = data["links"]
         if focus and focus["inFrame"]:
             lines.append("Keyboard focus: inside an embedded frame (its contents are not shown)")
         elif focus and focus["visible"]:
             lines.append(f"Keyboard focus: {focus['ref']}")
         content = "\n".join(lines)
+        if self._perception is PerceptionMode.MAGNIFIED and self._window is not None:
+            content, links = self._magnified(data)
         if self._perception is PerceptionMode.ACCESSIBILITY_TREE and self._reader is not None:
             await self._reader.refresh()
             content = self._reader.render(data["title"])
@@ -273,16 +290,64 @@ class PlaywrightExecutor:
             self._observations += 1
             path = self.screenshot_dir / self.session / f"{self._observations:03d}.png"
             path.parent.mkdir(parents=True, exist_ok=True)
-            await self.page.screenshot(path=str(path))
+            if self._window is not None:  # what the magnifier shows, not the whole page
+                await self.page.screenshot(
+                    path=str(path), full_page=True, clip=self._window.model_dump()
+                )
+            else:
+                await self.page.screenshot(path=str(path))
             screenshot = str(path)
 
         return Observation(
             mode=self._perception,
             url=data["url"],
             content=content,
-            links=data["links"],
+            links=links,
+            window=self._window,
             screenshot_path=screenshot,
         )
+
+    def _magnified(self, data: dict) -> tuple[str, list[str]]:
+        """Only the lines whose boxes intersect the magnifier window (L3)."""
+        window = self._window
+        assert window is not None
+        width, height = self._page_size
+        shown, links = [], []
+        for line, box in zip(data["lines"], data["boxes"], strict=True):
+            if Rect(**box).intersects(window):
+                shown.append(line)
+                if " -> " in line and line.startswith("[e"):
+                    links.append(urljoin(data["url"], line.rsplit(" -> ", 1)[1]))
+        header = (
+            f"Magnified view at {self._zoom * 100:.0f}%: you see the region from x={window.x:.0f},"
+            f" y={window.y:.0f}, {window.width:.0f} by {window.height:.0f} CSS pixels, of a page"
+            f" {width:.0f} by {height:.0f}. Use pan to see other parts."
+        )
+        body = shown or ["(nothing here but empty space)"]
+        focus = data["focus"]
+        tail = []
+        if focus and focus["visible"] and self._focus_rect and self._focus_rect.intersects(window):
+            tail = [f"Keyboard focus: {focus['ref']}"]
+        title = [f"Page title: {data['title']}"] if data["title"] else []
+        return "\n".join([*title, header, *body, *tail]), links
+
+    def _pan(self, dx: float, dy: float) -> None:
+        window = self._window
+        assert window is not None
+        width, height = self._page_size
+        x = min(max(0.0, window.x + dx), max(0.0, width - window.width))
+        y = min(max(0.0, window.y + dy), max(0.0, height - window.height))
+        self._window = window.model_copy(update={"x": x, "y": y})
+
+    async def _doc_box(self, element: ElementHandle | None) -> Rect | None:
+        """The element's box in document coordinates (stable across scrolling)."""
+        if element is None:
+            return None
+        box = await element.evaluate(
+            "(el) => { const r = el.getBoundingClientRect();"
+            " return { x: r.x + scrollX, y: r.y + scrollY, width: r.width, height: r.height }; }"
+        )
+        return Rect(**box)
 
     async def _element(self, ref: str | None) -> ElementHandle | None:
         if not ref or not ref.startswith("e") or not ref[1:].isdigit():
@@ -300,6 +365,11 @@ class PlaywrightExecutor:
             return None
         box = await element.bounding_box()
         return Rect(**box) if box else None
+
+    async def _snapshot_focus(self) -> None:
+        data = await self._snapshot()
+        focus = data["focus"]
+        self._focus_rect = Rect(**focus["box"]) if focus and focus.get("box") else None
 
     # ---------------------------------------------------------------- HUD
 
@@ -391,8 +461,21 @@ class PlaywrightExecutor:
     async def _perform(self, action: Action) -> tuple[Rect | None, str | None]:
         page = self.page
         tool = action.tool
-        if tool in UNSUPPORTED:
-            return None, f"{tool} is not available in this executor yet"
+        if tool in (Tool.PAN, Tool.PAN_TO_FOCUS):
+            if self._window is None:
+                return None, "the magnifier is not on for this run"
+            if tool is Tool.PAN:
+                self._pan(action.dx or 0, action.dy or 0)
+            else:
+                await self._snapshot_focus()
+                if self._focus_rect is None:
+                    return None, "nothing has keyboard focus"
+                box, window = self._focus_rect, self._window
+                self._pan(
+                    box.x + box.width / 2 - (window.x + window.width / 2),
+                    box.y + box.height / 2 - (window.y + window.height / 2),
+                )
+            return None, None
 
         if tool in (Tool.SR_NEXT, Tool.SR_PREV, Tool.SR_READ, Tool.SR_ACTIVATE):
             reader = self._reader
@@ -413,7 +496,10 @@ class PlaywrightExecutor:
         elif tool is Tool.TYPE:
             await page.keyboard.type(action.text or "", delay=20)
         elif tool is Tool.CLICK_AT:
-            box = Rect(x=action.x or 0, y=action.y or 0, width=1, height=1)
+            scroll = await page.evaluate("() => [scrollX, scrollY]")
+            box = Rect(
+                x=(action.x or 0) + scroll[0], y=(action.y or 0) + scroll[1], width=1, height=1
+            )
             await page.mouse.click(action.x or 0, action.y or 0)
             return box, None
         elif tool is Tool.WHEEL:
@@ -422,7 +508,7 @@ class PlaywrightExecutor:
             element = await self._element(action.ref)
             if element is None:
                 return None, f"no element {action.ref} on the page now"
-            box = await self._box(element)
+            box = await self._doc_box(element)
             if tool is Tool.CLICK and Condition.MOBILE in self.conditions:
                 await element.tap()  # a touch screen: a tap, still recorded as pointer input
             elif tool is Tool.CLICK:
