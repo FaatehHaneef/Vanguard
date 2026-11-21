@@ -34,6 +34,23 @@ jobs:
           name: backend-test-results
           path: backend/test-results.xml
 
+  hud:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/hud
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/hud/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      # The executor ships the bundled overlay; it must match its source.
+      - run: npm run build && git diff --exit-code -- ../../backend/vanguard/executor/js/hud.js
+
   tallowmere:
     runs-on: ubuntu-latest
     defaults:
