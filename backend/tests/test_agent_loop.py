@@ -80,3 +80,18 @@ def test_unsafe_navigation_is_blocked_for_control(store):
     script = [Action(tool="goto", url="https://www.paypal.com/")]
     summary = run(store, "unrestricted", [EnforcementOption.PROMPT_ONLY], script)
     assert store.steps(summary.id)[0].gate.rule == "S0"
+
+
+def test_press_repeat_is_one_call_and_still_keyboard(store):  # noqa: F811
+    # Tab, Enter on each page of the fake site, with Tab repeated in one call.
+    script = [Action(tool="press", key="Tab", repeat=1), Action(tool="press", key="Enter")] * 4
+    summary = run(store, "keyboard-only", [EnforcementOption.GATE], script)
+    assert summary.outcome is RunOutcome.SUCCESS
+    many = run(
+        store,
+        "keyboard-only",
+        [EnforcementOption.GATE],
+        [Action(tool="press", key="Tab", repeat=3)],
+    )
+    first = store.steps(many.id)[0]
+    assert [e.type for e in first.events] == ["keydown"] * 3 and first.gate.allowed

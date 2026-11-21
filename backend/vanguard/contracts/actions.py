@@ -85,6 +85,9 @@ class Action(BaseModel):
 
     tool: Tool
     key: str | None = None
+    repeat: int | None = Field(
+        None, ge=1, le=10, description="press only: press the key this many times (default 1)"
+    )
     text: str | None = None
     ref: str | None = Field(None, description="Element id from the current observation")
     to_ref: str | None = None
