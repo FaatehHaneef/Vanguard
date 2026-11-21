@@ -24,7 +24,9 @@ function describe(item: LabelItem): string {
   const action = item.step.proposed;
   if (!action) return "(no valid action)";
   const args = Object.entries(action)
-    .filter(([key, value]) => key !== "tool" && key !== "rationale" && value != null)
+    .filter(
+      ([key, value]) => key !== "tool" && key !== "rationale" && value != null,
+    )
     .map(([key, value]) => `${key}=${JSON.stringify(value)}`);
   return `${action.tool}(${args.join(", ")})`;
 }
@@ -54,7 +56,10 @@ export function LabelDesk() {
           setLabelled(done.length);
           setMessage(items.length ? "" : "Nothing left to label. Thank you.");
         },
-        () => setMessage("The labelling queue could not be loaded. Is the API running?"),
+        () =>
+          setMessage(
+            "The labelling queue could not be loaded. Is the API running?",
+          ),
       ),
     [],
   );
@@ -69,7 +74,11 @@ export function LabelDesk() {
         setLabelled(done.length);
         setMessage(items.length ? "" : "Nothing left to label. Thank you.");
       },
-      () => live && setMessage("The labelling queue could not be loaded. Is the API running?"),
+      () =>
+        live &&
+        setMessage(
+          "The labelling queue could not be loaded. Is the API running?",
+        ),
     );
     return () => {
       live = false;
@@ -122,7 +131,10 @@ export function LabelDesk() {
           setChosen(who);
         }}
       >
-        <label htmlFor="labeller" className="font-display text-lg text-parchment">
+        <label
+          htmlFor="labeller"
+          className="font-display text-lg text-parchment"
+        >
           Your labeller name
         </label>
         <input
@@ -143,7 +155,8 @@ export function LabelDesk() {
   return (
     <div className="grid gap-4">
       <p className="text-mist">
-        Labelling as <strong className="text-parchment">{name}</strong> · {labelled} labelled ·{" "}
+        Labelling as <strong className="text-parchment">{name}</strong> ·{" "}
+        {labelled} labelled ·{" "}
         <button
           type="button"
           className="underline"
@@ -161,12 +174,17 @@ export function LabelDesk() {
         </p>
       ) : null}
       {item ? (
-        <article className="pixel-panel grid gap-3" aria-labelledby="item-title">
+        <article
+          className="pixel-panel grid gap-3"
+          aria-labelledby="item-title"
+        >
           <h2 id="item-title" className="font-display text-xl text-amber">
             Item {item.position + 1}: {item.persona_name}, step {item.index + 1}
           </h2>
           <p className="text-sm text-mist">
-            Limits: {item.persona_limits.join(", ") || "none (control: judge every limit)"}
+            Limits:{" "}
+            {item.persona_limits.join(", ") ||
+              "none (control: judge every limit)"}
           </p>
           <p className="text-parchment">{item.persona_description}</p>
           <p className="text-parchment">
@@ -193,13 +211,19 @@ export function LabelDesk() {
             <code className="text-parchment">{describe(item)}</code>
           </p>
           {item.step.proposed?.rationale ? (
-            <p className="text-sm italic text-mist">&ldquo;{item.step.proposed.rationale}&rdquo;</p>
+            <p className="text-sm italic text-mist">
+              &ldquo;{item.step.proposed.rationale}&rdquo;
+            </p>
           ) : null}
           <p className="text-sm text-mist">
-            Gate: {item.step.gate.allowed ? "allowed" : `refused (${item.step.gate.rule})`} ·
-            Executed: {item.step.executed ? "yes" : "no"} · Browser events:{" "}
-            {item.step.events.map((e) => `${e.type}${e.trusted ? "" : " (untrusted)"}`).join(", ") ||
-              "none"}
+            Gate:{" "}
+            {item.step.gate.allowed
+              ? "allowed"
+              : `refused (${item.step.gate.rule})`}{" "}
+            · Executed: {item.step.executed ? "yes" : "no"} · Browser events:{" "}
+            {item.step.events
+              .map((e) => `${e.type}${e.trusted ? "" : " (untrusted)"}`)
+              .join(", ") || "none"}
           </p>
 
           <fieldset className="grid gap-2">
@@ -240,7 +264,9 @@ export function LabelDesk() {
                 Kind
                 <select
                   value={kind}
-                  onChange={(event) => setKind(event.target.value as "action" | "information")}
+                  onChange={(event) =>
+                    setKind(event.target.value as "action" | "information")
+                  }
                   className="rounded border border-line bg-night px-2 py-1 text-parchment"
                 >
                   <option value="action">action</option>
@@ -259,7 +285,12 @@ export function LabelDesk() {
               className="rounded border border-line bg-night px-2 py-1 text-parchment"
             />
           </label>
-          <button type="button" className="pixel-button" disabled={!verdict} onClick={submit}>
+          <button
+            type="button"
+            className="pixel-button"
+            disabled={!verdict}
+            onClick={submit}
+          >
             Save and next
           </button>
         </article>
