@@ -31,10 +31,19 @@ class Settings(BaseSettings):
         "sandbox.braintreegateway.com",
         "assets.braintreegateway.com",
         "client-analytics.sandbox.braintreegateway.com",
+        "payments.sandbox.braintree-api.com",
+        "api.sandbox.braintreegateway.com",
     ]
 
     # "playwright" drives a real browser; "fake" uses the in-memory test site.
     executor: str = "fake"
+    headless: bool = True
+    # Inside Docker the sites are not on localhost. Requests to a key origin are sent to
+    # the value origin instead, while the page keeps its usual address, for example
+    # {"http://localhost:3100": "http://tallowmere:3100"}.
+    origin_rewrites: dict[str, str] = {}
+    # Screenshots of every observation, saved under data_dir/screenshots/<session>/.
+    screenshots: bool = True
     cors_origins: list[str] = ["http://localhost:3000"]
 
     max_steps_per_run: int = 40
