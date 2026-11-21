@@ -23,7 +23,11 @@ def store():
 
 def run(store, persona_id, enforcement, script, stuck_after=5, max_steps=20):
     config = RunConfig(
-        site_id=SITE.id, task_id=TASK.id, persona_id=persona_id, enforcement=enforcement, provider="fake"
+        site_id=SITE.id,
+        task_id=TASK.id,
+        persona_id=persona_id,
+        enforcement=enforcement,
+        provider="fake",
     )
     summary = store.create_run(config)
     return asyncio.run(

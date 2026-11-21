@@ -14,7 +14,10 @@ _STRING = {"type": "string"}
 _NUMBER = {"type": "number"}
 
 TOOL_SPECS: dict[Tool, tuple[str, dict]] = {
-    Tool.PRESS: ("Press a key, e.g. Tab, Shift+Tab, Enter, Space, ArrowDown, Escape.", {"key": _STRING}),
+    Tool.PRESS: (
+        "Press a key, e.g. Tab, Shift+Tab, Enter, Space, ArrowDown, Escape.",
+        {"key": _STRING},
+    ),
     Tool.TYPE: ("Type text into the element that currently has focus.", {"text": _STRING}),
     Tool.CLICK: ("Click an element by its id from the observation.", {"ref": _STRING}),
     Tool.CLICK_AT: ("Click at page coordinates.", {"x": _NUMBER, "y": _NUMBER}),
@@ -36,7 +39,10 @@ TOOL_SPECS: dict[Tool, tuple[str, dict]] = {
     Tool.GOTO: ("Go to an address.", {"url": _STRING}),
     Tool.BACK: ("Go back one page.", {}),
     Tool.RELOAD: ("Reload the page.", {}),
-    Tool.DONE: ("Finish: the task is complete. Give the answer if one was asked for.", {"answer": _STRING}),
+    Tool.DONE: (
+        "Finish: the task is complete. Give the answer if one was asked for.",
+        {"answer": _STRING},
+    ),
     Tool.GIVE_UP: ("Stop: the task cannot be completed. Say why.", {"reason": _STRING}),
 }
 

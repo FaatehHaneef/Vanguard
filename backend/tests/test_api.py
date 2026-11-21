@@ -25,8 +25,13 @@ def test_health_and_catalog(client):
 
 
 def test_run_lifecycle(client):
-    body = {"site_id": "tallowmere", "task_id": "buy-one", "persona_id": "keyboard-only",
-            "enforcement": ["gate"], "provider": "fake"}
+    body = {
+        "site_id": "tallowmere",
+        "task_id": "buy-one",
+        "persona_id": "keyboard-only",
+        "enforcement": ["gate"],
+        "provider": "fake",
+    }
     created = client.post("/runs", json=body)
     assert created.status_code == 202
     run_id = created.json()["id"]
@@ -37,12 +42,21 @@ def test_run_lifecycle(client):
 
 
 def test_preview_persona_rejects_gate(client):
-    body = {"site_id": "tallowmere", "task_id": "buy-one", "persona_id": "screen-reader",
-            "enforcement": ["gate"], "provider": "fake"}
+    body = {
+        "site_id": "tallowmere",
+        "task_id": "buy-one",
+        "persona_id": "screen-reader",
+        "enforcement": ["gate"],
+        "provider": "fake",
+    }
     assert client.post("/runs", json=body).status_code == 422
 
 
 def test_task_must_match_site(client):
-    body = {"site_id": "elsewhere", "task_id": "buy-one", "persona_id": "keyboard-only",
-            "provider": "fake"}
+    body = {
+        "site_id": "elsewhere",
+        "task_id": "buy-one",
+        "persona_id": "keyboard-only",
+        "provider": "fake",
+    }
     assert client.post("/runs", json=body).status_code == 422

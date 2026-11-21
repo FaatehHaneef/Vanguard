@@ -34,7 +34,9 @@ def validate(config: RunConfig, settings: Settings) -> None:
         raise RunRejected(f"Task {task.id} does not belong to site {config.site_id}")
     catalog.site(config.site_id)
     if persona.status is PersonaStatus.PREVIEW and config.enforcement != ["prompt_only"]:
-        raise RunRejected(f"{persona.name} is a preview persona: only prompt_only runs are available")
+        raise RunRejected(
+            f"{persona.name} is a preview persona: only prompt_only runs are available"
+        )
     if config.provider not in settings.enabled_providers:
         raise RunRejected(f"Provider {config.provider!r} is not enabled here")
 
@@ -44,7 +46,9 @@ def create(config: RunConfig, settings: Settings, store: RunStore) -> RunSummary
     return store.create_run(config)
 
 
-async def execute(run_id: str, config: RunConfig, settings: Settings, store: RunStore) -> RunSummary:
+async def execute(
+    run_id: str, config: RunConfig, settings: Settings, store: RunStore
+) -> RunSummary:
     site = catalog.site(config.site_id)
     return await run_once(
         run_id,

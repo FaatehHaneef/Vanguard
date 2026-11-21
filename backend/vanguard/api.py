@@ -8,7 +8,15 @@ from fastapi.middleware.cors import CORSMiddleware
 from vanguard import __version__, catalog, service
 from vanguard.agent import PROMPT_VERSION
 from vanguard.catalog import CatalogError
-from vanguard.contracts import CONTRACT_VERSION, PersonaSpec, RunConfig, RunSummary, Site, StepRecord, Task
+from vanguard.contracts import (
+    CONTRACT_VERSION,
+    PersonaSpec,
+    RunConfig,
+    RunSummary,
+    Site,
+    StepRecord,
+    Task,
+)
 from vanguard.settings import Settings, get_settings
 from vanguard.store import RunStore
 
@@ -85,7 +93,9 @@ async def start_run(
 
 
 @app.get("/runs")
-def list_runs(batch_id: str | None = None, store: RunStore = Depends(get_store)) -> list[RunSummary]:
+def list_runs(
+    batch_id: str | None = None, store: RunStore = Depends(get_store)
+) -> list[RunSummary]:
     return store.list_runs(batch_id)
 
 

@@ -79,7 +79,11 @@ async def run_once(
                 decision = gate.decide(action, ctx)
 
             result = None
-            if action is not None and decision.allowed and action.tool not in (Tool.DONE, Tool.GIVE_UP):
+            if (
+                action is not None
+                and decision.allowed
+                and action.tool not in (Tool.DONE, Tool.GIVE_UP)
+            ):
                 result = await executor.execute(action)
 
             step = StepRecord(
@@ -109,7 +113,9 @@ async def run_once(
                     done_ok = answer_success(task, action) or page_success(
                         task, url, await executor.page_text()
                     )
-                    return store.finish_run(run_id, RunOutcome.SUCCESS if done_ok else RunOutcome.GAVE_UP)
+                    return store.finish_run(
+                        run_id, RunOutcome.SUCCESS if done_ok else RunOutcome.GAVE_UP
+                    )
                 if action.tool is Tool.GIVE_UP:
                     return store.finish_run(run_id, RunOutcome.GAVE_UP)
             if result is not None and page_success(

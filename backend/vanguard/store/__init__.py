@@ -90,10 +90,14 @@ class RunStore:
 
     def add_step(self, step: StepRecord) -> None:
         with self._session() as session, session.begin():
-            session.add(StepRow(run_id=step.run_id, index=step.index, record=step.model_dump(mode="json")))
+            session.add(
+                StepRow(run_id=step.run_id, index=step.index, record=step.model_dump(mode="json"))
+            )
             run = session.get(RunRow, step.run_id)
             run.steps += 1
-            if not step.gate.allowed and step.proposed is not None:  # unusable replies are not blocks
+            if (
+                not step.gate.allowed and step.proposed is not None
+            ):  # unusable replies are not blocks
                 run.blocked += 1
 
     def finish_run(self, run_id: str, outcome: RunOutcome, error: str | None = None) -> RunSummary:
