@@ -7,7 +7,7 @@ from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 
-from vanguard import __version__, batch, catalog, labels, results, service
+from vanguard import __version__, batch, catalog, failures, labels, results, service
 from vanguard.agent import PROMPT_VERSION
 from vanguard.catalog import CatalogError
 from vanguard.contracts import (
@@ -223,3 +223,17 @@ def list_labels(
 def label_agreement(first: str, second: str, store: RunStore = Depends(get_store)) -> dict:
     """Cohen's kappa between two labellers, and checker vs labellers."""
     return labels.agreement(store, first, second)
+
+
+@app.get("/batches/{batch_id}/failures")
+def get_batch_failures(
+    batch_id: str,
+    settings: Settings = Depends(get_settings),
+    store: RunStore = Depends(get_store),
+) -> list[dict]:
+    """Failing runs grouped by primary cause (tags computed from the records by code)."""
+    items = results.batch_failures(store, batch_id, settings)
+    return [
+        {"cause": cause, "meaning": meaning, "count": count, "runs": [vars(r) for r in runs]}
+        for cause, meaning, count, runs in failures.group(items)
+    ]
