@@ -121,7 +121,12 @@ def _labelling(args: argparse.Namespace) -> int:
     data = REPO_ROOT / "data"
     if args.action == "export":
         result = bundle.export_bundle(
-            store, args.batches, data / "labelling" / args.name, args.name, args.count
+            store,
+            args.batches,
+            data / "labelling" / args.name,
+            args.name,
+            args.count,
+            frozenset(args.no_shots),
         )
         print(f"bundle {result['name']}: {result['items']} steps from {result['runs']} runs")
     elif args.action == "import":
@@ -191,6 +196,9 @@ def main(argv: list[str] | None = None) -> int:
     exp.add_argument("--batches", nargs="+", required=True)
     exp.add_argument("--name", required=True)
     exp.add_argument("--count", type=int, default=60)
+    exp.add_argument(
+        "--no-shots", nargs="*", default=[], help="batches to export without screenshots"
+    )
     imp = lab_sub.add_parser("import", help="load a labelling bundle into the local store")
     imp.add_argument("folder", type=Path)
     exl = lab_sub.add_parser("export-labels", help="write your labels to data/labels/")

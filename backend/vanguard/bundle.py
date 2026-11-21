@@ -46,15 +46,26 @@ def _shrink(source: Path, target: Path) -> None:
 
 
 def export_bundle(
-    store: RunStore, batches: list[str], out: Path, name: str, count: int = 60
+    store: RunStore,
+    batches: list[str],
+    out: Path,
+    name: str,
+    count: int = 60,
+    no_shots: frozenset[str] = frozenset(),
 ) -> dict:
-    """Sample `count` steps from finished runs of full (evaluated) personas."""
+    """Sample `count` steps from runs of full (evaluated) personas.
+
+    Runs that stopped early (for example on model quota) are included: each recorded
+    step is still a complete, executed proposal, which is what a label judges.
+    Batches in `no_shots` are exported without screenshots (for example runs recorded
+    with the character overlay on, whose focus ring would bias labellers)."""
     keys = []
     summaries = {}
     for batch_id in batches:
         for run in store.list_runs(batch_id, limit=100_000):
             persona = catalog.persona(run.config.persona_id)
-            if run.status is not RunStatus.FINISHED or persona.status is not PersonaStatus.FULL:
+            ended = run.status in (RunStatus.FINISHED, RunStatus.FAILED)
+            if not ended or run.steps == 0 or persona.status is not PersonaStatus.FULL:
                 continue
             summaries[run.id] = run
             keys.extend((run.id, index) for index in range(run.steps))
@@ -72,9 +83,11 @@ def export_bundle(
             steps_by_run[run_id] = {s.index: s for s in store.steps(run_id)}
         step = steps_by_run[run_id][index]
         shot = None
-        if step.observation.screenshot_path and Path(step.observation.screenshot_path).is_file():
+        hide = summaries[run_id].config.batch_id in no_shots
+        path = step.observation.screenshot_path
+        if not hide and path and Path(path).is_file():
             shot = f"shots/{run_id[:12]}-{index:03d}.jpg"
-            _shrink(Path(step.observation.screenshot_path), out / shot)
+            _shrink(Path(path), out / shot)
         record = step.model_dump(mode="json")
         record["observation"]["screenshot_path"] = None
         items.append({"run_id": run_id, "index": index, "shot": shot, "step": record})
