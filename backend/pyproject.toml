@@ -46,3 +46,4 @@ extend-immutable-calls = ["fastapi.Depends"]
 # Prompt text is kept as written, without wrapping.
 "vanguard/agent/prompts.py" = ["E501"]
 "vanguard/explain/__init__.py" = ["E501"]
+"vanguard/verifier.py" = ["E501"]
