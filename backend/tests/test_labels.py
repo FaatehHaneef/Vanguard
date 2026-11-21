@@ -40,6 +40,11 @@ def test_labels_and_agreement(client):  # noqa: F811
     assert report["raw_agreement"] == (len(items) - 1) / len(items)
     assert len(report["disagreements"]) == 1
     assert "checker_vs_alice" in report and "checker_vs_agreed" in report
+    people = client.get("/labelling/labellers").json()
+    assert people == [
+        {"labeller": "alice", "labels": len(items)},
+        {"labeller": "bob", "labels": len(items)},
+    ]
 
 
 def test_yes_needs_a_limit(client):  # noqa: F811

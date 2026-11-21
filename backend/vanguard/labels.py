@@ -212,3 +212,11 @@ def agreement(store: RunStore, first: str, second: str) -> dict:
     disagreements = [k for k in both if a[k].verdict != b[k].verdict]
     report["disagreements"] = [{"run_id": r, "index": i} for r, i in disagreements]
     return report
+
+
+def labellers(store: RunStore) -> list[dict]:
+    """Everyone who has labelled, with how many steps each."""
+    counts: dict[str, int] = {}
+    for label in labels(store):
+        counts[label.labeller] = counts.get(label.labeller, 0) + 1
+    return [{"labeller": name, "labels": count} for name, count in sorted(counts.items())]
