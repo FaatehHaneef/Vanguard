@@ -1,6 +1,6 @@
 # Vanguard web app
 
-Proposed owner: Hadi. Status: **to be ported** from Sentinel's gamified UI (`sentinel/`, read-only reference clone; copy out of it, never edit it).
+Owner: foundation (Faateh). Status: **being ported** from Sentinel's gamified UI (`sentinel/`, read-only reference clone; copy out of it, never edit it).
 
 Next.js + React + TypeScript + Tailwind, as in Sentinel. It talks only to the Vanguard API (`http://localhost:8000`, OpenAPI at `/docs`). It never talks to model providers or to the test site directly.
 

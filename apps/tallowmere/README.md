@@ -1,6 +1,6 @@
 # Tallowmere: standalone test site
 
-Proposed owner: Hadi. Status: **to be extracted** from `sentinel/` (read-only reference clone; never edit it, copy out of it).
+Owner: foundation (Faateh). Status: **being extracted** from `sentinel/` (read-only reference clone; never edit it, copy out of it).
 
 Tallowmere is the candle shop Vanguard's simulated users shop in. It becomes its own Next.js app with no knowledge of Vanguard, exactly like a customer's site. Vanguard drives it from outside with Playwright.
 

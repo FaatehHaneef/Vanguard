@@ -297,13 +297,20 @@ Against the rubric, this also needs: functional tests with a pass rate (D6), at 
 
 **Foundation status (2026-11-21, evening):** done and committed in `backend/`: contracts, catalog (5 personas, Tallowmere tasks), shared hard and safety rules (S0, H1, H4a), action gate, provider interface (Gemini + scripted fake), executor interface + fake browser, agent loop with deterministic success and stuck checks, trace store, run service and API. 27 tests pass offline. Checker and metrics have defined interfaces only. `apps/web` and `apps/tallowmere` have handover notes only. Next: the Playwright executor and the worker (Faateh).
 
-**Proposed team split (to confirm with Hadi and Ibrahim):** every member covers both AI and engineering work, as A3 Table 3 row 12 requires.
+**What "foundation complete" means (decided 2026-11-21).** The foundation is finished when nobody ever needs `sentinel/` or `synthetic-users/` again: every reused piece has been copied into this repo, adapted and committed, so the two clones can be treated as gone. Teammates never clone or extract from them. Faateh (with Claude Code) builds the whole foundation:
+1. Backend core: ✅ done (above).
+2. **Tallowmere** extracted into `apps/tallowmere`, running standalone on port 3100, with a Dockerfile.
+3. **Web app** in `apps/web`: Sentinel's landing, lobby, sprites, sounds, results and ledger ported, wired to the Vanguard API (personas, sites, tasks, start run, step feed). Includes the new Wren sprite.
+4. **Playwright executor and worker**: real browser, real key presses, input-event recording, screenshots, HUD/sprite overlay injected as decoration only.
+5. **Remaining reusable code copied**: Synthetic Users' statistics helpers (Wilson interval, entropy) and resumable-run pattern; Sentinel's verdict prompt (Wick) as the starting point for the explanation generator.
 
-| Member | Engineering | AI |
-|---|---|---|
-| Faateh | foundation, Playwright executor and worker, gate, run controller | agent loop and prompts, persona and limits system |
-| Hadi | web app ported from Sentinel, Tallowmere extraction | verdict / explanation generator, preview personas' prompts |
-| Ibrahim | metrics, results-table script, functional tests | leakage checker, labelling and kappa, failure analysis, latency and cost |
+**Team split after the foundation (proposed, to confirm):** teammates get self-contained building work inside this repo, mostly agent and evaluation components, each covering both AI and engineering as A3 Table 3 row 12 requires.
+
+| Member | Builds |
+|---|---|
+| Faateh | foundation (all of the above), agent loop and prompts, run controller, the A3 comparison runs |
+| Hadi | explanation / verdict generator (alternative c), preview personas' perception and prompts, results page and live-view polish |
+| Ibrahim | leakage checker, metrics and results-table script, labelling workspace and kappa, functional tests, failure analysis, latency and cost |
 
 | # | Part | A3 (due 2026-11-22) | A4 | Stretch |
 |---|---|---|---|---|
