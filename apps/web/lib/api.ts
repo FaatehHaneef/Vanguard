@@ -191,6 +191,19 @@ export type BatchStatus = {
   stopped: string | null;
 };
 
+export type FailureGroup = {
+  cause: string;
+  meaning: string;
+  count: number;
+  runs: {
+    run_id: string;
+    label: string;
+    outcome: string | null;
+    tags: string[];
+    detail: string;
+  }[];
+};
+
 export type Health = { status: string; providers: string[]; executor: string };
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
@@ -224,8 +237,21 @@ export const api = {
       body: JSON.stringify(config),
     }),
   startBatch: (body: BatchRequest) =>
-    request<BatchStatus>("/batches", { method: "POST", body: JSON.stringify(body) }),
-  batch: (batchId: string) => request<BatchStatus>(`/batches/${encodeURIComponent(batchId)}`),
+    request<BatchStatus>("/batches", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+  batches: () => request<BatchStatus[]>("/batches"),
+  failures: (batchId: string) =>
+    request<FailureGroup[]>(`/batches/${encodeURIComponent(batchId)}/failures`),
+  labellers: () =>
+    request<{ labeller: string; labels: number }[]>("/labelling/labellers"),
+  agreement: (first: string, second: string) =>
+    request<Record<string, unknown>>(
+      `/labelling/agreement?first=${encodeURIComponent(first)}&second=${encodeURIComponent(second)}`,
+    ),
+  batch: (batchId: string) =>
+    request<BatchStatus>(`/batches/${encodeURIComponent(batchId)}`),
   runs: (batchId?: string) =>
     request<RunSummary[]>(
       batchId ? `/runs?batch_id=${encodeURIComponent(batchId)}` : "/runs",

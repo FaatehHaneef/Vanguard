@@ -220,6 +220,11 @@ def list_labels(
     return labels.labels(store, labeller)
 
 
+@app.get("/labelling/labellers")
+def list_labellers(store: RunStore = Depends(get_store)) -> list[dict]:
+    return labels.labellers(store)
+
+
 @app.get("/labelling/agreement")
 def label_agreement(first: str, second: str, store: RunStore = Depends(get_store)) -> dict:
     """Cohen's kappa between two labellers, and checker vs labellers."""
