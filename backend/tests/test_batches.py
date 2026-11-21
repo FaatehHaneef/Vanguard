@@ -48,13 +48,22 @@ def test_batch_runs_every_group_and_resumes(setup):
     assert len(store.list_runs(req.batch_id)) == 8  # nothing repeated
 
 
-def test_preview_persona_with_gate_is_rejected_before_running(setup):
+def test_preview_personas_only_get_prompt_only_groups(setup):
     settings, store = setup
-    from vanguard.service import RunRejected
+    req = batch.prepare(request(persona_ids=["screen-reader", "keyboard-only"]), settings)
+    groups = batch.targets_for(req)
+    assert [(p, o) for _, p, o in groups] == [
+        ("screen-reader", ("prompt_only",)),
+        ("keyboard-only", ("prompt_only",)),
+        ("keyboard-only", ("gate",)),
+    ]
 
-    with pytest.raises(RunRejected):
-        batch.prepare(request(persona_ids=["screen-reader"]), settings)
-    assert store.list_runs() == []
+
+def test_conditions_reach_every_run(setup):
+    settings, store = setup
+    req = batch.prepare(request(conditions=["mobile"], repeats=1), settings)
+    asyncio.run(batch.run_batch(req, settings, store))
+    assert all(r.config.conditions == ["mobile"] for r in store.list_runs(req.batch_id))
 
 
 def test_batch_api(client):  # noqa: F811
