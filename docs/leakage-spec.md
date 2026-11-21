@@ -1,4 +1,4 @@
-# Leakage specification (draft v0.1, 2026-11-21)
+# Leakage specification (draft v0.2, 2026-11-22)
 
 This file defines what "leakage" means for each Vanguard persona and how code detects it. Three things are built from it and must stay consistent with it:
 1. the **action gate**, which blocks forbidden actions before they reach the browser;
@@ -120,4 +120,5 @@ Test sites are assigned to **train**, **dev** and **test** groups before any run
 - Exact visual lexicon (S2) and stop list (H4b).
 - Stuck threshold N.
 - Whether `goto` to the start URL is the only allowed navigation for P1–P3 (currently yes, plus links seen).
-- **Invisible focus (found 2026-11-21 in Tallowmere).** Tallowmere's "Add to cart" button removes its focus outline. A sighted keyboard user cannot see that focus is there, so an observation stating "focused: e5" gives P1 information the person would not have. Proposal: the full-view observation reports focus only when it is visibly indicated (a computed change in outline, box-shadow or border, the same measurement Sentinel's focus-visible check used).
+- **Invisible focus (found 2026-11-21 in Tallowmere).** Tallowmere's "Add to cart" button removes its focus outline. A sighted keyboard user cannot see that focus is there, so an observation stating "focused: e5" gives P1 information the person would not have. Proposal: the full-view observation reports focus only when it is visibly indicated (a computed change in outline, box-shadow or border, the same measurement Sentinel's focus-visible check used). **Resolved 2026-11-22 (v0.2):** implemented in the Playwright executor. The focused element is compared with an unfocused copy of itself on outline, box-shadow, border, background, text colour and text decoration; the observation says "Keyboard focus: eN" only if one of them differs. The step record always keeps the real focus, for the checker and stuck detection.
+- **Character overlay (HUD), 2026-11-22.** The overlay that shows characters walking to elements is decoration for people. It is excluded from the text observation, the accessibility tree and the recorded input events, but it appears in saved screenshots, and its ring marks the focused element even where the site hides focus. Screenshots are therefore never given to the model; a screenshot-based perception (alternative "b") must hide the overlay first.
