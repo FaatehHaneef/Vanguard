@@ -33,6 +33,10 @@ class Settings(BaseSettings):
         "client-analytics.sandbox.braintreegateway.com",
     ]
 
+    # "playwright" drives a real browser; "fake" uses the in-memory test site.
+    executor: str = "fake"
+    cors_origins: list[str] = ["http://localhost:3000"]
+
     max_steps_per_run: int = 40
     stuck_after_steps: int = 5
 
