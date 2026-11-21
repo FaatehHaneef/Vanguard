@@ -53,11 +53,14 @@ BatchKey = tuple[str, str, tuple[EnforcementOption, ...]]  # task, persona, enfo
 
 
 def _options_for(persona_id: str, request: BatchRequest) -> list[list[EnforcementOption]]:
-    """Preview personas only run prompt-only: their limits are not enforced or checked."""
+    """Preview personas run only options that enforce nothing (prompt-only, bounded
+    perception); their limits are not enforced or checked."""
     from vanguard import catalog
+    from vanguard.service import PREVIEW_OPTIONS
 
     if catalog.persona(persona_id).status is PersonaStatus.PREVIEW:
-        return [[EnforcementOption.PROMPT_ONLY]]
+        allowed = [option for option in request.enforcements if set(option) <= PREVIEW_OPTIONS]
+        return allowed or [[EnforcementOption.PROMPT_ONLY]]
     return request.enforcements
 
 

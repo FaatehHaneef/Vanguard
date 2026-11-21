@@ -43,6 +43,7 @@ from vanguard.contracts import (
 )
 
 from .base import ExecutionResult
+from .screen_reader import ScreenReader
 
 if TYPE_CHECKING:
     from playwright.async_api import Browser, BrowserContext, ElementHandle, Page, Playwright, Route
@@ -97,10 +98,6 @@ NAVIGATION_MS = 8000
 MAX_OBSERVATION_CHARS = 9000
 
 UNSUPPORTED = {
-    Tool.SR_NEXT,
-    Tool.SR_PREV,
-    Tool.SR_READ,
-    Tool.SR_ACTIVATE,
     Tool.PAN,
     Tool.PAN_TO_FOCUS,
 }
@@ -125,7 +122,12 @@ class PlaywrightExecutor:
         headless: bool | None = None,
         screenshot_dir: Path | None = None,
         conditions: list[Condition] | None = None,
+        bounded_perception: bool = False,
     ):
+        # Option 3: perceive only what the persona's mode allows (Section 5 of the spec).
+        self.bounded_perception = bounded_perception
+        self._reader: ScreenReader | None = None
+        self._perception = PerceptionMode.FULL
         self.conditions = set(conditions or [])
         self.allowed_origins = {_origin(origin) for origin in settings.allowed_origins}
         self.payment_hosts = {host.lower() for host in settings.allowed_payment_hosts}
@@ -170,6 +172,13 @@ class PlaywrightExecutor:
             self._character = (persona.character, f"{persona.name} · Vanguard test")
         self._page = await self._context.new_page()
         self._page.set_default_timeout(ACTION_TIMEOUT_MS)
+        self._reader = ScreenReader(self._page)
+        if (
+            self.bounded_perception
+            and persona is not None
+            and persona.perception is PerceptionMode.ACCESSIBILITY_TREE
+        ):
+            self._perception = PerceptionMode.ACCESSIBILITY_TREE
         if Condition.SLOW_NETWORK in self.conditions:
             cdp = await self._context.new_cdp_session(self._page)
             await cdp.send("Network.enable")
@@ -253,6 +262,9 @@ class PlaywrightExecutor:
         elif focus and focus["visible"]:
             lines.append(f"Keyboard focus: {focus['ref']}")
         content = "\n".join(lines)
+        if self._perception is PerceptionMode.ACCESSIBILITY_TREE and self._reader is not None:
+            await self._reader.refresh()
+            content = self._reader.render(data["title"])
         if len(content) > MAX_OBSERVATION_CHARS:
             content = content[:MAX_OBSERVATION_CHARS] + "\n(page continues; scroll to see more)"
 
@@ -265,7 +277,7 @@ class PlaywrightExecutor:
             screenshot = str(path)
 
         return Observation(
-            mode=PerceptionMode.FULL,
+            mode=self._perception,
             url=data["url"],
             content=content,
             links=data["links"],
@@ -381,6 +393,20 @@ class PlaywrightExecutor:
         tool = action.tool
         if tool in UNSUPPORTED:
             return None, f"{tool} is not available in this executor yet"
+
+        if tool in (Tool.SR_NEXT, Tool.SR_PREV, Tool.SR_READ, Tool.SR_ACTIVATE):
+            reader = self._reader
+            if reader is None:
+                return None, "the screen reader is not running"
+            if tool is Tool.SR_READ:
+                await reader.refresh()
+                error = None
+            elif tool is Tool.SR_ACTIVATE:
+                error = await reader.activate()
+            else:
+                error = await reader.move(action.kind or "", 1 if tool is Tool.SR_NEXT else -1)
+            box = await reader.box()
+            return (Rect(**box) if box else None), error
 
         if tool is Tool.PRESS:
             await page.keyboard.press(action.key or "")

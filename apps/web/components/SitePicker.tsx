@@ -14,9 +14,14 @@ import {
 import { characterFor } from "@/lib/cast";
 import { Sprite } from "./Sprite";
 
-type Choice = "prompt_only" | "gate" | "verifier" | "compare";
+type Choice = "prompt_only" | "gate" | "verifier" | "bounded" | "compare";
 
-const OPTIONS: { id: Choice; label: string; help: string; runs: EnforcementOption[][] }[] = [
+const OPTIONS: {
+  id: Choice;
+  label: string;
+  help: string;
+  runs: EnforcementOption[][];
+}[] = [
   {
     id: "compare",
     label: "Compare",
@@ -34,6 +39,12 @@ const OPTIONS: { id: Choice; label: string; help: string; runs: EnforcementOptio
     label: "Gate",
     help: "Code refuses any action outside the limits before it reaches the page.",
     runs: [["gate"]],
+  },
+  {
+    id: "bounded",
+    label: "Bounded perception",
+    help: "Each persona perceives only what its user would, e.g. Echo hears the accessibility tree.",
+    runs: [["bounded_perception"]],
   },
   {
     id: "verifier",
@@ -73,13 +84,17 @@ export function SitePicker() {
   useEffect(() => {
     Promise.all([api.personas(), api.sites(), api.health()])
       .then(([allPersonas, allSites, health]) => {
-        setPersonas(allPersonas.filter((persona) => partyIds.includes(persona.id)));
+        setPersonas(
+          allPersonas.filter((persona) => partyIds.includes(persona.id)),
+        );
         setSites(allSites);
         setSiteId((current) => current || allSites[0]?.id || "");
         setProviders(health.providers);
         setProvider((current) => current || health.providers[0] || "");
       })
-      .catch(() => setError("The Vanguard API is not reachable. Is the backend running?"));
+      .catch(() =>
+        setError("The Vanguard API is not reachable. Is the backend running?"),
+      );
   }, [partyIds]);
 
   useEffect(() => {
@@ -103,14 +118,20 @@ export function SitePicker() {
         site_id: siteId,
         task_ids: [taskId],
         persona_ids: personas.map((persona) => persona.id),
-        enforcements: OPTIONS.find((entry) => entry.id === option)?.runs ?? [["gate"]],
+        enforcements: OPTIONS.find((entry) => entry.id === option)?.runs ?? [
+          ["gate"],
+        ],
         conditions,
         provider,
         repeats,
       });
       router.push(`/trials/${status.batch_id}`);
     } catch (problem) {
-      setError(problem instanceof Error ? problem.message : "The trial could not start.");
+      setError(
+        problem instanceof Error
+          ? problem.message
+          : "The trial could not start.",
+      );
       setStarting(false);
     }
   }
@@ -149,13 +170,21 @@ export function SitePicker() {
                   checked={site.id === siteId}
                   onChange={() => setSiteId(site.id)}
                 />
-                <span className="font-display text-xl font-bold text-parchment">{site.name}</span>
-                <span className="mt-1 block text-sm text-mist">{site.description}</span>
+                <span className="font-display text-xl font-bold text-parchment">
+                  {site.name}
+                </span>
+                <span className="mt-1 block text-sm text-mist">
+                  {site.description}
+                </span>
               </label>
             ))}
             <div className="pixel-panel flush p-4 opacity-60">
-              <span className="font-display text-xl font-bold text-parchment">Your own site</span>
-              <span className="mt-1 block text-sm text-mist">Coming in the next phase.</span>
+              <span className="font-display text-xl font-bold text-parchment">
+                Your own site
+              </span>
+              <span className="mt-1 block text-sm text-mist">
+                Coming in the next phase.
+              </span>
             </div>
           </div>
         </section>
@@ -166,7 +195,10 @@ export function SitePicker() {
           </h2>
           <div className="mt-3 grid gap-2">
             {tasks.map((task) => (
-              <label key={task.id} className="flex cursor-pointer items-start gap-3">
+              <label
+                key={task.id}
+                className="flex cursor-pointer items-start gap-3"
+              >
                 <input
                   type="radio"
                   name="task"
@@ -186,7 +218,10 @@ export function SitePicker() {
           </h2>
           <div className="mt-3 grid gap-2">
             {OPTIONS.map((entry) => (
-              <label key={entry.id} className="flex cursor-pointer items-start gap-3">
+              <label
+                key={entry.id}
+                className="flex cursor-pointer items-start gap-3"
+              >
                 <input
                   type="radio"
                   name="option"
@@ -195,16 +230,23 @@ export function SitePicker() {
                   onChange={() => setOption(entry.id)}
                 />
                 <span>
-                  <span className="font-bold text-parchment">{entry.label}.</span>{" "}
+                  <span className="font-bold text-parchment">
+                    {entry.label}.
+                  </span>{" "}
                   <span className="text-mist">{entry.help}</span>
                 </span>
               </label>
             ))}
           </div>
           <fieldset className="mt-4 grid gap-2">
-            <legend className="font-bold text-parchment">Conditions (optional)</legend>
+            <legend className="font-bold text-parchment">
+              Conditions (optional)
+            </legend>
             {CONDITIONS.map((entry) => (
-              <label key={entry.id} className="flex cursor-pointer items-center gap-3">
+              <label
+                key={entry.id}
+                className="flex cursor-pointer items-center gap-3"
+              >
                 <input
                   type="checkbox"
                   checked={conditions.includes(entry.id)}
@@ -223,7 +265,9 @@ export function SitePicker() {
           {previews.length > 0 ? (
             <p className="mt-3 text-sm text-mist">
               {previews.map((persona) => persona.name).join(", ")}{" "}
-              {previews.length === 1 ? "is a preview persona and runs" : "are preview personas and run"}{" "}
+              {previews.length === 1
+                ? "is a preview persona and runs"
+                : "are preview personas and run"}{" "}
               prompt-only whatever you choose.
             </p>
           ) : null}
@@ -231,7 +275,9 @@ export function SitePicker() {
       </div>
 
       <aside className="pixel-panel lit flex h-fit flex-col gap-4">
-        <p className="font-display text-sm uppercase tracking-widest text-amber">Party</p>
+        <p className="font-display text-sm uppercase tracking-widest text-amber">
+          Party
+        </p>
         <div className="flex flex-wrap items-end gap-3">
           {personas.map((persona) => {
             const character = characterFor(persona.id);
@@ -268,7 +314,9 @@ export function SitePicker() {
             min={1}
             max={5}
             value={repeats}
-            onChange={(event) => setRepeats(Math.min(5, Math.max(1, Number(event.target.value))))}
+            onChange={(event) =>
+              setRepeats(Math.min(5, Math.max(1, Number(event.target.value))))
+            }
             className="rounded bg-night px-2 py-1 text-parchment"
           />
         </label>

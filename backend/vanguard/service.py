@@ -6,7 +6,7 @@ Docker Compose takes this over when runs move to a queue.
 
 from vanguard import catalog
 from vanguard.agent import run_once
-from vanguard.contracts import PersonaStatus, RunConfig, RunSummary
+from vanguard.contracts import EnforcementOption, PersonaStatus, RunConfig, RunSummary
 from vanguard.executor import Executor, FakeExecutor
 from vanguard.providers import make_provider
 from vanguard.settings import Settings
@@ -17,13 +17,24 @@ class RunRejected(ValueError):
     pass
 
 
+# Preview personas: nothing is enforced on their actions or checked, but their
+# perception can be bounded (option 3).
+PREVIEW_OPTIONS = {EnforcementOption.PROMPT_ONLY, EnforcementOption.BOUNDED_PERCEPTION}
+
+
 def make_executor(settings: Settings, config: RunConfig | None = None) -> Executor:
     if settings.executor == "fake":
         return FakeExecutor()
     if settings.executor == "playwright":
         from vanguard.executor.playwright import PlaywrightExecutor  # added with the worker
 
-        return PlaywrightExecutor(settings, conditions=config.conditions if config else None)
+        return PlaywrightExecutor(
+            settings,
+            conditions=config.conditions if config else None,
+            bounded_perception=bool(
+                config and EnforcementOption.BOUNDED_PERCEPTION in config.enforcement
+            ),
+        )
     raise RunRejected(f"Unknown executor {settings.executor!r}")
 
 
@@ -33,9 +44,10 @@ def validate(config: RunConfig, settings: Settings) -> None:
     if task.site_id != config.site_id:
         raise RunRejected(f"Task {task.id} does not belong to site {config.site_id}")
     catalog.site(config.site_id)
-    if persona.status is PersonaStatus.PREVIEW and config.enforcement != ["prompt_only"]:
+    if persona.status is PersonaStatus.PREVIEW and not set(config.enforcement) <= PREVIEW_OPTIONS:
         raise RunRejected(
-            f"{persona.name} is a preview persona: only prompt_only runs are available"
+            f"{persona.name} is a preview persona: only prompt_only and bounded_perception"
+            " runs are available"
         )
     if config.provider not in settings.enabled_providers:
         raise RunRejected(f"Provider {config.provider!r} is not enabled here")
