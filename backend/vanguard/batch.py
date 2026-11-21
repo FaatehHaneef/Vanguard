@@ -9,11 +9,22 @@ run_generation; same author, see NOTICE.md):
   - progress is read back from the store, so a stopped batch continues where it stopped
     and finished runs are never repeated.
 
-The run controller (batch API endpoint and worker queue) builds on next_group().
+run_batch() is the run controller used by the batch API endpoint and the CLI.
 """
 
+import uuid
 from collections.abc import Hashable, Mapping, Sequence
 from typing import TypeVar
+
+from vanguard.contracts import (
+    BatchGroup,
+    BatchRequest,
+    BatchStatus,
+    EnforcementOption,
+    RunConfig,
+    RunOutcome,
+    RunStatus,
+)
 
 Group = TypeVar("Group", bound=Hashable)
 
@@ -32,3 +43,113 @@ def next_group(done: Mapping[Group, int], targets: Mapping[Group, int]) -> Group
 
 def remaining(done: Mapping[Group, int], targets: Mapping[Group, int]) -> int:
     return sum(max(0, target - done.get(group, 0)) for group, target in targets.items())
+
+
+# ---------------------------------------------------------------- running batches
+
+
+BatchKey = tuple[str, str, tuple[EnforcementOption, ...]]  # task, persona, enforcement
+
+
+def targets_for(request: BatchRequest) -> dict[BatchKey, int]:
+    """Every group in the batch, ordered task -> persona -> enforcement."""
+    return {
+        (task, persona, tuple(option)): request.repeats
+        for task in request.task_ids
+        for persona in request.persona_ids
+        for option in request.enforcements
+    }
+
+
+def done_counts(store, batch_id: str) -> dict[BatchKey, int]:
+    """Finished runs per group, read back from the store (failed runs do not count)."""
+    counts: dict[BatchKey, int] = {}
+    for run in store.list_runs(batch_id, limit=100_000):
+        if run.status is not RunStatus.FINISHED:
+            continue
+        key = (run.config.task_id, run.config.persona_id, tuple(run.config.enforcement))
+        counts[key] = counts.get(key, 0) + 1
+    return counts
+
+
+def status(store, request: BatchRequest, stopped: str | None = None) -> BatchStatus:
+    assert request.batch_id is not None
+    targets = targets_for(request)
+    done = done_counts(store, request.batch_id)
+    groups = [
+        BatchGroup(
+            task_id=task,
+            persona_id=persona,
+            enforcement=list(option),
+            target=target,
+            done=min(done.get((task, persona, option), 0), target),
+        )
+        for (task, persona, option), target in targets.items()
+    ]
+    return BatchStatus(
+        batch_id=request.batch_id,
+        groups=groups,
+        remaining=remaining(done, targets),
+        stopped=stopped,
+    )
+
+
+def prepare(request: BatchRequest, settings) -> BatchRequest:
+    """Give the batch an id and validate every group before anything runs."""
+    from vanguard import service
+
+    request = request.model_copy(update={"batch_id": request.batch_id or uuid.uuid4().hex[:12]})
+    for task, persona, option in targets_for(request):
+        service.validate(_config(request, task, persona, option, 0), settings)
+    return request
+
+
+def _config(request: BatchRequest, task, persona, option, repeat: int) -> RunConfig:
+    return RunConfig(
+        site_id=request.site_id,
+        task_id=task,
+        persona_id=persona,
+        enforcement=list(option),
+        provider=request.provider,
+        seed=request.seed + repeat,
+        repeat_index=repeat,
+        max_steps=request.max_steps,
+        batch_id=request.batch_id,
+    )
+
+
+MAX_CONSECUTIVE_ERRORS = 3
+
+
+async def run_batch(request: BatchRequest, settings, store, *, max_runs: int | None = None):
+    """Run the batch one run at a time until every group meets its target.
+
+    Safe to call again with the same batch_id: finished runs are counted, not repeated.
+    Stops early when the model is unavailable or several runs in a row fail.
+    """
+    from vanguard import service
+
+    assert request.batch_id is not None
+    targets = targets_for(request)
+    errors = 0
+    started = 0
+    while True:
+        done = done_counts(store, request.batch_id)
+        key = next_group(done, targets)
+        if key is None:
+            return status(store, request)
+        if max_runs is not None and started >= max_runs:
+            return status(store, request, "run cap reached")
+        task, persona, option = key
+        config = _config(request, task, persona, option, done.get(key, 0))
+        summary = service.create(config, settings, store)
+        started += 1
+        result = await service.execute(summary.id, config, settings, store)
+        if result.outcome is RunOutcome.ERROR:
+            errors += 1
+            if (result.error or "").startswith("model unavailable"):
+                return status(store, request, result.error)
+            if errors >= MAX_CONSECUTIVE_ERRORS:
+                return status(store, request, f"{errors} runs in a row failed: {result.error}")
+        else:
+            errors = 0
