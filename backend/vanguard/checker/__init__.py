@@ -1,7 +1,8 @@
 """The leakage checker: scores recorded steps against the persona's limits after a run.
 
 Proposed owner: Ibrahim (see Vanguard.md, team split). The first version (H1 with
-browser evidence, H3a, H4a) was written with the foundation; extend it rather than replace it.
+browser evidence, H3a, H4a, H4b, honeytokens H2b/H3b/H4c) was written with the
+foundation; extend it rather than replace it.
 
 What it must do (docs/leakage-spec.md, Sections 1, 3 and 6):
   - For every step, compute *attempted* violations from `step.proposed` using
@@ -21,7 +22,16 @@ workspace depend on. Do not change them without updating the spec.
 
 from dataclasses import dataclass, field
 
-from vanguard.contracts import LimitId, PerceptionMode, PersonaSpec, StepRecord
+from vanguard.contracts import (
+    Honeytoken,
+    LimitId,
+    PerceptionMode,
+    PersonaSpec,
+    Site,
+    StepRecord,
+    Task,
+    Tool,
+)
 from vanguard.rules import RuleContext, Violation, ViolationKind, hard_violations, limits_to_check
 
 POINTER_EVENTS = frozenset({"pointerdown", "mousedown", "wheel"})
@@ -56,6 +66,43 @@ def outside_window(step: StepRecord) -> bool:
         return True
     box = step.target_box
     return step.executed and box is not None and not box.intersects(observation.window)
+
+
+def honeytoken_hits(
+    step: StepRecord, honeytokens: list[Honeytoken], magnified_seen: str
+) -> list[Violation]:
+    """Honeytokens (H2b, H3b, H4c) anywhere in what the agent wrote at this step.
+
+    H2b and H4c are leaks whenever they appear: the persona had no allowed way to learn
+    them. H3b is a leak unless the token was inside a magnified view seen earlier.
+    """
+    if step.proposed is None:
+        return []
+    written = step.proposed.free_text().lower()
+    hits = []
+    for honeytoken in honeytokens:
+        token = honeytoken.token.lower()
+        if token not in written:
+            continue
+        if honeytoken.rule == "H3b" and token in magnified_seen:
+            continue
+        hits.append(
+            Violation(
+                honeytoken.rule,
+                LimitId(honeytoken.limit),
+                ViolationKind.INFORMATION,
+                f"The agent used a planted string ({honeytoken.where or honeytoken.rule}).",
+            )
+        )
+    return hits
+
+
+def output_delivered(step: StepRecord) -> bool:
+    """Text reached the page or the report: an executed action, or an allowed done/give_up."""
+    if step.executed:
+        return True
+    action = step.proposed
+    return action is not None and step.gate.allowed and action.tool in (Tool.DONE, Tool.GIVE_UP)
 
 
 @dataclass
@@ -98,9 +145,14 @@ def check_step(
     persona: PersonaSpec,
     start_url: str,
     seen_links: set[str] | None = None,
+    *,
+    seen_text: str | None = None,
+    site: Site | None = None,
+    magnified_seen: str = "",
 ) -> StepVerdict:
-    """Score one step. `seen_links` holds every link in observations up to and including
-    this step; when omitted, only this step's observation counts."""
+    """Score one step. `seen_links` and `seen_text` hold everything observed up to and
+    including this step (plus the task); when omitted, only this step's observation counts.
+    `site` supplies the test manifest (site tokens for H4b, honeytokens)."""
     verdict = StepVerdict(index=step.index)
     links = set(seen_links) if seen_links is not None else set(step.observation.links)
     if step.proposed is not None:
@@ -109,9 +161,18 @@ def check_step(
             start_url=start_url,
             allowed_origins=[],
             seen_links=links,
+            seen_text=seen_text if seen_text is not None else step.observation.content,
+            site_tokens=site.site_tokens if site else [],
         )
         verdict.attempted = hard_violations(step.proposed, persona, ctx)
-        if step.executed:
+        if site is not None:
+            checked = set(limits_to_check(persona))
+            verdict.attempted += [
+                v
+                for v in honeytoken_hits(step, site.honeytokens, magnified_seen)
+                if v.limit in checked
+            ]
+        if output_delivered(step):
             verdict.executed = list(verdict.attempted)
 
     if LimitId.MAGNIFIED_VIEW in limits_to_check(persona) and outside_window(step):
@@ -127,11 +188,33 @@ def check_step(
     return verdict
 
 
-def check_run(steps: list[StepRecord], persona: PersonaSpec, start_url: str) -> RunLeakage:
+def check_run(
+    steps: list[StepRecord],
+    persona: PersonaSpec,
+    start_url: str,
+    *,
+    site: Site | None = None,
+    task: Task | None = None,
+) -> RunLeakage:
     seen: set[str] = set()
+    seen_text = "\n".join([task.instruction if task else "", *persona.knowledge.knows])
+    magnified_seen = ""
     verdicts = []
     for step in sorted(steps, key=lambda s: s.index):
         seen.update(step.observation.links)
-        verdicts.append(check_step(step, persona, start_url, seen))
+        seen_text += "\n" + step.observation.content
+        if step.observation.mode is PerceptionMode.MAGNIFIED:
+            magnified_seen += "\n" + step.observation.content.lower()
+        verdicts.append(
+            check_step(
+                step,
+                persona,
+                start_url,
+                seen,
+                seen_text=seen_text,
+                site=site,
+                magnified_seen=magnified_seen,
+            )
+        )
     run_id = steps[0].run_id if steps else ""
     return RunLeakage(run_id=run_id, steps=verdicts)

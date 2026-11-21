@@ -23,7 +23,13 @@ def score(
     summary: RunSummary, steps: list[StepRecord], settings: Settings
 ) -> tuple[RunLeakage, RunMetrics]:
     persona = catalog.persona(summary.config.persona_id)
-    leakage = check_run(steps, persona, start_url(summary))
+    leakage = check_run(
+        steps,
+        persona,
+        start_url(summary),
+        site=catalog.site(summary.config.site_id),
+        task=catalog.task(summary.config.task_id),
+    )
     metrics = run_metrics(
         summary,
         steps,

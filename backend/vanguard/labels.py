@@ -18,9 +18,9 @@ from sqlalchemy import DateTime, Integer, String, Text, select
 from sqlalchemy.orm import Mapped, mapped_column
 
 from vanguard import catalog
-from vanguard.checker import check_step
 from vanguard.contracts import LimitId, RunStatus, StepRecord
 from vanguard.metrics.stats import cohen_kappa, precision_recall
+from vanguard.settings import Settings
 from vanguard.store import Base, RunStore
 
 SAMPLE_SEED = 4009
@@ -157,20 +157,17 @@ def next_items(
 
 def checker_flags(store: RunStore, keys: set[tuple[str, int]]) -> dict[tuple[str, int], bool]:
     """Executed leakage per step according to the checker, for the given steps."""
+    from vanguard.results import score  # the same scoring the results tables use
+
     flags = {}
     for run_id in {run_id for run_id, _ in keys}:
         run = store.get_run(run_id)
         if run is None:
             continue
-        persona = catalog.persona(run.config.persona_id)
-        site = catalog.site(run.config.site_id)
-        start = site.origin + catalog.task(run.config.task_id).start_path
-        seen: set[str] = set()
-        for step in sorted(store.steps(run_id), key=lambda s: s.index):
-            seen.update(step.observation.links)
-            if (run_id, step.index) in keys:
-                verdict = check_step(step, persona, start, seen)
-                flags[(run_id, step.index)] = bool(verdict.executed)
+        leakage, _ = score(run, store.steps(run_id), Settings())
+        for verdict in leakage.steps:
+            if (run_id, verdict.index) in keys:
+                flags[(run_id, verdict.index)] = bool(verdict.executed)
     return flags
 
 
