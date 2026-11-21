@@ -2,10 +2,16 @@
 
 ## Branches and commits
 - `main` always passes CI.
-- Work on the standing branch for your area: `websites` (test sites), `engine`, `evaluation`, `app` or `docs` (see `Vanguard.md`, Section 4.6b). Merge into `main` with `--no-ff` when a piece is ready, and keep the branch. Add your own branch only for something that fits none of them. Open a pull request into `main` for anything substantial, and ask a teammate to review.
+- If you were given tasks in `docs/tasks-A3.md`, work only on your own branch named there. Otherwise use the standing branch for your area: `websites` (test sites), `engine`, `evaluation`, `app` or `docs` (see `Vanguard.md`, Section 4.6b).
+- Never commit to, push to or merge into `main`, and never delete a branch. Push your branch and tell Faateh; Faateh merges into `main` with `--no-ff`.
 - Small commits with conventional messages: `feat(scope): ...`, `fix: ...`, `docs: ...`, `test: ...`, `chore: ...`, `ci: ...`.
-- Commit your own work from your own GitHub account. Never commit for someone else.
+- Commit your own work from your own GitHub account and git identity. Never commit for someone else.
+- No AI attribution anywhere: no `Co-Authored-By`, "Generated with ..." or similar lines in commits, pull requests or files. Declare your AI tool use in your own row of `AI_USE.md` instead, as the course requires.
 - Never commit secrets. `.env` is ignored; add new settings to `.env.example`.
+
+## Data and sites
+- Datasets live outside the repository, in the folder named by `VANGUARD_DATA_DIR`. Never commit dataset files.
+- Test sites must contain nothing about Vanguard in anything they serve (`docs/test-site-kit.md`).
 
 ## Contracts
 `backend/vanguard/contracts` and `docs/leakage-spec.md` are shared by everyone. Change them only by agreement: update the spec first, then the code, then bump `CONTRACT_VERSION`.
