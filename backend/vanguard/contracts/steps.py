@@ -57,6 +57,9 @@ class StepRecord(BaseModel):
     proposed: Action | None = Field(None, description="None when the model output was unusable")
     model_error: str | None = None
     gate: GateDecision
+    verifier: GateDecision | None = Field(
+        None, description="The verifier agent's decision (option 4), when it ran"
+    )
     executed: bool
     execution_error: str | None = None
     events: list[BrowserEvent] = Field(default_factory=list)
