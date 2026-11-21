@@ -6,7 +6,7 @@ VANGUARD_ENABLED_PROVIDERS; a local model (Ollama), Groq and OpenAI are planned.
 
 from vanguard.settings import Settings
 
-from .base import ModelReply, ModelRequest, Provider, ProviderUnavailable
+from .base import JsonReply, ModelReply, ModelRequest, Provider, ProviderUnavailable
 from .fake import ScriptedProvider
 
 
@@ -23,6 +23,7 @@ def make_provider(name: str, settings: Settings) -> Provider:
 
 
 __all__ = [
+    "JsonReply",
     "ModelReply",
     "ModelRequest",
     "Provider",

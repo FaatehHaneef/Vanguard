@@ -2,7 +2,7 @@
 
 from vanguard.contracts import Action
 
-from .base import ModelReply, ModelRequest
+from .base import JsonReply, ModelReply, ModelRequest
 
 
 class ScriptedProvider:
@@ -10,9 +10,17 @@ class ScriptedProvider:
 
     name = "fake"
 
-    def __init__(self, script: list[Action] | None = None):
+    def __init__(self, script: list[Action] | None = None, json_replies: list | None = None):
         self.script = list(script or [])
+        self.json_replies = list(json_replies or [])
         self.calls = 0
+
+    async def generate_json(self, system: str, user: str, schema: dict) -> JsonReply:
+        """Replays prepared JSON answers; with none left, answers nothing usable."""
+        self.calls += 1
+        if self.json_replies:
+            return JsonReply(value=self.json_replies.pop(0), model="scripted")
+        return JsonReply(value=None, model="scripted", error="no scripted reply")
 
     async def next_action(self, request: ModelRequest) -> ModelReply:
         self.calls += 1

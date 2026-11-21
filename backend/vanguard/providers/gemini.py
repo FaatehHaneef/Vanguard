@@ -6,6 +6,7 @@ ProviderUnavailable and records the step as a model failure; there is no silent 
 to a different behaviour, because that would change what is being measured.
 """
 
+import json
 import time
 
 from google import genai
@@ -13,7 +14,7 @@ from google.genai import errors, types
 
 from vanguard.contracts import Tool
 
-from .base import ModelReply, ModelRequest, ProviderUnavailable
+from .base import JsonReply, ModelReply, ModelRequest, ProviderUnavailable
 from .tools import description, json_schema, to_action
 
 KEY_REST_SECONDS = 600
@@ -50,6 +51,35 @@ class GeminiProvider:
             seed=request.seed,
             automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
         )
+        response, model, latency = await self._generate(request.user, config)
+        return self._reply(response, model, latency)
+
+    async def generate_json(self, system: str, user: str, schema: dict) -> JsonReply:
+        """One JSON answer matching `schema` (Gemini's OpenAPI-style schema)."""
+        config = types.GenerateContentConfig(
+            system_instruction=system,
+            response_mime_type="application/json",
+            response_schema=schema,
+            temperature=0.4,
+        )
+        response, model, latency = await self._generate(user, config)
+        usage = response.usage_metadata
+        try:
+            value = json.loads(response.text or "")
+            problem = None if isinstance(value, dict) else "reply is not an object"
+        except json.JSONDecodeError as error:
+            value, problem = None, f"reply is not JSON: {error.msg}"
+        return JsonReply(
+            value=value if problem is None else None,
+            model=model,
+            error=problem,
+            latency_ms=latency,
+            input_tokens=(usage.prompt_token_count or 0) if usage else 0,
+            output_tokens=(usage.candidates_token_count or 0) if usage else 0,
+        )
+
+    async def _generate(self, contents: str, config: types.GenerateContentConfig):
+        """Try each model with each rested key; return (response, model, latency_ms)."""
         last_problem = "no model answered"
         for model in self.models:
             for key in self.keys:
@@ -59,7 +89,7 @@ class GeminiProvider:
                 try:
                     client = genai.Client(api_key=key)
                     response = await client.aio.models.generate_content(
-                        model=model, contents=request.user, config=config
+                        model=model, contents=contents, config=config
                     )
                 except errors.APIError as error:
                     if error.code in (401, 403, 429):
@@ -68,8 +98,7 @@ class GeminiProvider:
                         continue
                     last_problem = f"{model} error {error.code}"
                     break  # try the next model
-                latency = (time.perf_counter() - started) * 1000
-                return self._reply(response, model, latency)
+                return response, model, (time.perf_counter() - started) * 1000
         raise ProviderUnavailable(last_problem)
 
     @staticmethod
