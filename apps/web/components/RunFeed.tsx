@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import {
   api,
   type Action,
+  type Explanation,
   type Persona,
   type RunReport,
   type RunSummary,
@@ -81,6 +82,7 @@ export function RunFeed() {
   const [persona, setPersona] = useState<Persona | null>(null);
   const [open, setOpen] = useState<number | null>(null);
   const [report, setReport] = useState<RunReport | null>(null);
+  const [story, setStory] = useState<Explanation | null>(null);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -110,6 +112,10 @@ export function RunFeed() {
     api
       .report(runId)
       .then(setReport)
+      .catch(() => undefined);
+    api
+      .explanation(runId)
+      .then(setStory)
       .catch(() => undefined);
   }, [finished, runId]);
 
@@ -187,6 +193,34 @@ export function RunFeed() {
             {latest.observation.url}
           </figcaption>
         </figure>
+      ) : null}
+
+      {story ? (
+        <section
+          className="pixel-panel grid gap-2"
+          aria-labelledby="story-title"
+        >
+          <h2
+            id="story-title"
+            className="font-display text-xl font-bold text-amber"
+          >
+            {story.headline}
+          </h2>
+          <p className="text-parchment">{story.story}</p>
+          {story.notes.length > 0 ? (
+            <ul className="grid list-disc gap-1 pl-5 text-sm text-parchment">
+              {story.notes.map((note) => (
+                <li key={note.index}>{note.why}</li>
+              ))}
+            </ul>
+          ) : null}
+          <p className="text-xs text-mist">
+            {story.source === "ai"
+              ? "Written by AI from facts computed by code; its numbers were checked."
+              : "Written from a template."}
+            {story.rejected ? ` (AI text not used: ${story.rejected})` : ""}
+          </p>
+        </section>
       ) : null}
 
       {report ? <Metrics report={report} /> : null}
