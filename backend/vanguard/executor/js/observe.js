@@ -141,6 +141,27 @@
 
   const refs = [];
   const lines = [];
+  // One box per line, in document coordinates, for the magnifier's window (L3).
+  const boxes = [];
+  const docBox = (el) => {
+    const r = el.getBoundingClientRect();
+    return { x: r.x + scrollX, y: r.y + scrollY, width: r.width, height: r.height };
+  };
+  const textBox = (node) => {
+    const range = document.createRange();
+    range.selectNodeContents(node);
+    return docBox(range);
+  };
+  const union = (a, b) => {
+    const x = Math.min(a.x, b.x);
+    const y = Math.min(a.y, b.y);
+    return {
+      x,
+      y,
+      width: Math.max(a.x + a.width, b.x + b.width) - x,
+      height: Math.max(a.y + a.height, b.y + b.height) - y,
+    };
+  };
   const links = [];
   let lastBlock = null;
 
@@ -174,6 +195,7 @@
         refs.push(el);
         const ref = `e${refs.length}`;
         lines.push(describe(el, ref));
+        boxes.push(docBox(el));
         lastBlock = null;
         if (el.tagName === "A" && el.href) links.push(el.href);
         if (el.tagName !== "SELECT") skipInside = el;
@@ -189,9 +211,11 @@
     const heading = block.closest("h1, h2, h3, h4, h5, h6");
     if (block === lastBlock && lines.length) {
       lines[lines.length - 1] = cut(`${lines[lines.length - 1]} ${text}`, MAX_LINE);
+      boxes[boxes.length - 1] = union(boxes[boxes.length - 1], textBox(node));
     } else {
       const prefix = heading ? "#".repeat(Number(heading.tagName[1])) + " " : "";
       lines.push(cut(prefix + text, MAX_LINE));
+      boxes.push(textBox(node));
       lastBlock = block;
     }
   }
@@ -208,6 +232,7 @@
     }
     focus = {
       ref: `e${index + 1}`,
+      box: docBox(active),
       visible: active.tagName === "IFRAME" ? false : focusShows(active),
       inFrame: active.tagName === "IFRAME",
     };
@@ -217,6 +242,9 @@
     title: document.title,
     url: location.href,
     lines,
+    boxes,
+    page: { width: document.documentElement.scrollWidth, height: document.documentElement.scrollHeight },
+    viewport: { width: innerWidth, height: innerHeight },
     links: Array.from(new Set(links)),
     focus,
     count: refs.length,

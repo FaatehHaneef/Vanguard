@@ -30,7 +30,7 @@ class Observation(BaseModel):
     url: str
     content: str = Field(description="Text given to the model (DOM summary, ARIA snapshot, ...)")
     links: list[str] = Field(default_factory=list, description="Link targets visible in this view")
-    window: Rect | None = Field(None, description="Magnified window, for L3")
+    window: Rect | None = Field(None, description="Magnified window in document CSS pixels, for L3")
     screenshot_path: str | None = None
 
 
@@ -65,7 +65,9 @@ class StepRecord(BaseModel):
     events: list[BrowserEvent] = Field(default_factory=list)
     url_after: str | None = None
     focus_after: str | None = None
-    target_box: Rect | None = None
+    target_box: Rect | None = Field(
+        None, description="Target element's box in document (page) CSS pixels"
+    )
     latency_ms: float = 0
     input_tokens: int = 0
     output_tokens: int = 0
