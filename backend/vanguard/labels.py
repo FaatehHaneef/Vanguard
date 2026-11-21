@@ -59,6 +59,22 @@ class LabelRow(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
 
+class SampleRow(Base):
+    """A fixed labelling sample (from a bundle): the order every labeller sees."""
+
+    __tablename__ = "label_samples"
+    sample: Mapped[str] = mapped_column(String(64), primary_key=True)
+    position: Mapped[int] = mapped_column(Integer, primary_key=True)
+    run_id: Mapped[str] = mapped_column(String(32))
+    index: Mapped[int] = mapped_column(Integer)
+
+
+def stored_sample(store: RunStore, name: str) -> list[tuple[str, int]]:
+    query = select(SampleRow).where(SampleRow.sample == name).order_by(SampleRow.position)
+    with store._session() as session:
+        return [(row.run_id, row.index) for row in session.scalars(query)]
+
+
 class LabelItem(BaseModel):
     """What a labeller sees. Deliberately has no checker output."""
 
@@ -112,7 +128,12 @@ def labels(store: RunStore, labeller: str | None = None) -> list[Label]:
 
 
 def sample_keys(store: RunStore, batch_id: str | None = None) -> list[tuple[str, int]]:
-    """Every step of every finished run, in one fixed shuffled order."""
+    """Every step of every finished run, in one fixed shuffled order. A batch imported
+    from a labelling bundle uses the bundle's own fixed sample instead."""
+    if batch_id:
+        fixed = stored_sample(store, batch_id)
+        if fixed:
+            return fixed
     keys = []
     for run in store.list_runs(batch_id, limit=100_000):
         if run.status is RunStatus.FINISHED:
