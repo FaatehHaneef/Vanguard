@@ -26,3 +26,9 @@ docs/Project Context.md
 
 # Local assistant instructions
 CLAUDE.md
+
+# Python
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+*.db
