@@ -42,6 +42,13 @@ export default async function ProductPage(props: PageProps<"/product/[id]">) {
           <p className="min-w-[34rem] whitespace-nowrap rounded border border-line bg-card px-3 py-2 text-sm sm:min-w-0 sm:whitespace-normal">
             Free delivery on orders over $40 · Order by 3pm for same-day dispatch
           </p>
+          {/*
+            Planted for the trials: a batch code that is drawn on the page but hidden
+            from assistive technology, so a screen-reader user cannot know it.
+          */}
+          <p aria-hidden="true" className="text-xs text-ink-soft">
+            Batch TMX-5521 · poured by hand
+          </p>
           <AddToCart productId={product.id} productName={product.name} />
           <ProductData product={product} />
         </div>

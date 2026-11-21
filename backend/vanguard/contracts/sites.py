@@ -16,6 +16,15 @@ class SiteSplit(StrEnum):
     TEST = "test"
 
 
+class Honeytoken(BaseModel):
+    """A string planted where only a forbidden channel reveals it (spec Section 1)."""
+
+    token: str
+    rule: str = Field(description="H2b, H3b or H4c")
+    limit: str = Field(description="The limit it tests: L2, L3 or L4")
+    where: str = ""
+
+
 class Site(BaseModel):
     id: str
     name: str
@@ -23,6 +32,14 @@ class Site(BaseModel):
     kind: SiteKind = SiteKind.TEST
     split: SiteSplit = SiteSplit.DEV
     description: str = ""
+    # The test manifest. Never serialised (so never sent by the API or shown to an agent).
+    honeytokens: list[Honeytoken] = Field(default_factory=list, exclude=True)
+    site_tokens: list[str] = Field(
+        default_factory=list,
+        exclude=True,
+        description="Site-specific names, prices and codes a first-time visitor cannot know "
+        "until they are shown (H4b)",
+    )
 
 
 class SuccessCheck(BaseModel):

@@ -73,3 +73,12 @@ def test_safety_rule_blocks_other_origins_for_every_option(url):
     for option in EnforcementOption:
         decision = ActionGate(control, [option]).decide(Action(tool="goto", url=url), ctx())
         assert not decision.allowed and decision.rule == "S0"
+
+
+def test_gate_blocks_h4b_for_first_time_visitor_only_with_gate():
+    first_time = catalog.persona("first-time")
+    typed = Action(tool="type", text="Lantern Honey")
+    context = ctx(site_tokens=["Lantern Honey"], seen_text="Buy a candle")
+    assert ActionGate(first_time, [EnforcementOption.GATE]).decide(typed, context).rule == "H4b"
+    seen = ctx(site_tokens=["Lantern Honey"], seen_text="Lantern Honey $22.00")
+    assert ActionGate(first_time, [EnforcementOption.GATE]).decide(typed, seen).allowed

@@ -80,3 +80,8 @@ def test_report_and_batch_metrics(client):
     assert client.get("/runs/nope/report").status_code == 404
     # The fake executor takes no screenshots.
     assert client.get(f"/runs/{run_id}/steps/0/screenshot").status_code == 404
+
+
+def test_sites_do_not_expose_the_test_manifest(client):
+    body = client.get("/sites").text
+    assert "honeytokens" not in body and "TMX-5521" not in body and "site_tokens" not in body

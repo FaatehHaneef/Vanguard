@@ -37,7 +37,8 @@ class RuleContext:
     start_url: str
     allowed_origins: list[str]
     seen_links: set[str] = field(default_factory=set)  # absolute URLs seen in any observation
-    seen_text: str = ""  # all observation text so far, for H4b (A4)
+    seen_text: str = ""  # task text, the persona's knowledge and all observation text so far
+    site_tokens: list[str] = field(default_factory=list)  # from the site manifest, for H4b
 
 
 def _origin(url: str) -> str:
@@ -101,12 +102,36 @@ def h4a_unlinked_navigation(
     )
 
 
-# Hard rules per limit. H2a/H2b, H3a/H3b, H4b/H4c follow in A4 (see the spec).
+def h4b_unseen_site_token(
+    action: Action, persona: PersonaSpec, ctx: RuleContext
+) -> Violation | None:
+    """H4b (L4): typed text or a done() answer names a site-specific token (product name,
+    price, code) that has not appeared in the task, the persona's knowledge or any
+    observation so far. Matching is case-insensitive on the site's curated token list."""
+    written = " ".join(part for part in (action.text, action.answer) if part).lower()
+    if not written or not ctx.site_tokens:
+        return None
+    seen = ctx.seen_text.lower()
+    for token in ctx.site_tokens:
+        needle = token.lower()
+        if needle in written and needle not in seen:
+            return Violation(
+                "H4b",
+                LimitId.FIRST_TIME_KNOWLEDGE,
+                ViolationKind.INFORMATION,
+                f"This user has not seen {token!r} on this site yet, so they cannot know it.",
+            )
+    return None
+
+
+# Hard rules per limit that can be judged from the proposal alone (and so can be
+# enforced by the gate). Rules that need execution records or the whole run (H1's
+# browser evidence, H3a, and the honeytokens H2b/H3b/H4c) live in the checker.
 HARD_RULES = {
     LimitId.NO_POINTER: [h1_no_pointer],
     LimitId.ACCESSIBILITY_TREE_ONLY: [],
     LimitId.MAGNIFIED_VIEW: [],
-    LimitId.FIRST_TIME_KNOWLEDGE: [h4a_unlinked_navigation],
+    LimitId.FIRST_TIME_KNOWLEDGE: [h4a_unlinked_navigation, h4b_unseen_site_token],
 }
 
 

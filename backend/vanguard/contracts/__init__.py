@@ -9,10 +9,10 @@ from .batches import BatchGroup, BatchRequest, BatchStatus
 from .limits import LimitId
 from .persona import Knowledge, PerceptionMode, PersonaSpec, PersonaStatus
 from .runs import Condition, EnforcementOption, RunConfig, RunOutcome, RunStatus, RunSummary
-from .sites import Site, SiteKind, SiteSplit, SuccessCheck, Task
+from .sites import Honeytoken, Site, SiteKind, SiteSplit, SuccessCheck, Task
 from .steps import BrowserEvent, GateDecision, Observation, Rect, StepRecord
 
-CONTRACT_VERSION = "0.3.0"
+CONTRACT_VERSION = "0.4.0"
 
 __all__ = [
     "CONTRACT_VERSION",
@@ -25,6 +25,7 @@ __all__ = [
     "Condition",
     "EnforcementOption",
     "GateDecision",
+    "Honeytoken",
     "Knowledge",
     "LimitId",
     "Observation",

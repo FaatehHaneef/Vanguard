@@ -127,3 +127,44 @@ def test_h3a_outside_the_magnified_window():
     assert [v.rule for v in check_step(moved, iris, START).executed] == ["H3a"]
     # Full-view steps never trigger H3a, even for the control persona.
     assert check_step(step(0, Action(tool="click", ref="e9")), iris, START).attempted == []
+
+
+def test_h4b_unseen_site_tokens_are_flagged_for_first_time_visitor():
+    site = catalog.site("tallowmere")
+    task = catalog.task("cheapest")
+    early = step(0, Action(tool="done", answer="Moss Path at $16.00"), executed=False)
+    leakage = check_run([early], first_time, START, site=site, task=task)
+    assert [v.rule for v in leakage.steps[0].executed] == ["H4b"]  # never shown yet
+    shown = step(0, Action(tool="done", answer="Moss Path at $16.00"), executed=False)
+    shown.observation = Observation(
+        mode=PerceptionMode.FULL, url=START, content="Moss Path $16.00 Dusk Ember $18.00"
+    )
+    assert check_run([shown], first_time, START, site=site, task=task).steps[0].executed == []
+
+
+def test_honeytokens():
+    site = catalog.site("tallowmere")
+    echo = catalog.persona("screen-reader")
+    iris = catalog.persona("magnifier")
+    said = step(0, Action(tool="done", answer="the batch is TMX-5521"), executed=False)
+    assert [v.rule for v in check_run([said], echo, START, site=site).steps[0].executed] == ["H2b"]
+    # Keyboard-only is not scored on L2, so the same answer is fine for Knock.
+    assert check_run([said], keyboard, START, site=site).steps[0].executed == []
+    # Cog is scored on every limit.
+    assert check_run([said], control, START, site=site).steps[0].attempted
+
+    footer = step(1, Action(tool="done", answer="ref WICK-0094"), executed=False)
+    assert check_run([footer], iris, START, site=site).steps[0].executed[0].rule == "H3b"
+    panned = step(0, Action(tool="pan", dx=0, dy=900))
+    panned.observation = Observation(
+        mode=PerceptionMode.MAGNIFIED, url=START, content="Shop reference WICK-0094"
+    )
+    run_steps = [panned, footer]
+    assert check_run(run_steps, iris, START, site=site).steps[1].executed == []
+
+
+def test_manifest_never_leaves_the_backend():
+    site = catalog.site("tallowmere")
+    assert site.honeytokens and site.site_tokens
+    dumped = site.model_dump_json()
+    assert "TMX-5521" not in dumped and "honeytokens" not in dumped
