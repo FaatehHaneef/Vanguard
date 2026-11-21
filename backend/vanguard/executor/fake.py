@@ -95,6 +95,9 @@ class FakeExecutor:
             error=error,
         )
 
+    async def announce(self, action: Action, message: str, tone: str) -> None:
+        return None
+
     async def current_url(self) -> str:
         return self.origin + self.path
 

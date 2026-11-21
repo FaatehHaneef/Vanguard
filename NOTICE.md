@@ -18,6 +18,8 @@ Vanguard reuses and adapts code from two earlier projects by the same author (Fa
 
 - 2026-11-21: `backend/vanguard/explain/__init__.py`, the system prompt and response schema from Sentinel's `lib/ai/wick.ts` (the Wick verdict). Adapted to Vanguard's personas and findings; the coin purse and colour suggestions were dropped.
 
+- 2026-11-22: `apps/hud`, a new overlay whose animation table and walking approach are adapted from Sentinel's `engine/hud/stage.ts`. Its sprites are imported from `apps/web/lib/art` (already listed above), not copied again. Sentinel's sound effects and clock were not needed.
+
 Entries are added as each piece is committed.
 
 ## Datasets

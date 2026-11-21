@@ -38,6 +38,8 @@ class Settings(BaseSettings):
     # "playwright" drives a real browser; "fake" uses the in-memory test site.
     executor: str = "fake"
     headless: bool = True
+    # The decorative character overlay (apps/hud) in the test browser and screenshots.
+    hud: bool = True
     # Inside Docker the sites are not on localhost. Requests to a key origin are sent to
     # the value origin instead, while the page keeps its usual address, for example
     # {"http://localhost:3100": "http://tallowmere:3100"}.

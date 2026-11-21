@@ -30,6 +30,10 @@ class Executor(Protocol):
     async def execute(self, action: Action) -> ExecutionResult:
         """Perform one allowed action and report what happened in the page."""
 
+    async def announce(self, action: Action, message: str, tone: str) -> None:
+        """Show (decoration only) an action that was refused ("refused") or ended the run
+        ("done"). Executors without a display do nothing."""
+
     async def current_url(self) -> str: ...
 
     async def page_text(self) -> str:
