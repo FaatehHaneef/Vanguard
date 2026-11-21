@@ -1,0 +1,28 @@
+# Read-only reference clones (separate git repos)
+sentinel/
+synthetic-users/
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Build / runtime artifacts
+node_modules/
+__pycache__/
+.venv/
+*.log
+.DS_Store
+
+# Original course documents and planning notes (kept local; customised versions will be added later)
+docs/AI-4009_Assignment#3.pdf
+docs/Assignment#4.pdf
+docs/Assignment_3_Evaluation_Rubric_Form.pdf
+docs/Assignment_4_Evaluation_Rubric_Form.pdf
+docs/FACET_Sample_Proposal_Pure_Product.pdf
+docs/FACET_Sample_Proposal_RD_Product.pdf
+docs/CLAUDE.md
+docs/Project Context.md
+
+# Local assistant instructions
+CLAUDE.md
