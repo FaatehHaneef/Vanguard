@@ -194,6 +194,9 @@ export function GameLobby({ start = "circle" }: { start?: "circle" | "line" }) {
             <Link href="/trials" className="pixel-button quiet">
               Past trials
             </Link>
+            <Link href="/results" className="pixel-button quiet">
+              Results
+            </Link>
           </nav>
         </>
       ) : null}
