@@ -256,6 +256,10 @@ def test_magnifier_window_and_pan(site):
             await ex.close()
             pytest.skip(f"browser unavailable: {error}")
         try:
+            # Panning works before the first observation too.
+            await ex.execute(Action(tool=Tool.PAN, dx=0, dy=400))
+            assert ex._window.y == 400
+            await ex.execute(Action(tool=Tool.PAN, dx=0, dy=-400))
             obs = await ex.observe()
             assert obs.mode is PerceptionMode.MAGNIFIED
             assert obs.window.width == 320 and obs.window.height == 180
