@@ -31,6 +31,7 @@ from urllib.parse import urljoin, urlsplit
 from vanguard.contracts import (
     Action,
     BrowserEvent,
+    Condition,
     Observation,
     PerceptionMode,
     PersonaSpec,
@@ -71,6 +72,24 @@ HUD_WALK_MS = 450
 BINDING = "__vanguardRecord"
 
 VIEWPORT = {"width": 1280, "height": 720}
+# Conditions (leakage-spec Section 4): never leakage, they change success, steps and latency.
+MOBILE = {
+    "viewport": {"width": 390, "height": 844},
+    "device_scale_factor": 3,
+    "is_mobile": True,
+    "has_touch": True,
+    "user_agent": (
+        "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 "
+        "(KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1"
+    ),
+}
+# Roughly a slow 3G connection: 400 ms latency, 500 kbit/s down and up.
+SLOW_NETWORK = {
+    "offline": False,
+    "latency": 400,
+    "downloadThroughput": 500 * 1024 / 8,
+    "uploadThroughput": 500 * 1024 / 8,
+}
 ACTION_TIMEOUT_MS = 5000
 SETTLE_MS = 400
 IDLE_TIMEOUT_MS = 2500
@@ -105,7 +124,9 @@ class PlaywrightExecutor:
         *,
         headless: bool | None = None,
         screenshot_dir: Path | None = None,
+        conditions: list[Condition] | None = None,
     ):
+        self.conditions = set(conditions or [])
         self.allowed_origins = {_origin(origin) for origin in settings.allowed_origins}
         self.payment_hosts = {host.lower() for host in settings.allowed_payment_hosts}
         self.headless = settings.headless if headless is None else headless
@@ -137,7 +158,10 @@ class PlaywrightExecutor:
 
         self._playwright = await async_playwright().start()
         self._browser = await self._playwright.chromium.launch(headless=self.headless)
-        self._context = await self._browser.new_context(viewport=VIEWPORT, locale="en-US")
+        options: dict = {"viewport": VIEWPORT}
+        if Condition.MOBILE in self.conditions:
+            options = dict(MOBILE)
+        self._context = await self._browser.new_context(locale="en-US", **options)
         await self._context.route("**/*", self._filter)
         await self._context.expose_binding(BINDING, self._record)
         await self._context.add_init_script(LISTEN_JS)
@@ -146,6 +170,10 @@ class PlaywrightExecutor:
             self._character = (persona.character, f"{persona.name} · Vanguard test")
         self._page = await self._context.new_page()
         self._page.set_default_timeout(ACTION_TIMEOUT_MS)
+        if Condition.SLOW_NETWORK in self.conditions:
+            cdp = await self._context.new_cdp_session(self._page)
+            await cdp.send("Network.enable")
+            await cdp.send("Network.emulateNetworkConditions", SLOW_NETWORK)
         await self._page.goto(site.origin + task.start_path, wait_until="domcontentloaded")
         await self._settle()
 
@@ -369,7 +397,9 @@ class PlaywrightExecutor:
             if element is None:
                 return None, f"no element {action.ref} on the page now"
             box = await self._box(element)
-            if tool is Tool.CLICK:
+            if tool is Tool.CLICK and Condition.MOBILE in self.conditions:
+                await element.tap()  # a touch screen: a tap, still recorded as pointer input
+            elif tool is Tool.CLICK:
                 await element.click()
             elif tool is Tool.HOVER:
                 await element.hover()

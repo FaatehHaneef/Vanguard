@@ -17,13 +17,13 @@ class RunRejected(ValueError):
     pass
 
 
-def make_executor(settings: Settings) -> Executor:
+def make_executor(settings: Settings, config: RunConfig | None = None) -> Executor:
     if settings.executor == "fake":
         return FakeExecutor()
     if settings.executor == "playwright":
         from vanguard.executor.playwright import PlaywrightExecutor  # added with the worker
 
-        return PlaywrightExecutor(settings)
+        return PlaywrightExecutor(settings, conditions=config.conditions if config else None)
     raise RunRejected(f"Unknown executor {settings.executor!r}")
 
 
@@ -57,7 +57,7 @@ async def execute(
         site,
         catalog.task(config.task_id),
         make_provider(config.provider, settings),
-        make_executor(settings),
+        make_executor(settings, config),
         store,
         allowed_origins=settings.allowed_origins,
         max_steps=config.max_steps or settings.max_steps_per_run,
