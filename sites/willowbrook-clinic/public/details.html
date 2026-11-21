@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Your details | Willowbrook Family Clinic</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="site">
+      <div class="bar">
+        <a class="brand" href="/">Willowbrook Family Clinic</a>
+        <nav aria-label="Main">
+          <a href="/">Home</a>
+          <a href="/book.html">Book an appointment</a>
+          <a href="/callback.html">Request a callback</a>
+        </nav>
+      </div>
+    </header>
+    <main id="main">
+      <h1>Your details</h1>
+      <p id="summary"></p>
+      <form id="details">
+        <label for="name">Full name</label>
+        <input id="name" name="name" autocomplete="name" required />
+        <label for="phone">Phone number</label>
+        <input id="phone" name="phone" type="tel" autocomplete="tel" required />
+        <p><button class="button" type="submit">Confirm booking</button></p>
+      </form>
+      <p><a href="/book.html">Choose a different time</a></p>
+    </main>
+    <script>
+      const booking = JSON.parse(sessionStorage.getItem("willowbrook.booking") || "null");
+      const summary = document.getElementById("summary");
+      if (!booking) {
+        summary.textContent = "You have not chosen a time yet.";
+        document.getElementById("details").hidden = true;
+      } else {
+        summary.textContent = `${booking.doctor}, ${booking.day} at ${booking.time}.`;
+      }
+      document.getElementById("details").addEventListener("submit", (event) => {
+        event.preventDefault();
+        booking.name = document.getElementById("name").value;
+        sessionStorage.setItem("willowbrook.booking", JSON.stringify(booking));
+        const ref = Math.random().toString(36).slice(2, 8).toUpperCase();
+        location.href = `/confirmed.html?ref=${ref}`;
+      });
+    </script>
+  </body>
+</html>

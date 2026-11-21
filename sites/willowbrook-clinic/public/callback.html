@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Request a callback | Willowbrook Family Clinic</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="site">
+      <div class="bar">
+        <a class="brand" href="/">Willowbrook Family Clinic</a>
+        <nav aria-label="Main">
+          <a href="/">Home</a>
+          <a href="/book.html">Book an appointment</a>
+          <a href="/callback.html">Request a callback</a>
+        </nav>
+      </div>
+    </header>
+    <main id="main">
+      <h1>Request a callback</h1>
+      <p>Leave your name and number and the reception team will call you to book.</p>
+      <form id="callback">
+        <label for="name">Full name</label>
+        <input id="name" name="name" autocomplete="name" required />
+        <label for="phone">Phone number</label>
+        <input id="phone" name="phone" type="tel" autocomplete="tel" required />
+        <label for="when">Best time to call</label>
+        <select id="when" name="when">
+          <option>Morning</option>
+          <option>Afternoon</option>
+        </select>
+        <p><button class="button" type="submit">Send request</button></p>
+      </form>
+      <p id="thanks" role="status"></p>
+    </main>
+    <script>
+      document.getElementById("callback").addEventListener("submit", (event) => {
+        event.preventDefault();
+        const name = document.getElementById("name").value;
+        event.target.hidden = true;
+        document.getElementById("thanks").textContent =
+          `Thank you, ${name}. We will call you back in the ${document
+            .getElementById("when")
+            .value.toLowerCase()}.`;
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Booked | Willowbrook Family Clinic</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="site">
+      <div class="bar">
+        <a class="brand" href="/">Willowbrook Family Clinic</a>
+        <nav aria-label="Main">
+          <a href="/">Home</a>
+          <a href="/book.html">Book an appointment</a>
+          <a href="/callback.html">Request a callback</a>
+        </nav>
+      </div>
+    </header>
+    <main id="main">
+      <h1>Your appointment is booked</h1>
+      <p id="what"></p>
+      <p>Reference: <strong id="ref"></strong></p>
+    </main>
+    <script>
+      const booking = JSON.parse(sessionStorage.getItem("willowbrook.booking") || "null");
+      document.getElementById("ref").textContent =
+        new URLSearchParams(location.search).get("ref") || "-";
+      document.getElementById("what").textContent = booking
+        ? `${booking.doctor}, ${booking.day} at ${booking.time}, for ${booking.name || "you"}.`
+        : "";
+    </script>
+  </body>
+</html>
