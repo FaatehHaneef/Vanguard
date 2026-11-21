@@ -1,31 +1,31 @@
 # Vanguard web app
 
-Owner: foundation (Faateh). Status: **being ported** from Sentinel's gamified UI (`sentinel/`, read-only reference clone; copy out of it, never edit it).
+Next.js + React + TypeScript + Tailwind. The gamified look (dusk theme, pixel characters, turning lobby) is ported from the author's earlier project Sentinel (MIT; see the top-level `NOTICE.md`). Everything else is Vanguard's own.
 
-Next.js + React + TypeScript + Tailwind, as in Sentinel. It talks only to the Vanguard API (`http://localhost:8000`, OpenAPI at `/docs`). It never talks to model providers or to the test site directly.
+The app talks only to the Vanguard API (`NEXT_PUBLIC_VANGUARD_API`, default `http://localhost:8000`). It never calls a model provider or a test site directly.
 
-## Flow (Vanguard.md, Section 6.1)
-landing → lobby (pick characters) → **pick site** (A3: Tallowmere only) → start trial → live view → results / ledger.
+## Run
+```bash
+npm install
+npm run dev          # http://localhost:3000, with the backend running on :8000
+```
 
-## What to bring over from Sentinel
-
-| Sentinel | Vanguard use |
+## Flow and screens
+| Route | Screen |
 |---|---|
-| `app/page.tsx`, `components/sentinel/LobbyBackdrop.tsx`, `GameLobby.tsx` | landing page and animations |
-| `app/lobby/page.tsx`, `components/sentinel/PartyPicker.tsx` | lobby: pick characters |
-| `engine/art/*.ts`, `engine/art/sprite.ts` | sprites. Knock, Echo, Iris and Cog exist. **Wren** (first-time visitor) is new and needs drawing in the same style |
-| `engine/audio/sfx.ts` | sounds |
-| `components/sentinel/RunResults.tsx`, `app/runs/[id]/page.tsx` | results page, reading `/runs/{id}` and `/runs/{id}/steps` |
-| `components/sentinel/Ledger.tsx`, `app/ledger/page.tsx` | ledger of steps across runs (AG Grid) |
+| `/` | Landing: the five characters in a turning circle; "Start your trial" walks them into a line |
+| `/lobby` | Choose the party. Preview personas carry a badge; full or preview comes from `GET /personas` |
+| `/sites?party=…` | Choose the site (Tallowmere for now; "your own site" comes later), the task, the enforcement option (prompt-only or gate), the model and the runs per persona |
+| `/trials/[batch]` | Every run in the trial, refreshed until all finish |
+| `/runs/[id]` | One run, step by step: proposed action and rationale, the gate's decision (refused steps in red with the rule id), and, when expanded, what the persona perceived and the input events |
+| `/trials` | Past trials |
 
-**Leave behind:** `engine/core`, `engine/journeys`, `engine/checks`, `lib/trial/*` (scripted walking, scoring and Sentinel's checks are replaced by the Vanguard backend), the loader and `app/sites` (own-site testing is A4 and works differently).
+## Code map
+- `lib/cast.ts`: display data for each character (name, motto, limits in plain words, accent). Matched to personas by id.
+- `lib/api.ts`: typed client for the API. The types mirror `backend/vanguard/contracts`.
+- `lib/art/`: the sprites as text grids. `wren.ts` is new; the others come from Sentinel. Dash, Pell and Tobin are kept for possible condition characters.
+- `lib/audio/sfx.ts`: sound effects from Sentinel, for the live view.
+- `components/`: `GameLobby`, `Sprite`, `LobbyBackdrop` (ported); `SitePicker`, `TrialBoard`, `RunFeed`, `TrialList` (new).
 
-## Screens to build or adapt for A3
-1. **Lobby:** all five characters from `GET /personas`. Echo, Iris and Wren show a **Preview** badge (`status == "preview"`).
-2. **Site picker (new):** cards from `GET /sites`; A3 shows Tallowmere only. Then tasks from `GET /sites/{id}/tasks`.
-3. **Run setup:** enforcement option (prompt-only or gate; preview personas get prompt-only only), number of repeats. `POST /runs` per run.
-4. **Live view:** poll `/runs/{id}/steps`. Show per step: what the persona perceived, the proposed action and rationale, the gate decision (blocked steps in red with the rule id), and the outcome. The sprite overlay on the page itself is done in the worker (Faateh).
-5. **Results:** outcome, steps, blocks, leakage (from the checker, once built) and the plain-language verdict. Mark preview personas' results "not validated".
-
-## Provenance
-Add a line to the top-level `NOTICE.md` when Sentinel code is first committed here.
+## Not built yet
+Leakage and metrics on the results page (waiting on the checker and metrics), the ledger across runs, the comparison view, the labelling workspace, the persona builder and own-site testing.
