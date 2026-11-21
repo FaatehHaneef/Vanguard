@@ -11,6 +11,11 @@ Focus is reported to the persona only when it is visibly indicated (leakage-spec
 Section 9, "invisible focus"). The step record always stores the real focus.
 
 Network requests outside the allowed origins and the sandbox payment hosts are aborted.
+
+The HUD (apps/hud) is decoration for people watching a run. It is excluded from the
+text observation, but it does appear in the saved screenshots and its ring marks the
+focused element even where the site hides focus. Screenshots are therefore for people
+only; a screenshot-based perception for the model must hide the HUD first.
 """
 
 from __future__ import annotations
@@ -33,6 +38,7 @@ from vanguard.contracts import (
     Site,
     Task,
     Tool,
+    ToolGroup,
 )
 
 from .base import ExecutionResult
@@ -47,6 +53,21 @@ log = logging.getLogger(__name__)
 _JS = files("vanguard.executor") / "js"
 OBSERVE_JS = (_JS / "observe.js").read_text(encoding="utf-8")
 LISTEN_JS = (_JS / "listen.js").read_text(encoding="utf-8")
+# Built from apps/hud (npm run build). Decoration only; see that package.
+HUD_JS = (_JS / "hud.js").read_text(encoding="utf-8")
+HUD_SHOW = """([character, label, box, text, tone]) => {
+    const hud = window[Symbol.for('vanguard.hud')];
+    if (!hud) return false;
+    hud.show(character, label, box, text, tone);
+    return true;
+}"""
+FOCUS_BOX = """() => {
+    const el = document.activeElement;
+    if (!el || el === document.body || el === document.documentElement) return null;
+    const r = el.getBoundingClientRect();
+    return { x: r.x, y: r.y, width: r.width, height: r.height };
+}"""
+HUD_WALK_MS = 450
 BINDING = "__vanguardRecord"
 
 VIEWPORT = {"width": 1280, "height": 720}
@@ -63,6 +84,12 @@ UNSUPPORTED = {
     Tool.PAN,
     Tool.PAN_TO_FOCUS,
 }
+
+
+def _caption(action: Action) -> str:
+    args = action.model_dump(exclude={"tool", "rationale"}, exclude_none=True)
+    shown = ", ".join(f"{value}" for value in args.values())
+    return f"{action.tool} {shown}".strip()
 
 
 def _origin(url: str) -> str:
@@ -88,6 +115,8 @@ class PlaywrightExecutor:
         if screenshot_dir is None and settings.screenshots:
             screenshot_dir = Path(settings.data_dir) / "screenshots"
         self.screenshot_dir = screenshot_dir
+        self.hud = settings.hud
+        self._character: tuple[str, str] | None = None
         self.session = uuid.uuid4().hex[:12]
         self.blocked: list[str] = []  # request URLs aborted by the network filter
 
@@ -111,6 +140,9 @@ class PlaywrightExecutor:
         await self._context.route("**/*", self._filter)
         await self._context.expose_binding(BINDING, self._record)
         await self._context.add_init_script(LISTEN_JS)
+        if self.hud and persona is not None:
+            await self._context.add_init_script(HUD_JS)
+            self._character = (persona.character, f"{persona.name} · Vanguard test")
         self._page = await self._context.new_page()
         self._page.set_default_timeout(ACTION_TIMEOUT_MS)
         await self._page.goto(site.origin + task.start_path, wait_until="domcontentloaded")
@@ -228,6 +260,36 @@ class PlaywrightExecutor:
         box = await element.bounding_box()
         return Rect(**box) if box else None
 
+    # ---------------------------------------------------------------- HUD
+
+    async def _show(self, box: Rect | None, text: str, tone: str) -> None:
+        """Walk the character to `box` and say `text`. Never affects the run."""
+        if self._character is None:
+            return
+        try:
+            data = box.model_dump() if box else None
+            shown = await self.page.evaluate(HUD_SHOW, [*self._character, data, text, tone])
+            if shown:
+                await self.page.wait_for_timeout(HUD_WALK_MS)
+        except Exception:  # decoration must never break a run
+            pass
+
+    async def _focus_box(self) -> Rect | None:
+        try:
+            box = await self.page.evaluate(FOCUS_BOX)
+        except Exception:
+            return None
+        return Rect(**box) if box else None
+
+    async def announce(self, action: Action, message: str, tone: str) -> None:
+        """Show an action that did not run (refused) or that ended the run (done)."""
+        box = None
+        if action.ref:
+            box = await self._box(await self._element(action.ref))
+        if box is None:
+            box = await self._focus_box()
+        await self._show(box, message, tone)
+
     # ---------------------------------------------------------------- actions
 
     async def execute(self, action: Action) -> ExecutionResult:
@@ -235,11 +297,17 @@ class PlaywrightExecutor:
         self._step_began = time.perf_counter()
         target_box = None
         error = None
+        if self._character is not None:
+            ahead = await self._box(await self._element(action.ref)) if action.ref else None
+            await self._show(ahead or await self._focus_box(), _caption(action), "act")
+            self._events = []  # the walk is not part of the step
         try:
             target_box, error = await self._perform(action)
         except Exception as exc:  # reported to the agent as a failed step
             error = f"{type(exc).__name__}: {str(exc).splitlines()[0][:200]}"
         await self._settle()
+        if self._character is not None and action.group is ToolGroup.KEYBOARD:
+            await self._show(await self._focus_box(), _caption(action), "act")
         focus = None
         try:
             snapshot = await self._snapshot()  # refreshes refs so focus_after uses new ids

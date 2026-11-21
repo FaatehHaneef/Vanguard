@@ -107,6 +107,13 @@ async def run_once(
             store.add_step(step)
             history.append(step)
 
+            if action is not None and not decision.allowed:
+                await executor.announce(action, decision.message or "Refused", "refused")
+            elif action is not None and action.tool is Tool.DONE:
+                await executor.announce(action, action.answer or "Done", "done")
+            elif action is not None and action.tool is Tool.GIVE_UP:
+                await executor.announce(action, action.reason or "Giving up", "refused")
+
             if action is not None and decision.allowed:
                 if action.tool is Tool.DONE:
                     url = await executor.current_url()
