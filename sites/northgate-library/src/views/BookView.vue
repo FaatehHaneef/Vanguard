@@ -28,6 +28,7 @@ watchEffect(() => {
         <dd><span class="dot" :class="book.available > 0 ? 'dot-in' : 'dot-out'"></span></dd>
       </dl>
       <p><RouterLink class="button" :to="`/reserve/${book.id}`">Reserve</RouterLink></p>
+      <p class="stock-label" aria-hidden="true">Stock batch NB-7302</p>
     </div>
     <aside class="book-side" aria-labelledby="where">
       <h2 id="where">Where to find it</h2>
