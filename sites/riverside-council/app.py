@@ -60,7 +60,8 @@ COOKIE_CHOICE = "cookie_choice"
 @app.post("/cookies")
 def cookies():
     back = request.form.get("next", "/")
-    if not back.startswith("/") or back.startswith("//"):
+    # Only paths on this site: "//host" and "/\host" would leave it.
+    if not back.startswith("/") or back[1:2] in ("/", "\\"):
         back = "/"
     response = redirect(back, code=303)
     choice = "accepted" if request.form.get("choice") == "accept" else "rejected"
