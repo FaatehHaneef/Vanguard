@@ -54,6 +54,25 @@ reports: dict[str, dict[str, str]] = {}
 next_number = count(260411)
 
 
+COOKIE_CHOICE = "cookie_choice"
+
+
+@app.post("/cookies")
+def cookies():
+    back = request.form.get("next", "/")
+    if not back.startswith("/") or back.startswith("//"):
+        back = "/"
+    response = redirect(back, code=303)
+    choice = "accepted" if request.form.get("choice") == "accept" else "rejected"
+    response.set_cookie(COOKIE_CHOICE, choice, max_age=60 * 60 * 24 * 365, samesite="Lax")
+    return response
+
+
+@app.context_processor
+def cookie_banner():
+    return {"show_cookie_banner": COOKIE_CHOICE not in request.cookies}
+
+
 @app.get("/")
 def home():
     return render_template("index.html")
