@@ -29,6 +29,7 @@ src/App.vue         header, navigation, main region and footer
 src/views/          one component per page
 src/data/books.js   the catalogue
 src/reservation.js  reservations in session storage
+src/staff.js        the staff shortcut code
 src/styles.css      the stylesheet
 nginx.conf          the Docker image's web server settings
 ```
