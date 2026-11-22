@@ -332,3 +332,28 @@ td {
   color: var(--soft);
   font-size: 0.95rem;
 }
+
+/* Book page */
+.crumbs {
+  font-size: 0.95rem;
+}
+
+.about {
+  max-width: 40em;
+  margin-top: 12px;
+}
+
+.facts {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 6px 20px;
+  margin: 20px 0;
+}
+
+.facts dt {
+  font-weight: 700;
+}
+
+.facts dd {
+  margin: 0;
+}

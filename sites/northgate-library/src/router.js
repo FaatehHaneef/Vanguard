@@ -2,11 +2,13 @@ import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from './views/HomeView.vue'
 import AboutView from './views/AboutView.vue'
 import SearchView from './views/SearchView.vue'
+import BookView from './views/BookView.vue'
 import NotFoundView from './views/NotFoundView.vue'
 
 const routes = [
   { path: '/', component: HomeView, meta: { title: 'Welcome' } },
   { path: '/search', component: SearchView, meta: { title: 'Search the catalogue' } },
+  { path: '/book/:id', component: BookView },
   { path: '/about', component: AboutView, meta: { title: 'About the library' } },
   { path: '/:rest(.*)*', component: NotFoundView, meta: { title: 'Page not found' } },
 ]
@@ -18,7 +20,8 @@ const router = createRouter({
 })
 
 router.afterEach((to) => {
-  document.title = `${to.meta.title} | Northgate Library`
+  // Pages without a fixed title set their own.
+  if (to.meta.title) document.title = `${to.meta.title} | Northgate Library`
 })
 
 export default router

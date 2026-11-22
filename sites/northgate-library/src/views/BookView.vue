@@ -1,0 +1,36 @@
+<script setup>
+import { computed, watchEffect } from 'vue'
+import { useRoute } from 'vue-router'
+import { findBook } from '../data/books.js'
+
+const route = useRoute()
+const book = computed(() => findBook(route.params.id))
+
+watchEffect(() => {
+  document.title = `${book.value ? book.value.title : 'Book not found'} | Northgate Library`
+})
+</script>
+
+<template>
+  <template v-if="book">
+    <p class="crumbs"><RouterLink to="/search">Back to search</RouterLink></p>
+    <h1 tabindex="-1">{{ book.title }}</h1>
+    <p class="byline">{{ book.author }}, {{ book.year }}</p>
+    <p class="about">{{ book.about }}</p>
+
+    <dl class="facts">
+      <dt>Author</dt>
+      <dd>{{ book.author }}</dd>
+      <dt>Published</dt>
+      <dd>{{ book.year }}</dd>
+      <dt>Location</dt>
+      <dd>Floor {{ book.floor }}, shelf {{ book.shelf }}</dd>
+      <dt>Availability</dt>
+      <dd>{{ book.available }} of {{ book.copies }} copies on the shelf</dd>
+    </dl>
+  </template>
+  <template v-else>
+    <h1 tabindex="-1">Book not found</h1>
+    <p>There is no book at this address. <RouterLink to="/search">Search the catalogue</RouterLink> instead.</p>
+  </template>
+</template>
