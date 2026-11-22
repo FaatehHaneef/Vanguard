@@ -26,7 +26,7 @@ watchEffect(() => {
       <dt>Location</dt>
       <dd>Floor {{ book.floor }}, shelf {{ book.shelf }}</dd>
       <dt>Availability</dt>
-      <dd>{{ book.available }} of {{ book.copies }} copies on the shelf</dd>
+      <dd><span class="dot" :class="book.available > 0 ? 'dot-in' : 'dot-out'"></span></dd>
     </dl>
     <p><RouterLink class="button" :to="`/reserve/${book.id}`">Reserve</RouterLink></p>
   </template>

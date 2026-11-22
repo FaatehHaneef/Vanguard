@@ -404,3 +404,26 @@ caption {
   border-color: var(--teal);
   color: #fff;
 }
+
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 14px;
+}
+
+.dot {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  vertical-align: -2px;
+}
+
+.dot-in {
+  background: #1f8a4c;
+}
+
+.dot-out {
+  background: #c0392b;
+}

@@ -61,7 +61,12 @@ watch(query, async (now) => {
     <label for="q">Title or author</label>
     <div class="search-row">
       <input id="q" v-model="typed" type="search" name="q" autocomplete="off" />
-      <button class="button" type="submit">Search</button>
+      <button class="button icon-button" type="submit">
+        <svg viewBox="0 0 24 24" width="20" height="20" focusable="false">
+          <circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2.5" />
+          <path d="M15.5 15.5 21 21" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" />
+        </svg>
+      </button>
     </div>
   </form>
 
