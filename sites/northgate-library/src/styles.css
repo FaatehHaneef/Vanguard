@@ -472,3 +472,9 @@ main.wide {
   color: var(--soft);
   font-size: 0.85rem;
 }
+
+.site-footer .footer-ref {
+  margin-top: 16px;
+  font-size: 0.85rem;
+  text-align: right;
+}

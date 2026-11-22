@@ -44,6 +44,7 @@ watch(
       </nav>
       <p>Northgate Library, 14 Northgate Street, Kelbridge</p>
       <p>This is a demonstration website. It does not hold real library accounts or loans.</p>
+      <p class="footer-ref">Catalogue reference NC-5619</p>
     </div>
   </footer>
 </template>
