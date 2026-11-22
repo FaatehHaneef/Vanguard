@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 300" font-family="system-ui, Arial, sans-serif" font-size="11">
+  <rect width="480" height="300" fill="#e8efe4"/>
+  <path d="M0 230 C90 205 150 250 240 225 S390 190 480 215 L480 260 C390 240 330 270 240 268 S90 250 0 275 Z" fill="#a9d3e3"/>
+  <rect x="300" y="30" width="120" height="70" rx="6" fill="#cfe3c4"/>
+  <g stroke="#ffffff" stroke-width="12" stroke-linecap="round" fill="none">
+    <path d="M20 60 H460"/>
+    <path d="M20 150 H460"/>
+    <path d="M110 20 V215"/>
+    <path d="M250 20 V225"/>
+    <path d="M380 110 V200"/>
+    <path d="M110 105 L250 105"/>
+  </g>
+  <g fill="#374a4f">
+    <text x="30" y="52">Mill Lane</text>
+    <text x="30" y="142">Station Road</text>
+    <text x="118" y="98">Weavers Row</text>
+    <text x="258" y="180" transform="rotate(-90 258 180)">Orchard Street</text>
+    <text x="318" y="70">Heron Park</text>
+    <text x="388" y="190" transform="rotate(-90 388 190)">Kingfisher Way</text>
+    <text x="300" y="252">River Wend</text>
+  </g>
+</svg>

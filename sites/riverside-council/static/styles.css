@@ -180,3 +180,17 @@ dl { margin: 0 0 1rem; }
 dt { font-weight: 600; }
 dd { margin: 0 0 0.6rem; }
 .columns { columns: 2 12rem; padding-left: 1.2rem; }
+
+/* Location map */
+.map-label { font-weight: 600; margin-bottom: 0.3rem; }
+.map {
+  max-width: 30rem;
+  aspect-ratio: 8 / 5;
+  background: url("map.svg") center / cover no-repeat;
+  border: 2px solid var(--ink);
+  border-radius: 4px;
+}
+.map-grid { display: grid; grid-template-columns: repeat(8, 1fr); grid-template-rows: repeat(5, 1fr); height: 100%; }
+.map-cell { border: 1px dashed rgba(29, 42, 46, 0.25); cursor: pointer; }
+.map-cell:hover { background: rgba(11, 85, 99, 0.18); }
+.map-cell.pinned { background: rgba(198, 40, 40, 0.35); box-shadow: inset 0 0 0 3px #c62828; }

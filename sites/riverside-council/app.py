@@ -60,8 +60,10 @@ def home():
 
 
 def validate_report(form) -> tuple[dict[str, str], dict[str, str]]:
-    values = {name: form.get(name, "").strip() for name in ("street", "description", "name", "email")}
+    values = {name: form.get(name, "").strip() for name in ("street", "description", "name", "email", "pin")}
     errors = {}
+    if not re.fullmatch(r"[A-E][1-8]", values["pin"]):
+        values["pin"] = ""
     if not values["street"]:
         errors["street"] = "Enter the street where the problem is"
     if len(values["description"]) < 10:

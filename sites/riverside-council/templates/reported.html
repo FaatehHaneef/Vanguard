@@ -6,7 +6,7 @@
   <p>Your reference number is</p>
   <p class="reference">{{ ref }}</p>
 </div>
-<p>Thank you, {{ report.name }}. We have received your report about {{ report.street }}.</p>
+<p>Thank you, {{ report.name }}. We have received your report about {{ report.street }}.{% if report.pin %} You placed a pin in map square {{ report.pin }}.{% endif %}</p>
 <p>We have sent a copy to {{ report.email }}. An inspector will visit within five working days, and we will email you again when the repair has been made.</p>
 <h2>What happens next</h2>
 <ol>
