@@ -9,6 +9,8 @@ const router = useRouter()
 const query = computed(() => (typeof route.query.q === 'string' ? route.query.q : null))
 const typed = ref(query.value ?? '')
 const summary = ref(null)
+const onlyAvailable = ref(false)
+const floor = ref(null)
 
 function words(text) {
   return text
@@ -29,6 +31,16 @@ const results = computed(() => {
   })
 })
 
+const shown = computed(() =>
+  results.value.filter(
+    (book) => (!onlyAvailable.value || book.available > 0) && (!floor.value || book.floor === floor.value),
+  ),
+)
+
+function pickFloor(number) {
+  floor.value = floor.value === number ? null : number
+}
+
 function search() {
   router.push({ path: '/search', query: { q: typed.value.trim() } })
 }
@@ -36,6 +48,8 @@ function search() {
 // Keep the field in step with the address, and move focus to the result count after a search.
 watch(query, async (now) => {
   typed.value = now ?? ''
+  onlyAvailable.value = false
+  floor.value = null
   await nextTick()
   summary.value?.focus()
 })
@@ -57,12 +71,32 @@ watch(query, async (now) => {
       <template v-else-if="results.length === 1">1 result for “{{ query }}”</template>
       <template v-else>{{ results.length }} results for “{{ query }}”</template>
     </h2>
-    <ul v-if="results.length" class="results">
-      <li v-for="book in results" :key="book.id">
+    <template v-if="results.length">
+      <div class="chips">
+        <div class="chip" :class="{ 'chip-on': onlyAvailable }" @click="onlyAvailable = !onlyAvailable">
+          Available now
+        </div>
+        <div
+          v-for="number in [1, 2, 3]"
+          :key="number"
+          class="chip"
+          :class="{ 'chip-on': floor === number }"
+          @click="pickFloor(number)"
+        >
+          Floor {{ number }}
+        </div>
+      </div>
+      <p v-if="shown.length !== results.length" class="hint">
+        Showing {{ shown.length }} of {{ results.length }}.
+      </p>
+    </template>
+    <ul v-if="shown.length" class="results">
+      <li v-for="book in shown" :key="book.id">
         <RouterLink :to="`/book/${book.id}`">{{ book.title }}</RouterLink>
         <span class="byline">{{ book.author }}, {{ book.year }}</span>
       </li>
     </ul>
+    <p v-else-if="results.length">No books match these filters.</p>
     <p v-else>No books match. Try fewer words, or check the spelling.</p>
   </template>
   <p v-else>

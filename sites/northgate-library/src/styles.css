@@ -377,3 +377,30 @@ caption {
   padding: 0 0 8px;
   color: var(--teal-dark);
 }
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 12px;
+}
+
+.chip {
+  padding: 5px 14px;
+  border: 1px solid #8a8f94;
+  border-radius: 999px;
+  background: var(--card);
+  font-size: 0.95rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.chip:hover {
+  border-color: var(--teal);
+}
+
+.chip-on {
+  background: var(--teal);
+  border-color: var(--teal);
+  color: #fff;
+}
