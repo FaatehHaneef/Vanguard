@@ -8,13 +8,14 @@ function reservationNumber(card, bookId) {
   return String(hash).padStart(8, '0').replace(/(\d{4})(\d{4})/, '$1 $2')
 }
 
+// `card` is null for a staff reservation made with the shortcut code.
 export function saveReservation(book, card, name) {
   const reservation = {
-    number: reservationNumber(card, book.id),
+    number: reservationNumber(card ?? 'staff', book.id),
     title: book.title,
     author: book.author,
     ready: book.available > 0,
-    cardEnd: card.slice(-4),
+    cardEnd: card ? card.slice(-4) : null,
     name,
   }
   sessionStorage.setItem(KEY, JSON.stringify(reservation))

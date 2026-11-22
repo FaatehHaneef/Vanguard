@@ -15,7 +15,8 @@ const reservation = loadReservation()
       <dt>Book</dt>
       <dd>{{ reservation.title }}, {{ reservation.author }}</dd>
       <dt>Library card</dt>
-      <dd>ending {{ reservation.cardEnd }}</dd>
+      <dd v-if="reservation.cardEnd">ending {{ reservation.cardEnd }}</dd>
+      <dd v-else>Staff reservation</dd>
       <dt>Collect from</dt>
       <dd>The reservations shelf at the welcome desk, Floor 1</dd>
     </dl>

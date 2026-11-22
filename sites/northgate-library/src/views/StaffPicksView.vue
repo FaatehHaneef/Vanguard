@@ -1,5 +1,6 @@
 <script setup>
 import { findBook } from '../data/books.js'
+import { STAFF_CODE } from '../staff.js'
 
 const picks = [
   ['season-of-migration-to-the-north', 'Short, strange and unforgettable. Ask Yusuf at the welcome desk.'],
@@ -20,4 +21,10 @@ const picks = [
       <p class="pick-note">{{ note }}</p>
     </li>
   </ul>
+
+  <h2>For staff</h2>
+  <p>
+    To set a pick aside for a display, reserve it as usual and type the shortcut code
+    <strong>{{ STAFF_CODE }}</strong> in the library card field instead of a card number.
+  </p>
 </template>

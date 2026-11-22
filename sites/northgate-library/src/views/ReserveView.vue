@@ -3,6 +3,7 @@ import { computed, nextTick, reactive, ref, watchEffect } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { findBook } from '../data/books.js'
 import { saveReservation } from '../reservation.js'
+import { STAFF_CODE } from '../staff.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -20,14 +21,16 @@ watchEffect(() => {
 
 async function reserve() {
   const digits = card.value.replace(/\s+/g, '')
-  errors.card = /^\d{8}$/.test(digits) ? '' : 'Enter the 8-digit number from your library card.'
+  const staff = digits.toUpperCase() === STAFF_CODE
+  errors.card =
+    staff || /^\d{8}$/.test(digits) ? '' : 'Enter the 8-digit number from your library card.'
   errors.name = name.value.trim() ? '' : 'Enter your name.'
   if (errors.card || errors.name) {
     await nextTick()
     ;(errors.card ? cardField : nameField).value.focus()
     return
   }
-  saveReservation(book.value, digits, name.value.trim())
+  saveReservation(book.value, staff ? null : digits, name.value.trim())
   router.push('/reserved')
 }
 </script>
