@@ -1,12 +1,52 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Riverside Borough Council</title>
-  <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}">
-</head>
-<body>
-  <h1>Riverside Borough Council</h1>
-</body>
-</html>
+{% extends "base.html" %}
+{% block title %}Home{% endblock %}
+{% block content %}
+<section class="hero">
+  <h1>Welcome to Riverside Borough Council</h1>
+  <p class="lead">Council services for the 84,000 people who live and work along the River Wend, from Millford in the north to Eastbank in the south.</p>
+</section>
+
+<section aria-labelledby="services-heading">
+  <h2 id="services-heading">Popular services</h2>
+  <ul class="cards">
+    <li class="card">
+      <h3><a href="/report">Report a problem</a></h3>
+      <p>Tell us about potholes, broken street lights, fly-tipping and damaged pavements. We aim to inspect road defects within five working days.</p>
+    </li>
+    <li class="card">
+      <h3><a href="/bins">Bin collections</a></h3>
+      <p>Enter your postcode to find your next general waste, recycling and garden waste collection.</p>
+    </li>
+    <li class="card">
+      <h3><a href="/council-tax">Council tax</a></h3>
+      <p>See this year's bands and charges, ways to pay, and the date by which the full amount must be paid.</p>
+    </li>
+  </ul>
+</section>
+
+<section aria-labelledby="news-heading">
+  <h2 id="news-heading">Latest news</h2>
+  <ul class="news">
+    <li>
+      <h3>Resurfacing on Station Road</h3>
+      <p class="meta">Published 16 November 2026</p>
+      <p>Station Road between the level crossing and Kingfisher Way will be resurfaced from 30 November to 4 December 2026. The road will close each night from 19:00 to 06:00, with a signed diversion through Orchard Street.</p>
+    </li>
+    <li>
+      <h3>Christmas and New Year bin collections</h3>
+      <p class="meta">Published 12 November 2026</p>
+      <p>Collections due on Friday 25 December 2026 and Friday 1 January 2027 will take place one day later. All other collections over the holiday period are unchanged.</p>
+    </li>
+    <li>
+      <h3>Riverside Library extends its opening hours</h3>
+      <p class="meta">Published 5 November 2026</p>
+      <p>From 1 December 2026 the central library on Market Square will stay open until 20:00 on Tuesdays and Thursdays, and will open from 10:00 to 14:00 on Sundays.</p>
+    </li>
+    <li>
+      <h3>Have your say on the Eastbank riverside path</h3>
+      <p class="meta">Published 29 October 2026</p>
+      <p>We are asking residents for their views on lighting and seating along the riverside path between Eastbank Bridge and Heron Meadows. The consultation closes on 18 December 2026.</p>
+    </li>
+  </ul>
+</section>
+{% endblock %}

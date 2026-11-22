@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{% endblock %} | Riverside Borough Council</title>
+  <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}">
+</head>
+<body>
+  <a class="skip-link" href="#content">Skip to main content</a>
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <a class="brand" href="{{ url_for('home') }}">
+        <img src="{{ url_for('static', filename='favicon.svg') }}" alt="" width="36" height="36">
+        <span>Riverside Borough Council</span>
+      </a>
+      <nav aria-label="Main">
+        <ul class="nav-list">
+          {% set here = request.endpoint %}
+          <li><a href="{{ url_for('home') }}"{% if here == 'home' %} aria-current="page"{% endif %}>Home</a></li>
+          <li><a href="/report"{% if here in ('report', 'reported') %} aria-current="page"{% endif %}>Report a problem</a></li>
+          <li><a href="/bins"{% if here == 'bins' %} aria-current="page"{% endif %}>Bin collections</a></li>
+          <li><a href="/council-tax"{% if here == 'council_tax' %} aria-current="page"{% endif %}>Council tax</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="content" class="wrap">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap footer-inner">
+      <div>
+        <h2>Riverside Borough Council</h2>
+        <p>Civic Centre, 1 Bridge Street, Riverside RV1 1AA</p>
+        <p>Customer services: Monday to Friday, 8:30 to 17:00</p>
+      </div>
+      <div>
+        <h2>Help</h2>
+        <ul>
+          <li><a href="/contact">Contact us</a></li>
+        </ul>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>
