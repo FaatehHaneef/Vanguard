@@ -28,6 +28,7 @@ watchEffect(() => {
       <dt>Availability</dt>
       <dd>{{ book.available }} of {{ book.copies }} copies on the shelf</dd>
     </dl>
+    <p><RouterLink class="button" :to="`/reserve/${book.id}`">Reserve</RouterLink></p>
   </template>
   <template v-else>
     <h1 tabindex="-1">Book not found</h1>

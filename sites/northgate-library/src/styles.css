@@ -357,3 +357,16 @@ td {
 .facts dd {
   margin: 0;
 }
+
+/* Reservation form */
+.reserve-form {
+  max-width: 480px;
+}
+
+.reserve-form input[aria-invalid='true'] {
+  border-color: var(--error);
+}
+
+.actions {
+  margin-top: 20px;
+}
