@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Vanguard: A3 evaluation results</title>
+<!-- Numbers come from docs/results/a3-results.md (backend/scripts/a3_results.py) and
+     docs/results/functional-tests.md. Print to PDF at 1280x720 per slide. -->
+<style>
+  @page { size: 1280px 720px; margin: 0; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: "Segoe UI", Arial, sans-serif; color: #f3e9d2; background: #1b1f3b; }
+  section { width: 1280px; height: 720px; padding: 56px 72px; page-break-after: always; position: relative;
+            background: linear-gradient(180deg, #1b1f3b 0%, #232a4f 100%); }
+  h1 { font-size: 54px; margin: 0 0 10px; color: #ffb347; }
+  h2 { font-size: 34px; margin: 0 0 24px; color: #ffb347; }
+  p, li { font-size: 22px; line-height: 1.45; }
+  .sub { font-size: 24px; color: #c9d3e2; }
+  .small { font-size: 16px; color: #9aa6bf; }
+  table { border-collapse: collapse; width: 100%; font-size: 19px; }
+  th, td { border-bottom: 1px solid #3a4470; padding: 9px 10px; text-align: left; }
+  th { color: #c9d3e2; font-weight: 600; }
+  .big { font-size: 64px; font-weight: 700; color: #ffb347; line-height: 1; }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 18px; }
+  .card { background: #2a3360; border-radius: 10px; padding: 20px 22px; }
+  .card p { font-size: 18px; margin: 8px 0 0; color: #c9d3e2; }
+  .good { color: #7fb069; font-weight: 700; } .bad { color: #e05a6d; font-weight: 700; }
+  footer { position: absolute; bottom: 24px; left: 72px; right: 72px; font-size: 14px; color: #7f8aa8;
+           display: flex; justify-content: space-between; }
+</style>
+</head>
+<body>
+
+<section>
+  <p class="small">AI-4009 Generative AI · Assignment 3 · Pure Product</p>
+  <h1>Vanguard</h1>
+  <p class="sub">Auditing LLM-simulated users with enforced limits</p>
+  <p style="margin-top:48px">An AI agent plays a person with limits (a keyboard-only shopper, a screen-reader user) on real websites. Vanguard enforces those limits in code and checks every step for <b>leakage</b>: the agent doing what that person could not.</p>
+  <p class="small" style="margin-top:60px">Syed Muhammad Faateh Haneef (23i-0688) · Abdul Hadi (23i-0676) · Ibrahim Malik (23i-0694)</p>
+</section>
+
+<section>
+  <h2>What was evaluated in A3</h2>
+  <ul>
+    <li><b>Simulated-user agent</b> (Gemini 3.6 Flash, forced tool calls): 16 runs, 80 steps</li>
+    <li><b>Baseline vs ours:</b> limits only in the prompt vs a <b>code-enforced gate</b></li>
+    <li>Personas: <b>Knock</b> (keyboard-only) and <b>Cog</b> (unrestricted control, scored as if every limit applied)</li>
+    <li>Tasks: Tallowmere "cheapest candle" and Willowbrook "request a callback", 2 repeats each, 12-step cap</li>
+    <li><b>Leakage checker</b> (deterministic code) validated against 60 human-labelled steps</li>
+    <li>Real browser: Playwright drives Chromium; real key presses and clicks; trusted input events recorded</li>
+  </ul>
+  <footer><span>Every number: backend/scripts/a3_results.py</span><span>2</span></footer>
+</section>
+
+<section>
+  <h2>Baseline comparison: Knock (keyboard-only)</h2>
+  <table>
+    <tr><th>Enforcement</th><th>Success</th><th>Runs that broke a limit</th><th>Attempted / step</th><th>Mean steps</th></tr>
+    <tr><td>Prompt-only (baseline)</td><td>4 / 4</td><td class="bad">4 / 4 · clicked with a mouse every time</td><td>0.45</td><td>5.0</td></tr>
+    <tr><td><b>Gate</b> (ours)</td><td>4 / 4</td><td class="good">0 / 4 · 3 clicks refused, finished by keyboard</td><td>0.17</td><td>6.5</td></tr>
+  </table>
+  <div class="grid">
+    <div class="card"><div class="big">100%</div><p>prompt-only runs where Knock still used the mouse</p></div>
+    <div class="card"><div class="big">0%</div><p>gated runs with an executed leak, at no loss of success</p></div>
+    <div class="card"><div class="big">+1.5</div><p>extra steps on average under the gate (keyboard route is longer)</p></div>
+  </div>
+  <footer><span>95% Wilson intervals with 2 runs per group are wide (e.g. 0%–66%); A4 adds runs on local models</span><span>3</span></footer>
+</section>
+
+<section>
+  <h2>Labelled test set and checker agreement</h2>
+  <div class="grid">
+    <div class="card"><div class="big">60</div><p>steps from real runs, a fixed blind sample, labelled independently by two members</p></div>
+    <div class="card"><div class="big">κ 1.00</div><p>agreement between the two labellers (60 of 60)</p></div>
+    <div class="card"><div class="big">κ 1.00</div><p>checker vs agreed labels: precision 100%, recall 100%</p></div>
+  </div>
+  <p style="margin-top:34px"><b>Limitation, stated plainly:</b> this sample is dominated by input-type cases (a click by a persona that may not click), which are unambiguous. Harder information-leak cases (screen-reader and magnifier personas, honeytokens) are labelled in A4.</p>
+  <footer><span>data/labelling/a3 · data/labels/</span><span>4</span></footer>
+</section>
+
+<section>
+  <h2>Error analysis: 14 failing runs, grouped by cause</h2>
+  <table>
+    <tr><th>Cause (computed by code)</th><th>Runs</th><th>What happened</th><th>Planned fix</th></tr>
+    <tr><td>Model unavailable</td><td>8</td><td>Free-tier daily quota (20 requests per project) ran out mid-run</td><td>Several actions per model call; local models (Ollama) for volume; quota-aware pacing</td></tr>
+    <tr><td>Persona leak</td><td>6</td><td>Keyboard-only persona clicked, all under prompt-only</td><td>This is the baseline's failure: the gate removes it (0 under the gate)</td></tr>
+  </table>
+  <p style="margin-top:26px">Also found and fixed during evaluation: pages with <code>tabindex="-1"</code> containers were hidden from the agent's view; a refused click was counted as a checker miss.</p>
+  <footer><span>29 A3 runs with the real model · docs/results/a3-results.md §4</span><span>5</span></footer>
+</section>
+
+<section>
+  <h2>Latency, cost and functional tests</h2>
+  <div class="grid">
+    <div class="card"><div class="big">5.8 s</div><p>step latency p50 (model call + browser action); p95 18.4 s</p></div>
+    <div class="card"><div class="big">$0.008</div><p>per run at the paid list price ($0 on the free tier); ~1,900 input tokens per step</p></div>
+    <div class="card"><div class="big">100%</div><p>functional test cases passed: 206 of 206, including real-browser tests; CI on every push</p></div>
+  </div>
+  <p style="margin-top:34px">Four test sites built separately to a written kit, each with planted barriers and honeytokens: Tallowmere (shop), Willowbrook (clinic), Northgate (library), Riverside (council, with a 24-notice prompt-injection set).</p>
+  <footer><span>docs/results/functional-tests.md</span><span>6</span></footer>
+</section>
+
+<section>
+  <h2>Next (A4)</h2>
+  <ul>
+    <li><b>Live in-app walkthrough:</b> stream the browser so characters are watched moving through sites inside Vanguard</li>
+    <li>Fewer model calls per run (several actions per call); local models for the bulk of runs</li>
+    <li>Bounded perception and verifier batches; screen-reader and magnifier personas fully checked</li>
+    <li>≥ 100 labelled steps per component, including information leaks and honeytokens</li>
+    <li>Public deployment on a VPS; demonstration paper, documentation, pitch</li>
+  </ul>
+  <footer><span>github.com/FaatehHaneef/Vanguard</span><span>7</span></footer>
+</section>
+
+</body>
+</html>
