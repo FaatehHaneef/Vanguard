@@ -41,10 +41,10 @@
 <section>
   <h2>What was evaluated in A3</h2>
   <ul>
-    <li><b>Simulated-user agent</b> (Gemini 3.6 Flash, forced tool calls): 16 runs, 80 steps</li>
+    <li><b>Simulated-user agent</b> (Gemini 3.6 Flash, forced tool calls): 24 runs, 119 steps</li>
     <li><b>Baseline vs ours:</b> limits only in the prompt vs a <b>code-enforced gate</b></li>
     <li>Personas: <b>Knock</b> (keyboard-only) and <b>Cog</b> (unrestricted control, scored as if every limit applied)</li>
-    <li>Tasks: Tallowmere "cheapest candle" and Willowbrook "request a callback", 2 repeats each, 12-step cap</li>
+    <li>Tasks: Tallowmere "cheapest candle" and Willowbrook "request a callback", 3 repeats each, 12-step cap</li>
     <li><b>Leakage checker</b> (deterministic code) validated against 60 human-labelled steps</li>
     <li>Real browser: Playwright drives Chromium; real key presses and clicks; trusted input events recorded</li>
   </ul>
@@ -55,15 +55,15 @@
   <h2>Baseline comparison: Knock (keyboard-only)</h2>
   <table>
     <tr><th>Enforcement</th><th>Success</th><th>Runs that broke a limit</th><th>Attempted / step</th><th>Mean steps</th></tr>
-    <tr><td>Prompt-only (baseline)</td><td>4 / 4</td><td class="bad">4 / 4 · clicked with a mouse every time</td><td>0.45</td><td>5.0</td></tr>
-    <tr><td><b>Gate</b> (ours)</td><td>4 / 4</td><td class="good">0 / 4 · 3 clicks refused, finished by keyboard</td><td>0.17</td><td>6.5</td></tr>
+    <tr><td>Prompt-only (baseline)</td><td>6 / 6</td><td class="bad">5 / 6 · clicked with a mouse</td><td>0.32</td><td>4.7</td></tr>
+    <tr><td><b>Gate</b> (ours)</td><td>6 / 6</td><td class="good">0 / 6 · 4 clicks refused, finished by keyboard</td><td>0.13</td><td>6.5</td></tr>
   </table>
   <div class="grid">
-    <div class="card"><div class="big">100%</div><p>prompt-only runs where Knock still used the mouse</p></div>
+    <div class="card"><div class="big">83%</div><p>prompt-only runs where Knock still used the mouse (5 of 6)</p></div>
     <div class="card"><div class="big">0%</div><p>gated runs with an executed leak, at no loss of success</p></div>
-    <div class="card"><div class="big">+1.5</div><p>extra steps on average under the gate (keyboard route is longer)</p></div>
+    <div class="card"><div class="big">+1.8</div><p>extra steps on average under the gate (keyboard route is longer)</p></div>
   </div>
-  <footer><span>95% Wilson intervals with 2 runs per group are wide (e.g. 0%–66%); A4 adds runs on local models</span><span>3</span></footer>
+  <footer><span>3 runs per persona, task and option; 95% Wilson intervals are still wide (e.g. 0%–56%); A4 runs 5 on local models</span><span>3</span></footer>
 </section>
 
 <section>
@@ -78,20 +78,20 @@
 </section>
 
 <section>
-  <h2>Error analysis: 14 failing runs, grouped by cause</h2>
+  <h2>Error analysis: 15 failing runs, grouped by cause</h2>
   <table>
     <tr><th>Cause (computed by code)</th><th>Runs</th><th>What happened</th><th>Planned fix</th></tr>
     <tr><td>Model unavailable</td><td>8</td><td>Free-tier daily quota (20 requests per project) ran out mid-run</td><td>Several actions per model call; local models (Ollama) for volume; quota-aware pacing</td></tr>
-    <tr><td>Persona leak</td><td>6</td><td>Keyboard-only persona clicked, all under prompt-only</td><td>This is the baseline's failure: the gate removes it (0 under the gate)</td></tr>
+    <tr><td>Persona leak</td><td>7</td><td>Keyboard-only persona clicked, all under prompt-only</td><td>This is the baseline's failure: the gate removes it (0 under the gate)</td></tr>
   </table>
   <p style="margin-top:26px">Also found and fixed during evaluation: pages with <code>tabindex="-1"</code> containers were hidden from the agent's view; a refused click was counted as a checker miss.</p>
-  <footer><span>29 A3 runs with the real model · docs/results/a3-results.md §4</span><span>5</span></footer>
+  <footer><span>37 A3 runs with the real model · docs/results/a3-results.md §4</span><span>5</span></footer>
 </section>
 
 <section>
   <h2>Latency, cost and functional tests</h2>
   <div class="grid">
-    <div class="card"><div class="big">5.8 s</div><p>step latency p50 (model call + browser action); p95 18.4 s</p></div>
+    <div class="card"><div class="big">8.5 s</div><p>step latency p50 (model call + browser action); p95 26.6 s</p></div>
     <div class="card"><div class="big">$0.008</div><p>per run at the paid list price ($0 on the free tier); ~1,900 input tokens per step</p></div>
     <div class="card"><div class="big">100%</div><p>functional test cases passed: 206 of 206, including real-browser tests; CI on every push</p></div>
   </div>
