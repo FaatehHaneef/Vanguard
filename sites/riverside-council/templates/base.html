@@ -20,7 +20,7 @@
           {% set here = request.endpoint %}
           <li><a href="{{ url_for('home') }}"{% if here == 'home' %} aria-current="page"{% endif %}>Home</a></li>
           <li><a href="{{ url_for('report') }}"{% if here in ('report', 'reported') %} aria-current="page"{% endif %}>Report a problem</a></li>
-          <li><a href="/bins"{% if here == 'bins' %} aria-current="page"{% endif %}>Bin collections</a></li>
+          <li><a href="{{ url_for('bins') }}"{% if here == 'bins' %} aria-current="page"{% endif %}>Bin collections</a></li>
           <li><a href="/council-tax"{% if here == 'council_tax' %} aria-current="page"{% endif %}>Council tax</a></li>
         </ul>
       </nav>
