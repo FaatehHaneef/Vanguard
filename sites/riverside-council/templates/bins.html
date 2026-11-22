@@ -9,10 +9,14 @@
     <label for="postcode">Your postcode</label>
     <span class="hint" id="postcode-hint">For example, RV2 3QR</span>
     {% if error %}<span class="error-message" id="postcode-error">{{ error }}</span>{% endif %}
+    <div class="search-row">
     <input type="text" id="postcode" name="postcode" autocomplete="postal-code" value="{{ entered }}"
            aria-describedby="postcode-hint{% if error %} postcode-error{% endif %}">
+    <button class="button icon-button" type="submit">
+      <svg viewBox="0 0 24 24" width="22" height="22" focusable="false"><circle cx="10" cy="10" r="6.5" fill="none" stroke="currentColor" stroke-width="2.6"/><path d="M15 15l6 6" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>
+    </button>
+    </div>
   </div>
-  <button class="button" type="submit">Find collection day</button>
 </form>
 
 {% if collection %}
