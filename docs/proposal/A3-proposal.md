@@ -53,13 +53,13 @@ From the user's view, Vanguard is a web app with a game-like front end. The user
 
 ```mermaid
 flowchart LR
-  A[Pick characters<br/>lobby] --> B[Pick site, task,<br/>enforcement, conditions]
-  B --> C[Batch starts:<br/>balanced runs]
-  C --> D[Each step: observe →<br/>model proposes action →<br/>gate / verifier → browser]
-  D -->|recorded| E[(Trace store)]
-  E --> F[Checker and metrics<br/>(code)]
-  F --> G[Live view, explanation,<br/>comparison, dashboard]
-  E --> H[Blind labelling desk]
+  A["Pick characters<br/>lobby"] --> B["Pick site, task,<br/>enforcement, conditions"]
+  B --> C["Batch starts:<br/>balanced runs"]
+  C --> D["Each step: observe →<br/>model proposes action →<br/>gate / verifier → browser"]
+  D -->|recorded| E[("Trace store")]
+  E --> F["Checker and metrics<br/>(code)"]
+  F --> G["Live view, explanation,<br/>comparison, dashboard"]
+  E --> H["Blind labelling desk"]
   H --> F
 ```
 
@@ -68,25 +68,25 @@ flowchart LR
 ```mermaid
 flowchart TB
   subgraph Web["Web app (Next.js, React)"]
-    L[Lobby / site picker] --- R[Run view and live view] --- D[Results dashboard] --- LB[Labelling desk]
+    L["Lobby / site picker"] --- R["Run view and live view"] --- D["Results dashboard"] --- LB["Labelling desk"]
   end
   subgraph API["Backend (FastAPI, Python)"]
-    S[Run and batch controller]
-    AG[Agent loop]
-    GT[Action gate<br/>rules S0, H1, H4a, H4b]
-    VF[Verifier agent]
-    CK[Leakage checker<br/>+ metrics, failures]
-    EX[Explanation generator]
+    S["Run and batch controller"]
+    AG["Agent loop"]
+    GT["Action gate<br/>rules S0, H1, H4a, H4b"]
+    VF["Verifier agent"]
+    CK["Leakage checker<br/>+ metrics, failures"]
+    EX["Explanation generator"]
   end
   subgraph Worker["Browser executor (Playwright, Chromium)"]
-    OB[Observation builders:<br/>full view, accessibility tree,<br/>magnifier window]
-    EV[Trusted input recorder,<br/>network allow-list, screenshots]
-    HUD[Character overlay<br/>(decoration only)]
+    OB["Observation builders:<br/>full view, accessibility tree,<br/>magnifier window"]
+    EV["Trusted input recorder,<br/>network allow-list, screenshots"]
+    HUD["Character overlay<br/>(decoration only)"]
   end
-  M[(Gemini API<br/>or OpenAI-compatible model)]
-  DB[(PostgreSQL)]
-  SITE[Test sites, e.g. Tallowmere]
-  BT[Braintree sandbox]
+  M[("Gemini API<br/>or OpenAI-compatible model")]
+  DB[("PostgreSQL")]
+  SITE["Test sites, e.g. Tallowmere"]
+  BT["Braintree sandbox"]
   Web <--> API
   AG <--> M
   VF <--> M
@@ -252,3 +252,14 @@ Vanguard is deployed with Docker on a cloud VPS, not on a serverless host, becau
 [7] Google. *Gemini API pricing.* https://ai.google.dev/gemini-api/docs/pricing (read 2026-11-22).
 [8] startup.pk. *NIC Islamabad's Cohort 6 applications are open.* https://startup.pk/nic-islamabads-cohort-6-applications-are-open-heres-everything-you-need-to-apply/ ; techx.pk, *NIC Islamabad Cohort 6 window shuts* (read 2026-11-22).
 [9] Google. *Google for Startups Cloud Program.* https://cloud.google.com/startup (terms to be confirmed; secondary summary read 2026-11-22).
+
+## Appendix: AI tool declaration
+
+As required by Assignment 3, Section 9. Kept in the repository as `AI_USE.md`; runtime use of AI inside the product is described in Sections 4 and 5.
+
+| Date | Member | Tool | Used for | Checked by |
+|---|---|---|---|---|
+| 2026-11-21 | Syed Muhammad Faateh Haneef | Claude Code (Anthropic) | Reading and summarising the course documents and the two earlier repositories; drafting `Vanguard.md` and `docs/leakage-spec.md`; writing the backend foundation (contracts, rules, gate, agent loop, store, API) and its tests; extracting and porting reused code from Sentinel | Design decisions made by the team; every file reviewed by Faateh; tests run locally |
+| 2026-11-22 | Syed Muhammad Faateh Haneef | Claude Code (Anthropic) | Writing the Playwright executor (observation, event recording, network filter, screen-reader and magnifier perception, conditions), the character overlay, the leakage checker (H1, H3a, H4a, H4b, honeytokens), metrics, batches, labelling and agreement, failure analysis, the explanation generator and verifier, the OpenAI-compatible provider, the related web pages, tests, CI and documentation; verifying the downloaded datasets | Design decisions and scope set by Faateh; code to be reviewed by Faateh before submission; 80 automated tests run locally and in CI against a real Chromium |
+| 2026-11-22 | Abdul Hadi | Claude Code (Anthropic) | Building the Northgate Library test site from `docs/tasks-A3.md` Section 1: the Vue 3 + Vite scaffold, pages, styles, catalogue data, planted barriers and honeytokens, Dockerfile, README and manifest; registering the site and its tasks in the catalog, Compose and the allowed origins; running the site checks; labelling the 60 steps of the A3 sample (`data/labels/hadi.json`) by following `docs/labelling-guide.md` | `check-site northgate --live` and `pytest -q` run locally; each task tried in Chromium with a mouse and with the keyboard only against the manifest; code and labels to be reviewed by Abdul before pushing |
+| 2026-11-22 | Ibrahim Malik | Claude Code (Anthropic) | Building the Riverside Council test site (Flask templates, styles, planted barriers, honeytokens, Dockerfile, README and manifest), the 24-notice prompt-injection set, `backend/tests/test_injection.py`, the catalog and Compose entries, and the functional test table; checking the site in Chromium by keyboard and mouse; labelling the 60 steps of the A3 sample (`data/labels/ibrahim.json`) | Site design and steps from `docs/tasks-A3.md`; code to be reviewed by Ibrahim before submission; `check-site --live` (15/15) and 206 backend tests run locally. The A3 labels were made with Claude Code, so agreement involving them is not agreement between two people |
