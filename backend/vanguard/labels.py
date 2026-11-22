@@ -177,7 +177,10 @@ def next_items(
 
 
 def checker_flags(store: RunStore, keys: set[tuple[str, int]]) -> dict[tuple[str, int], bool]:
-    """Executed leakage per step according to the checker, for the given steps."""
+    """Attempted leakage per step according to the checker, for the given steps.
+
+    Labellers judge the proposal, whether or not it ran (docs/labelling-guide.md: a click
+    the gate refused is still "yes"), so the matching checker verdict is *attempted*."""
     from vanguard.results import score  # the same scoring the results tables use
 
     flags = {}
@@ -188,7 +191,7 @@ def checker_flags(store: RunStore, keys: set[tuple[str, int]]) -> dict[tuple[str
         leakage, _ = score(run, store.steps(run_id), Settings())
         for verdict in leakage.steps:
             if (run_id, verdict.index) in keys:
-                flags[(run_id, verdict.index)] = bool(verdict.executed)
+                flags[(run_id, verdict.index)] = bool(verdict.attempted)
     return flags
 
 
