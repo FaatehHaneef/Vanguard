@@ -69,8 +69,9 @@ def main() -> None:
         "",
         "## 1. Prompt-only vs gate (baseline comparison)",
         "",
-        "Tasks: Tallowmere `cheapest`, Willowbrook `wb-callback`; 2 runs per group; "
-        "12-step cap. Percentages in brackets are 95% Wilson intervals.",
+        "Tasks: Tallowmere `cheapest`, Willowbrook `wb-callback`; "
+        f"{min(g.runs for g in groups)} runs per group; 12-step cap. "
+        "Percentages in brackets are 95% Wilson intervals.",
         "",
         "| Persona / task / enforcement | Runs | Success | Runs with an executed leak "
         "| Attempted / step | Executed / step | Steps | Refused | Step p50 / p95 (s) |",
