@@ -34,3 +34,4 @@ CLAUDE.md
 *.db
 .venv/
 test-results.xml
+submission/
