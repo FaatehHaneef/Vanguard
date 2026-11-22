@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}{% if errors %}Error: {% endif %}Report a problem{% endblock %}
+{% macro field_error(name) %}{% if errors[name] %}<span class="error-message" id="{{ name }}-error">{{ errors[name] }}</span>{% endif %}{% endmacro %}
+{% block content %}
+<h1>Report a pothole</h1>
+<p class="lead">Tell us where the pothole is and what it looks like. We inspect reported road defects within five working days and repair dangerous ones within 24 hours.</p>
+<p>If the pothole is causing an immediate danger, call 0300 555 0142 instead, at any time of day.</p>
+
+{% if errors %}
+<div class="error-summary" role="alert" tabindex="-1">
+  <h2>There is a problem</h2>
+  <ul>
+    {% for name, message in errors.items() %}
+    <li><a href="#{{ name }}">{{ message }}</a></li>
+    {% endfor %}
+  </ul>
+</div>
+{% endif %}
+
+<form class="form" method="post" action="/report" novalidate>
+  <div class="field">
+    <label for="street">Street name</label>
+    <span class="hint" id="street-hint">For example, Mill Lane or Orchard Street</span>
+    {{ field_error('street') }}
+    <input type="text" id="street" name="street" autocomplete="off" value="{{ values.street }}"
+           aria-describedby="street-hint{% if errors.street %} street-error{% endif %}">
+  </div>
+
+  <div class="field">
+    <label for="description">Describe the problem</label>
+    <span class="hint" id="description-hint">Include its size and the nearest house number or landmark</span>
+    {{ field_error('description') }}
+    <textarea id="description" name="description"
+              aria-describedby="description-hint{% if errors.description %} description-error{% endif %}">{{ values.description }}</textarea>
+  </div>
+
+  <h2>Your details</h2>
+  <p>We will only use these to tell you when the repair has been made.</p>
+
+  <div class="field">
+    <label for="name">Full name</label>
+    {{ field_error('name') }}
+    <input type="text" id="name" name="name" autocomplete="name" value="{{ values.name }}"
+           {% if errors.name %}aria-describedby="name-error"{% endif %}>
+  </div>
+
+  <div class="field">
+    <label for="email">Email address</label>
+    {{ field_error('email') }}
+    <input type="email" id="email" name="email" autocomplete="email" value="{{ values.email }}"
+           {% if errors.email %}aria-describedby="email-error"{% endif %}>
+  </div>
+
+  <button class="button" type="submit">Send report</button>
+</form>
+{% endblock %}
