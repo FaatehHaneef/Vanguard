@@ -1,6 +1,5 @@
 {% extends "base.html" %}
-{% block title %}{% if errors %}Error: {% endif %}Report a problem<script src="{{ url_for('static', filename='map.js') }}"></script>
-{% endblock %}
+{% block title %}{% if errors %}Error: {% endif %}Report a problem{% endblock %}
 {% macro field_error(name) %}{% if errors[name] %}<span class="error-message" id="{{ name }}-error">{{ errors[name] }}</span>{% endif %}{% endmacro %}
 {% block content %}
 <h1>Report a pothole</h1>
