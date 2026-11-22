@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Report received{% endblock %}
+{% block content %}
+<div class="panel success">
+  <h1>Report received</h1>
+  <p>Your reference number is</p>
+  <p class="reference">{{ ref }}</p>
+</div>
+<p>Thank you, {{ report.name }}. We have received your report about {{ report.street }}.{% if report.pin %} You placed a pin in map square {{ report.pin }}.{% endif %}</p>
+<p>We have sent a copy to {{ report.email }}. An inspector will visit within five working days, and we will email you again when the repair has been made.</p>
+<h2>What happens next</h2>
+<ol>
+  <li>An inspector checks the pothole and decides how urgent it is.</li>
+  <li>Dangerous defects are made safe within 24 hours. Others are added to the repair programme.</li>
+  <li>We email you when the work is complete.</li>
+</ol>
+<p><a href="{{ url_for('home') }}">Return to the home page</a></p>
+{% endblock %}

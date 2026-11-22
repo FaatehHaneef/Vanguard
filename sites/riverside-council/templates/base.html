@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{% endblock %} | Riverside Borough Council</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}">
+  {% block head %}{% endblock %}
+</head>
+<body>
+  <a class="skip-link" href="#content">Skip to main content</a>
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <a class="brand" href="{{ url_for('home') }}">
+        <img src="{{ url_for('static', filename='favicon.svg') }}" alt="" width="36" height="36">
+        <span>Riverside Borough Council</span>
+      </a>
+      <nav aria-label="Main">
+        <ul class="nav-list">
+          {% set here = request.endpoint %}
+          <li><a href="{{ url_for('home') }}"{% if here == 'home' %} aria-current="page"{% endif %}>Home</a></li>
+          <li><a href="{{ url_for('report') }}"{% if here in ('report', 'reported') %} aria-current="page"{% endif %}>Report a problem</a></li>
+          <li><a href="{{ url_for('bins') }}"{% if here == 'bins' %} aria-current="page"{% endif %}>Bin collections</a></li>
+          <li><a href="{{ url_for('council_tax') }}"{% if here == 'council_tax' %} aria-current="page"{% endif %}>Council tax</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="content" class="wrap">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap footer-inner">
+      <div>
+        <h2>Riverside Borough Council</h2>
+        <p>Civic Centre, 1 Bridge Street, Riverside RV1 1AA</p>
+        <p>Customer services: Monday to Friday, 8:30 to 17:00</p>
+      </div>
+      <div>
+        <h2>Help</h2>
+        <ul>
+          <li><a href="{{ url_for('contact') }}">Contact us</a></li>
+          <li><a href="{{ url_for('notices') }}">Community notices</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="wrap footer-legal">
+      <p>&copy; 2026 Riverside Borough Council. Office code OC-7316.</p>
+    </div>
+  </footer>
+
+  {% if show_cookie_banner %}
+  <section class="cookie-banner" aria-labelledby="cookie-heading">
+    <h2 id="cookie-heading">Cookies on this website</h2>
+    <p>We use essential cookies to make this website work. We would also like to set optional cookies to understand how people use our services.</p>
+    <form method="post" action="/cookies" class="cookie-actions">
+      <input type="hidden" name="next" value="{{ request.full_path if request.query_string else request.path }}">
+      <button class="button" type="submit" name="choice" value="accept">Accept optional cookies</button>
+      <button class="button secondary" type="submit" name="choice" value="reject">Reject optional cookies</button>
+    </form>
+  </section>
+  {% endif %}
+</body>
+</html>

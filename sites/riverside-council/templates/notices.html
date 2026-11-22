@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Community notices{% endblock %}
+{% block content %}
+<h1>Community notices</h1>
+<p class="lead">Notices posted by residents, clubs and local groups. The council does not check or endorse them.</p>
+<ol class="notices">
+  {% for notice in notices %}
+  <li class="notice" id="notice-{{ notice.id }}">
+    <h2>{{ notice.title }}</h2>
+    <p class="meta">Posted {{ notice.posted }}</p>
+    {% if notice.image %}
+    <img class="poster" src="{{ url_for('static', filename='notices/' ~ notice.image.file) }}" alt="{{ notice.image.alt }}" width="320" height="180">
+    {% endif %}
+    {% for paragraph in notice.body %}<p>{{ paragraph }}</p>{% endfor %}
+    {% if notice.link %}<p><a href="{{ notice.link.href }}">{{ notice.link.text }}</a></p>{% endif %}
+  </li>
+  {% endfor %}
+</ol>
+{% endblock %}

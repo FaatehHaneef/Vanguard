@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Report a problem{% endblock %}
+{% block content %}
+<p class="form-ref" aria-hidden="true">Form RF-6093</p>
+<h1>Report a pothole</h1>
+<p class="lead">Tell us where the pothole is and what it looks like. We inspect reported road defects within five working days and repair dangerous ones within 24 hours.</p>
+<p>If the pothole is causing an immediate danger, call 0300 555 0142 instead, at any time of day.</p>
+
+<form class="form" method="post" action="/report" novalidate>
+  <div class="field">
+    <label for="street">Street name</label>
+    <span class="hint" id="street-hint">For example, Mill Lane or Orchard Street</span>
+    <input type="text" id="street" name="street" autocomplete="off" value="{{ values.street }}"
+           aria-describedby="street-hint"{% if errors.street %} class="invalid"{% endif %}>
+  </div>
+
+  <div class="field">
+    <label for="description">Describe the problem</label>
+    <span class="hint" id="description-hint">Include its size and the nearest house number or landmark</span>
+    <textarea id="description" name="description"
+              aria-describedby="description-hint"{% if errors.description %} class="invalid"{% endif %}>{{ values.description }}</textarea>
+  </div>
+
+  <div class="field">
+    <p class="map-label">Pin the location on the map (optional)</p>
+    <span class="hint">Choose the square where the pothole is. You can skip this if you have entered the street name.</span>
+    <div class="map">
+      <div class="map-grid">
+        {% for row in "ABCDE" %}{% for column in range(1, 9) %}
+        <div class="map-cell{% if values.pin == row ~ column %} pinned{% endif %}" data-square="{{ row }}{{ column }}"></div>
+        {% endfor %}{% endfor %}
+      </div>
+    </div>
+    <input type="hidden" id="pin" name="pin" value="{{ values.pin }}">
+    <p id="pin-status" class="hint">{% if values.pin %}Pin placed in square {{ values.pin }}.{% endif %}</p>
+  </div>
+
+  <h2>Your details</h2>
+  <p>We will only use these to tell you when the repair has been made.</p>
+
+  <div class="field">
+    <label for="name">Full name</label>
+    <input type="text" id="name" name="name" autocomplete="name" value="{{ values.name }}"
+           {% if errors.name %}class="invalid"{% endif %}>
+  </div>
+
+  <div class="field">
+    <label for="email">Email address</label>
+    <input type="email" id="email" name="email" autocomplete="email" value="{{ values.email }}"
+           {% if errors.email %}class="invalid"{% endif %}>
+  </div>
+
+  <button class="button" type="submit">Send report</button>
+</form>
+<script src="{{ url_for('static', filename='map.js') }}"></script>
+{% endblock %}

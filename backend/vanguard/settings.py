@@ -40,6 +40,7 @@ class Settings(BaseSettings):
         "http://localhost:3100",
         "http://localhost:3101",
         "http://localhost:3102",
+        "http://localhost:3103",
     ]
     # Payment providers the agent may reach, sandbox hosts only.
     allowed_payment_hosts: list[str] = [

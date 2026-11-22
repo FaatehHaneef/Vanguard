@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% block title %}Council tax
+<h2>How your council tax is spent</h2>
+<p>For every £100 of council tax paid in Riverside in 2026 to 2027:</p>
+<div class="table-wrap">
+<table>
+  <caption>Spending for every £100 of council tax</caption>
+  <thead><tr><th scope="col">Service</th><th scope="col" class="num">Amount</th></tr></thead>
+  <tbody>
+    <tr><td>Adult social care</td><td class="num">£31</td></tr>
+    <tr><td>Children's services and schools support</td><td class="num">£19</td></tr>
+    <tr><td>Wendshire Police</td><td class="num">£13</td></tr>
+    <tr><td>Bins, recycling and street cleaning</td><td class="num">£11</td></tr>
+    <tr><td>Roads, pavements and street lighting</td><td class="num">£9</td></tr>
+    <tr><td>Wendshire Fire and Rescue Service</td><td class="num">£5</td></tr>
+    <tr><td>Libraries, parks and leisure</td><td class="num">£5</td></tr>
+    <tr><td>Housing and homelessness</td><td class="num">£4</td></tr>
+    <tr><td>Running the council</td><td class="num">£3</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2>Common questions</h2>
+<h3>I have moved home. What do I need to do?</h3>
+<p>Tell us the date you moved in or out, and the address you moved to. We will close your old account and send you a final bill, or a refund if you have paid too much.</p>
+<h3>Why has my bill gone up?</h3>
+<p>The charge for every band rose by 4.99% this year. Of this, 2% is set aside for adult social care, as allowed by government rules.</p>
+<h3>Can I challenge my band?</h3>
+<p>You can ask the Valuation Office Agency to review your band if you think it is wrong. Keep paying your current bill while they decide.</p>
+<h3>Do I pay council tax on an empty home?</h3>
+<p>Homes that have been empty and unfurnished for more than a year pay a 100% premium on top of the normal charge.</p>
+
+<h2 id="deadline">Payment deadline</h2>
+<div class="panel">
+  <p>The full council tax for 2026 to 2027 must be paid by <strong>31 January 2027</strong>.</p>
+</div>
+
+{% endblock %}
+{% block content %}
+<h1>Council tax 2026 to 2027</h1>
+<p class="lead">Council tax pays for local services such as bin collections, road repairs, libraries and social care. The amount you pay depends on the band of your home.</p>
+
+<h2>Bands and charges</h2>
+<p>Each home is placed in a band by the Valuation Office Agency, based on what it would have sold for on 1 April 1991.</p>
+<div class="table-wrap">
+<table>
+  <caption>Yearly council tax by band, 2026 to 2027</caption>
+  <thead>
+    <tr><th scope="col">Band</th><th scope="col">Property value in 1991</th><th scope="col" class="num">Yearly charge</th></tr>
+  </thead>
+  <tbody>
+    {% for band, value, charge in bands %}
+    <tr><td>{{ band }}</td><td>{{ value }}</td><td class="num">{{ charge }}</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+<p>The charges include amounts collected for Wendshire Police and Wendshire Fire and Rescue Service.</p>
+
+<h2>Ways to pay</h2>
+<ul>
+  <li><strong>Direct Debit:</strong> 10 monthly instalments, taken on the 1st, 15th or 28th of each month. This is the easiest way to make sure you never miss a payment.</li>
+  <li><strong>By phone:</strong> call our automated line on 0300 555 0150 with your debit card and your council tax account number.</li>
+  <li><strong>In person:</strong> at any Post Office or PayPoint outlet, using the barcode on your bill.</li>
+  <li><strong>Bank transfer:</strong> to Riverside Borough Council, sort code 20-45-77, quoting your 9-digit account number.</li>
+</ul>
+
+<h2>Discounts and reductions</h2>
+<ul>
+  <li><strong>Single person discount:</strong> 25% off if you are the only adult living in your home.</li>
+  <li><strong>Students:</strong> homes where everyone is a full-time student do not pay council tax.</li>
+  <li><strong>Council tax support:</strong> help for people on a low income, whether or not they work.</li>
+  <li><strong>Disabled band reduction:</strong> your bill is reduced by one band if your home has been adapted for a disabled person.</li>
+</ul>
+
+<h2>If you cannot pay</h2>
+<p>Contact us as soon as you can on 0300 555 0150. We can often spread payments over more months. If you miss a payment we will send a reminder; if the amount is still unpaid after 14 days, you lose the right to pay by instalments.</p>
+
+<h2>How your council tax is spent</h2>
+<p>For every £100 of council tax paid in Riverside in 2026 to 2027:</p>
+<div class="table-wrap">
+<table>
+  <caption>Spending for every £100 of council tax</caption>
+  <thead><tr><th scope="col">Service</th><th scope="col" class="num">Amount</th></tr></thead>
+  <tbody>
+    <tr><td>Adult social care</td><td class="num">£31</td></tr>
+    <tr><td>Children's services and schools support</td><td class="num">£19</td></tr>
+    <tr><td>Wendshire Police</td><td class="num">£13</td></tr>
+    <tr><td>Bins, recycling and street cleaning</td><td class="num">£11</td></tr>
+    <tr><td>Roads, pavements and street lighting</td><td class="num">£9</td></tr>
+    <tr><td>Wendshire Fire and Rescue Service</td><td class="num">£5</td></tr>
+    <tr><td>Libraries, parks and leisure</td><td class="num">£5</td></tr>
+    <tr><td>Housing and homelessness</td><td class="num">£4</td></tr>
+    <tr><td>Running the council</td><td class="num">£3</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2>Common questions</h2>
+<h3>I have moved home. What do I need to do?</h3>
+<p>Tell us the date you moved in or out, and the address you moved to. We will close your old account and send you a final bill, or a refund if you have paid too much.</p>
+<h3>Why has my bill gone up?</h3>
+<p>The charge for every band rose by 4.99% this year. Of this, 2% is set aside for adult social care, as allowed by government rules.</p>
+<h3>Can I challenge my band?</h3>
+<p>You can ask the Valuation Office Agency to review your band if you think it is wrong. Keep paying your current bill while they decide.</p>
+<h3>Do I pay council tax on an empty home?</h3>
+<p>Homes that have been empty and unfurnished for more than a year pay a 100% premium on top of the normal charge.</p>
+
+<h2 id="deadline">Payment deadline</h2>
+<div class="panel">
+  <p>The full council tax for 2026 to 2027 must be paid by <strong>31 January 2027</strong>.</p>
+</div>
+
+{% endblock %}

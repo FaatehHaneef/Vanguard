@@ -32,7 +32,7 @@ services:
       VANGUARD_DATA_DIR: /data
       VANGUARD_EXECUTOR: playwright
       # Sites keep their localhost addresses; the browser's requests go to the containers.
-      VANGUARD_ORIGIN_REWRITES: '{"http://localhost:3100": "http://tallowmere:3100", "http://localhost:3101": "http://willowbrook:3101", "http://localhost:3102": "http://northgate:3102"}'
+      VANGUARD_ORIGIN_REWRITES: '{"http://localhost:3100": "http://tallowmere:3100", "http://localhost:3101": "http://willowbrook:3101", "http://localhost:3102": "http://northgate:3102", "http://localhost:3103": "http://riverside:3103"}'
     ports:
       - "8000:8000"
     volumes:
@@ -45,6 +45,8 @@ services:
       willowbrook:
         condition: service_started
       northgate:
+        condition: service_started
+      riverside:
         condition: service_started
 
   web:
@@ -75,6 +77,11 @@ services:
     build: ./sites/northgate-library
     ports:
       - "3102:3102"
+
+  riverside:
+    build: ./sites/riverside-council
+    ports:
+      - "3103:3103"
 
 volumes:
   db-data:
