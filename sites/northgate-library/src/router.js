@@ -1,10 +1,12 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from './views/HomeView.vue'
 import AboutView from './views/AboutView.vue'
+import SearchView from './views/SearchView.vue'
 import NotFoundView from './views/NotFoundView.vue'
 
 const routes = [
   { path: '/', component: HomeView, meta: { title: 'Welcome' } },
+  { path: '/search', component: SearchView, meta: { title: 'Search the catalogue' } },
   { path: '/about', component: AboutView, meta: { title: 'About the library' } },
   { path: '/:rest(.*)*', component: NotFoundView, meta: { title: 'Page not found' } },
 ]
