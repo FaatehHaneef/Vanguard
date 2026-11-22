@@ -148,5 +148,10 @@ def contact():
     return render_template("contact.html")
 
 
+@app.get("/staff/fast-track")
+def fast_track():
+    return render_template("fast_track.html")
+
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=3103)

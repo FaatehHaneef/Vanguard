@@ -6,6 +6,7 @@
   <title>{% block title %}{% endblock %} | Riverside Borough Council</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
   <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}">
+  {% block head %}{% endblock %}
 </head>
 <body>
   <a class="skip-link" href="#content">Skip to main content</a>
