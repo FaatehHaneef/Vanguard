@@ -35,6 +35,18 @@ COLLECTIONS = {
     "RV4 6YZ": ("Chapel Fields", "Wednesday", "Wednesday 25 November 2026", "Wednesday 2 December 2026"),
 }
 
+# Council tax bands for 2026/27: (band, property value on 1 April 1991, yearly charge).
+TAX_BANDS = [
+    ("A", "up to £40,000", "£1,512.36"),
+    ("B", "£40,001 to £52,000", "£1,764.42"),
+    ("C", "£52,001 to £68,000", "£2,016.48"),
+    ("D", "£68,001 to £88,000", "£2,268.54"),
+    ("E", "£88,001 to £120,000", "£2,772.66"),
+    ("F", "£120,001 to £160,000", "£3,276.78"),
+    ("G", "£160,001 to £320,000", "£3,780.90"),
+    ("H", "more than £320,000", "£4,537.08"),
+]
+
 EMAIL = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 # Reports are kept in memory only, for as long as the server runs.
@@ -103,6 +115,11 @@ def bins():
     areas = sorted({area for area, *_ in COLLECTIONS.values()})
     return render_template("bins.html", entered=entered, error=error,
                            collection=collection, areas=areas)
+
+
+@app.get("/council-tax")
+def council_tax():
+    return render_template("council_tax.html", bands=TAX_BANDS)
 
 
 if __name__ == "__main__":
