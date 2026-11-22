@@ -462,3 +462,7 @@ main.wide {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+.pick-note {
+  margin: 4px 0 0;
+}
