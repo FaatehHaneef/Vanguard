@@ -36,12 +36,19 @@ PAGE = """<!doctype html>
 
 NEXT = "<!doctype html><title>Next</title><h1>Thanks</h1>"
 
+# Sites often give <main> tabindex="-1" so focus can move there after navigation; that
+# must not turn the whole page into one control.
+WRAPPED = """<!doctype html><title>Wrapped</title>
+<main id="main" tabindex="-1"><h1 tabindex="-1">Results</h1>
+<a href="/next.html">First result</a><button>Filter</button></main>"""
+
 
 @pytest.fixture(scope="module")
 def site(tmp_path_factory):
     root: Path = tmp_path_factory.mktemp("site")
     (root / "index.html").write_text(PAGE)
     (root / "next.html").write_text(NEXT)
+    (root / "wrapped.html").write_text(WRAPPED)
     handler = functools.partial(http.server.SimpleHTTPRequestHandler, directory=str(root))
     handler.log_message = lambda *args: None
     server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), handler)
@@ -304,5 +311,16 @@ def test_press_repeat_presses_for_real(site):
         obs = await ex.observe()
         assert result.focus_after == _ref(obs.content, "Add to cart")
         assert [e.target for e in result.events if e.type == "keydown"] == ["Tab", "Tab"]
+
+    _run(site, body)
+
+
+def test_tabindex_minus_one_containers_do_not_hide_their_content(site):
+    async def body(ex):
+        await ex.execute(Action(tool=Tool.GOTO, url="/wrapped.html"))
+        obs = await ex.observe()
+        assert 'link "First result"' in obs.content and 'button "Filter"' in obs.content
+        assert "# Results" in obs.content
+        assert "[e1] main" not in obs.content and "clickable" not in obs.content
 
     _run(site, body)
