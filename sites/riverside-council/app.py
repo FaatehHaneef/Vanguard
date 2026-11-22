@@ -122,5 +122,10 @@ def council_tax():
     return render_template("council_tax.html", bands=TAX_BANDS)
 
 
+@app.get("/contact")
+def contact():
+    return render_template("contact.html")
+
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=3103)
