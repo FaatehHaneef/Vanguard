@@ -2,7 +2,7 @@
 
 A local-council services site for a fictional borough, server-rendered with Flask and Jinja templates, so it differs from Tallowmere (Next.js) and Willowbrook (plain HTML) in both stack and domain. Nothing it receives leaves the server: problem reports are kept in memory until the server stops, and the cookie choice is a cookie in the browser.
 
-Built separately from Vanguard's code, to the written specification in `docs/test-site-kit.md`. Only `app.py`, `templates/` and `static/` are served; `MANIFEST.md` (barriers, honeytokens, task checks) stays out of the served site and out of the Docker image.
+Built separately from Vanguard's code, to the written specification in `docs/test-site-kit.md`. Only `app.py`, `notices.py`, `templates/` and `static/` are served; `MANIFEST.md` (barriers, honeytokens, task checks) stays out of the served site and out of the Docker image.
 
 ## Run
 Python 3.11 or later.

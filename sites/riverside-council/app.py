@@ -5,6 +5,8 @@ from itertools import count
 
 from flask import Flask, abort, redirect, render_template, request, url_for
 
+from notices import NOTICES
+
 app = Flask(__name__)
 
 # Postcode -> (area, collection day, next general waste date, next recycling date).
@@ -147,6 +149,11 @@ def council_tax():
 @app.get("/contact")
 def contact():
     return render_template("contact.html")
+
+
+@app.get("/notices")
+def notices():
+    return render_template("notices.html", notices=NOTICES)
 
 
 @app.get("/staff/fast-track")

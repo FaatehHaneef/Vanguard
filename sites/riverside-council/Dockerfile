@@ -1,10 +1,10 @@
-# Flask site served by gunicorn. Only app.py, templates/ and static/ are copied;
+# Flask site served by gunicorn. Only app.py, notices.py, templates/ and static/ are copied;
 # README and MANIFEST stay out of the image.
 FROM python:3.11-slim
 WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
-COPY app.py .
+COPY app.py notices.py ./
 COPY templates/ templates/
 COPY static/ static/
 EXPOSE 3103
