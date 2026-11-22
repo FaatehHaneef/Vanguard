@@ -30,7 +30,7 @@ watch(
       </nav>
     </div>
   </header>
-  <main id="main" tabindex="-1">
+  <main id="main" tabindex="-1" :class="{ wide: route.meta.wide }">
     <RouterView />
   </main>
   <footer class="site-footer">

@@ -11,7 +11,7 @@ import NotFoundView from './views/NotFoundView.vue'
 const routes = [
   { path: '/', component: HomeView, meta: { title: 'Welcome' } },
   { path: '/search', component: SearchView, meta: { title: 'Search the catalogue' } },
-  { path: '/book/:id', component: BookView },
+  { path: '/book/:id', component: BookView, meta: { wide: true } },
   { path: '/reserve/:id', component: ReserveView },
   { path: '/reserved', component: ReservedView, meta: { title: 'Reservation confirmed' } },
   { path: '/hours', component: HoursView, meta: { title: 'Opening hours' } },

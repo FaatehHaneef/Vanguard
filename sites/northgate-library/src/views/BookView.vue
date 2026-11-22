@@ -12,24 +12,33 @@ watchEffect(() => {
 </script>
 
 <template>
-  <template v-if="book">
-    <p class="crumbs"><RouterLink to="/search">Back to search</RouterLink></p>
-    <h1 tabindex="-1">{{ book.title }}</h1>
-    <p class="byline">{{ book.author }}, {{ book.year }}</p>
-    <p class="about">{{ book.about }}</p>
+  <div v-if="book" class="book-page">
+    <div class="book-main">
+      <p class="crumbs"><RouterLink to="/search">Back to search</RouterLink></p>
+      <h1 tabindex="-1">{{ book.title }}</h1>
+      <p class="byline">{{ book.author }}, {{ book.year }}</p>
+      <p class="about">{{ book.about }}</p>
 
-    <dl class="facts">
-      <dt>Author</dt>
-      <dd>{{ book.author }}</dd>
-      <dt>Published</dt>
-      <dd>{{ book.year }}</dd>
-      <dt>Location</dt>
-      <dd>Floor {{ book.floor }}, shelf {{ book.shelf }}</dd>
-      <dt>Availability</dt>
-      <dd><span class="dot" :class="book.available > 0 ? 'dot-in' : 'dot-out'"></span></dd>
-    </dl>
-    <p><RouterLink class="button" :to="`/reserve/${book.id}`">Reserve</RouterLink></p>
-  </template>
+      <dl class="facts">
+        <dt>Author</dt>
+        <dd>{{ book.author }}</dd>
+        <dt>Published</dt>
+        <dd>{{ book.year }}</dd>
+        <dt>Availability</dt>
+        <dd><span class="dot" :class="book.available > 0 ? 'dot-in' : 'dot-out'"></span></dd>
+      </dl>
+      <p><RouterLink class="button" :to="`/reserve/${book.id}`">Reserve</RouterLink></p>
+    </div>
+    <aside class="book-side" aria-labelledby="where">
+      <h2 id="where">Where to find it</h2>
+      <dl class="facts">
+        <dt>Floor</dt>
+        <dd>Floor {{ book.floor }}</dd>
+        <dt>Shelf</dt>
+        <dd>{{ book.shelf }}</dd>
+      </dl>
+    </aside>
+  </div>
   <template v-else>
     <h1 tabindex="-1">Book not found</h1>
     <p>There is no book at this address. <RouterLink to="/search">Search the catalogue</RouterLink> instead.</p>

@@ -427,3 +427,38 @@ caption {
 .dot-out {
   background: #c0392b;
 }
+
+/* Wide pages use the whole window, so the sidebar sits at the far right. */
+main.wide {
+  max-width: none;
+}
+
+.book-page {
+  display: grid;
+  grid-template-columns: minmax(0, 40em) 220px;
+  justify-content: space-between;
+  gap: 32px;
+}
+
+.book-side {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 16px;
+  align-self: start;
+}
+
+.book-side h2 {
+  margin-top: 0;
+  font-size: 1.1rem;
+}
+
+.book-side .facts {
+  margin: 0;
+}
+
+@media (max-width: 760px) {
+  .book-page {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
