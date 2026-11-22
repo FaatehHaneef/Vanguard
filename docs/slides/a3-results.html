@@ -4,112 +4,356 @@
 <meta charset="utf-8">
 <title>Vanguard: A3 evaluation results</title>
 <!-- Numbers come from docs/results/a3-results.md (backend/scripts/a3_results.py) and
-     docs/results/functional-tests.md. Print to PDF at 1280x720 per slide. -->
+     docs/results/functional-tests.md. Sprites are the product's own (assets/sprites.js,
+     generated from apps/web/lib/art). Print to PDF at 1280x720 per slide. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Pixelify+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="assets/sprites.js"></script>
 <style>
+  :root {
+    --night: #12152a; --indigo: #1b1f3b; --slate: #2e3a5c; --panel: #232a4f;
+    --mist: #8fa3bf; --amber: #ffb347; --ember: #e8743b; --moss: #6fae75;
+    --parchment: #f3e9d2; --rose: #e05a6d; --wax: #8a3b12;
+  }
   @page { size: 1280px 720px; margin: 0; }
   * { box-sizing: border-box; }
-  body { margin: 0; font-family: "Segoe UI", Arial, sans-serif; color: #f3e9d2; background: #1b1f3b; }
-  section { width: 1280px; height: 720px; padding: 56px 72px; page-break-after: always; position: relative;
-            background: linear-gradient(180deg, #1b1f3b 0%, #232a4f 100%); }
-  h1 { font-size: 54px; margin: 0 0 10px; color: #ffb347; }
-  h2 { font-size: 34px; margin: 0 0 24px; color: #ffb347; }
-  p, li { font-size: 22px; line-height: 1.45; }
-  .sub { font-size: 24px; color: #c9d3e2; }
-  .small { font-size: 16px; color: #9aa6bf; }
-  table { border-collapse: collapse; width: 100%; font-size: 19px; }
-  th, td { border-bottom: 1px solid #3a4470; padding: 9px 10px; text-align: left; }
-  th { color: #c9d3e2; font-weight: 600; }
-  .big { font-size: 64px; font-weight: 700; color: #ffb347; line-height: 1; }
-  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 18px; }
-  .card { background: #2a3360; border-radius: 10px; padding: 20px 22px; }
-  .card p { font-size: 18px; margin: 8px 0 0; color: #c9d3e2; }
-  .good { color: #7fb069; font-weight: 700; } .bad { color: #e05a6d; font-weight: 700; }
-  footer { position: absolute; bottom: 24px; left: 72px; right: 72px; font-size: 14px; color: #7f8aa8;
-           display: flex; justify-content: space-between; }
+  body { margin: 0; background: var(--night); color: var(--parchment);
+         font-family: "Atkinson Hyperlegible", "Segoe UI", sans-serif; }
+  section { width: 1280px; height: 720px; position: relative; overflow: hidden;
+            page-break-after: always; padding: 52px 64px;
+            background:
+              radial-gradient(ellipse 120% 70% at 50% 120%, #3a2a3f 0%, rgba(58,42,63,0) 60%),
+              linear-gradient(180deg, var(--night) 0%, var(--indigo) 70%, #262046 100%); }
+  section::before { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .55;
+    background-image:
+      radial-gradient(#cbd5e8 1.2px, transparent 1.4px), radial-gradient(#ffd89a 1.2px, transparent 1.4px);
+    background-size: 97px 83px, 151px 127px; background-position: 13px 9px, 61px 47px; }
+  .hills { position: absolute; left: 0; right: 0; bottom: 0; height: 120px; pointer-events: none;
+    background: #171a33;
+    clip-path: polygon(0 60%,6% 60%,6% 50%,12% 50%,12% 40%,18% 40%,18% 52%,26% 52%,26% 62%,34% 62%,34% 48%,
+      40% 48%,40% 36%,46% 36%,46% 46%,54% 46%,54% 58%,62% 58%,62% 44%,70% 44%,70% 32%,76% 32%,76% 44%,
+      84% 44%,84% 56%,92% 56%,92% 46%,100% 46%,100% 100%,0 100%); }
+  .content { position: relative; z-index: 1; height: 100%; }
+  .kicker { font-family: "Pixelify Sans", monospace; letter-spacing: .25em; text-transform: uppercase;
+            color: var(--amber); font-size: 15px; margin: 0 0 10px; }
+  h1 { font-family: "Pixelify Sans", monospace; font-weight: 700; font-size: 112px; line-height: .9;
+       margin: 0; color: var(--parchment); text-shadow: 6px 6px 0 #0b0d1c; letter-spacing: .02em; }
+  h2 { font-family: "Pixelify Sans", monospace; font-weight: 600; font-size: 44px; line-height: 1.05;
+       margin: 0 0 22px; color: var(--parchment); text-shadow: 4px 4px 0 #0b0d1c; }
+  h2 em { font-style: normal; color: var(--amber); }
+  p { font-size: 21px; line-height: 1.45; margin: 0 0 12px; }
+  .muted { color: var(--mist); }
+  .small { font-size: 15px; color: var(--mist); }
+  .px { font-family: "Pixelify Sans", monospace; }
+  .panel { background: var(--panel); position: relative; padding: 18px 20px;
+           box-shadow: 0 -4px 0 0 #3b4677, 0 4px 0 0 #0e1124, -4px 0 0 0 #3b4677, 4px 0 0 0 #0e1124,
+                       8px 8px 0 0 rgba(0,0,0,.35); }
+  .panel.lit { box-shadow: 0 -4px 0 0 var(--amber), 0 4px 0 0 #a46a1f, -4px 0 0 0 var(--amber),
+                           4px 0 0 0 #a46a1f, 8px 8px 0 0 rgba(0,0,0,.35); }
+  .big { font-family: "Atkinson Hyperlegible", sans-serif; font-weight: 700; font-size: 70px; line-height: 1;
+         letter-spacing: -.01em; }
+  .num { font-family: "Atkinson Hyperlegible", sans-serif; font-weight: 700; }
+  .foot span:last-child { font-family: "Atkinson Hyperlegible", sans-serif; font-weight: 700; }
+  .amber { color: var(--amber); } .rose { color: var(--rose); } .moss { color: var(--moss); }
+  .tag { display: inline-block; font-family: "Pixelify Sans", monospace; font-size: 13px; letter-spacing: .12em;
+         text-transform: uppercase; padding: 3px 8px; margin-right: 6px; color: var(--night); }
+  .tag.ai { background: var(--amber); } .tag.code { background: var(--mist); }
+  .tag.bad { background: var(--rose); } .tag.good { background: var(--moss); }
+  canvas.sprite { image-rendering: pixelated; display: block; }
+  .shadow { width: 70%; height: 10px; margin: 2px auto 0; border-radius: 50%; background: rgba(0,0,0,.45); }
+  .browser { background: #0e1124; padding: 0; overflow: hidden;
+             box-shadow: 0 0 0 4px #3b4677, 10px 10px 0 0 rgba(0,0,0,.4); }
+  .browser .bar { height: 26px; background: #2e3a5c; display: flex; align-items: center; gap: 7px; padding: 0 10px;
+                  font-family: "Pixelify Sans", monospace; font-size: 13px; color: var(--mist); }
+  .browser .bar i { width: 9px; height: 9px; background: var(--rose); display: inline-block; }
+  .browser .bar i:nth-child(2) { background: var(--amber); } .browser .bar i:nth-child(3) { background: var(--moss); }
+  .browser .bar span { margin-left: 8px; }
+  .browser img { display: block; width: 100%; }
+  .foot { position: absolute; left: 64px; right: 64px; bottom: 20px; z-index: 2; display: flex; justify-content: space-between;
+          font-size: 13px; color: #7f8aa8; font-family: "Pixelify Sans", monospace; letter-spacing: .05em; }
+  .row { display: flex; gap: 26px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 26px; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  .grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+  table { border-collapse: collapse; width: 100%; font-size: 18px; }
+  th, td { padding: 9px 10px; text-align: left; border-bottom: 2px solid #3b4677; }
+  th { font-family: "Pixelify Sans", monospace; font-weight: 600; color: var(--mist); font-size: 15px; letter-spacing: .06em; }
+  .step { text-align: center; padding: 16px 10px 14px; }
+  .step .n { font-family: "Atkinson Hyperlegible", sans-serif; font-weight: 700; color: var(--amber); font-size: 17px; }
+  .step .t { font-family: "Pixelify Sans", monospace; font-size: 20px; margin: 8px 0 6px; }
+  .step .d { font-size: 15px; color: var(--mist); line-height: 1.35; }
+  .arrow { align-self: center; font-family: "Pixelify Sans", monospace; color: var(--amber); font-size: 30px; }
+  svg.icon { shape-rendering: crispEdges; display: block; margin: 0 auto; }
 </style>
 </head>
 <body>
 
+<!-- 1 Title -->
 <section>
-  <p class="small">AI-4009 Generative AI · Assignment 3 · Pure Product</p>
-  <h1>Vanguard</h1>
-  <p class="sub">Auditing LLM-simulated users with enforced limits</p>
-  <p style="margin-top:48px">An AI agent plays a person with limits (a keyboard-only shopper, a screen-reader user) on real websites. Vanguard enforces those limits in code and checks every step for <b>leakage</b>: the agent doing what that person could not.</p>
-  <p class="small" style="margin-top:60px">Syed Muhammad Faateh Haneef (23i-0688) · Abdul Hadi (23i-0676) · Ibrahim Malik (23i-0694)</p>
-</section>
-
-<section>
-  <h2>What was evaluated in A3</h2>
-  <ul>
-    <li><b>Simulated-user agent</b> (Gemini 3.6 Flash, forced tool calls): 24 runs, 119 steps</li>
-    <li><b>Baseline vs ours:</b> limits only in the prompt vs a <b>code-enforced gate</b></li>
-    <li>Personas: <b>Knock</b> (keyboard-only) and <b>Cog</b> (unrestricted control, scored as if every limit applied)</li>
-    <li>Tasks: Tallowmere "cheapest candle" and Willowbrook "request a callback", 3 repeats each, 12-step cap</li>
-    <li><b>Leakage checker</b> (deterministic code) validated against 60 human-labelled steps</li>
-    <li>Real browser: Playwright drives Chromium; real key presses and clicks; trusted input events recorded</li>
-  </ul>
-  <footer><span>Every number: backend/scripts/a3_results.py</span><span>2</span></footer>
-</section>
-
-<section>
-  <h2>Baseline comparison: Knock (keyboard-only)</h2>
-  <table>
-    <tr><th>Enforcement</th><th>Success</th><th>Runs that broke a limit</th><th>Attempted / step</th><th>Mean steps</th></tr>
-    <tr><td>Prompt-only (baseline)</td><td>6 / 6</td><td class="bad">5 / 6 · clicked with a mouse</td><td>0.32</td><td>4.7</td></tr>
-    <tr><td><b>Gate</b> (ours)</td><td>6 / 6</td><td class="good">0 / 6 · 4 clicks refused, finished by keyboard</td><td>0.13</td><td>6.5</td></tr>
-  </table>
-  <div class="grid">
-    <div class="card"><div class="big">83%</div><p>prompt-only runs where Knock still used the mouse (5 of 6)</p></div>
-    <div class="card"><div class="big">0%</div><p>gated runs with an executed leak, at no loss of success</p></div>
-    <div class="card"><div class="big">+1.8</div><p>extra steps on average under the gate (keyboard route is longer)</p></div>
+  <div class="hills"></div>
+  <div class="content" style="text-align:center">
+    <p class="kicker" style="margin-top:6px">Simulated users, audited</p>
+    <h1>Vanguard</h1>
+    <p style="font-size:24px;margin:18px auto 0;max-width:820px">An AI playing a keyboard-only shopper is only useful if it really stays keyboard-only.
+      <span class="amber">Vanguard enforces each persona's limits in code and checks every step.</span></p>
+    <div class="row" style="justify-content:center;align-items:flex-end;gap:54px;margin-top:46px">
+      <div><canvas class="sprite" data-sprite="iris" data-scale="6"></canvas><div class="shadow"></div></div>
+      <div><canvas class="sprite" data-sprite="wren" data-scale="6"></canvas><div class="shadow"></div></div>
+      <div><canvas class="sprite" data-sprite="knock" data-scale="8"></canvas><div class="shadow"></div></div>
+      <div><canvas class="sprite" data-sprite="echo" data-scale="6"></canvas><div class="shadow"></div></div>
+      <div><canvas class="sprite" data-sprite="cog" data-scale="6"></canvas><div class="shadow"></div></div>
+    </div>
+    <p class="px" style="margin-top:26px;font-size:16px;letter-spacing:.08em;color:var(--mist)">
+      AI-4009 Generative AI · Assignment 3 · Pure Product track</p>
+    <p style="font-size:17px;margin-top:6px">Syed Muhammad Faateh Haneef (23i-0688) · Abdul Hadi (23i-0676) · Ibrahim Malik (23i-0694)</p>
   </div>
-  <footer><span>3 runs per persona, task and option; 95% Wilson intervals are still wide (e.g. 0%–56%); A4 runs 5 on local models</span><span>3</span></footer>
 </section>
 
+<!-- 2 Problem -->
 <section>
-  <h2>Labelled test set and checker agreement</h2>
-  <div class="grid">
-    <div class="card"><div class="big">60</div><p>steps from real runs, a fixed blind sample, labelled independently by two members</p></div>
-    <div class="card"><div class="big">κ 1.00</div><p>agreement between the two labellers (60 of 60)</p></div>
-    <div class="card"><div class="big">κ 1.00</div><p>checker vs agreed labels: precision 100%, recall 100%</p></div>
+  <div class="hills"></div>
+  <div class="content">
+    <p class="kicker">The problem</p>
+    <h2>Tell an AI it can't use a mouse.<br><em>It uses one anyway.</em></h2>
+    <div class="row" style="gap:40px;align-items:center;margin-top:10px">
+      <div style="text-align:center;width:250px">
+        <canvas class="sprite" data-sprite="knock" data-frame="worry" data-scale="10" style="margin:0 auto"></canvas>
+        <div class="shadow"></div>
+        <p class="px" style="margin-top:14px;font-size:22px">Knock</p>
+        <p class="small">"a shopper who uses only a keyboard"</p>
+      </div>
+      <div style="flex:1;display:grid;gap:18px">
+        <div class="panel lit"><span class="big rose">5 of 6</span>
+          <p style="margin-top:8px">of our runs where Knock's limits were only <b>written in the prompt</b>, it clicked with a mouse anyway.</p></div>
+        <div class="grid2">
+          <div class="panel"><span class="big amber" style="font-size:52px">0.1%</span>
+            <p style="font-size:17px;margin-top:6px">of actions by blind and low-vision users were pointer actions</p></div>
+          <div class="panel"><span class="big amber" style="font-size:52px">15–89%</span>
+            <p style="font-size:17px;margin-top:6px">pointer actions by two AI agents told to work under a magnifier</p></div>
+        </div>
+        <p class="small">Reference: Reduced A11y-CUA dataset (CHI '26), our count. If the simulation leaks, its findings can't be trusted.</p>
+      </div>
+    </div>
   </div>
-  <p style="margin-top:34px"><b>Limitation, stated plainly:</b> this sample is dominated by input-type cases (a click by a persona that may not click), which are unambiguous. Harder information-leak cases (screen-reader and magnifier personas, honeytokens) are labelled in A4.</p>
-  <footer><span>data/labelling/a3 · data/labels/</span><span>4</span></footer>
+  <div class="foot"><span>Vanguard</span><span>2</span></div>
 </section>
 
+<!-- 3 How it works -->
 <section>
-  <h2>Error analysis: 15 failing runs, grouped by cause</h2>
-  <table>
-    <tr><th>Cause (computed by code)</th><th>Runs</th><th>What happened</th><th>Planned fix</th></tr>
-    <tr><td>Model unavailable</td><td>8</td><td>Free-tier daily quota (20 requests per project) ran out mid-run</td><td>Several actions per model call; local models (Ollama) for volume; quota-aware pacing</td></tr>
-    <tr><td>Persona leak</td><td>7</td><td>Keyboard-only persona clicked, all under prompt-only</td><td>This is the baseline's failure: the gate removes it (0 under the gate)</td></tr>
-  </table>
-  <p style="margin-top:26px">Also found and fixed during evaluation: pages with <code>tabindex="-1"</code> containers were hidden from the agent's view; a refused click was counted as a checker miss.</p>
-  <footer><span>37 A3 runs with the real model · docs/results/a3-results.md §4</span><span>5</span></footer>
-</section>
-
-<section>
-  <h2>Latency, cost and functional tests</h2>
-  <div class="grid">
-    <div class="card"><div class="big">8.5 s</div><p>step latency p50 (model call + browser action); p95 26.6 s</p></div>
-    <div class="card"><div class="big">$0.008</div><p>per run at the paid list price ($0 on the free tier); ~1,900 input tokens per step</p></div>
-    <div class="card"><div class="big">100%</div><p>functional test cases passed: 206 of 206, including real-browser tests; CI on every push</p></div>
+  <div class="hills"></div>
+  <div class="content">
+    <p class="kicker">How it works</p>
+    <h2>Every step passes through <em>code</em> first</h2>
+    <div class="row" style="gap:10px;align-items:stretch;margin-top:20px">
+      <div class="panel step" style="flex:1"><div class="n">1</div>
+        <canvas class="sprite" data-sprite="knock" data-scale="4" style="margin:6px auto 0"></canvas>
+        <div class="t">Persona</div><div class="d">limits as a spec: what it perceives, can do, knows</div></div>
+      <div class="arrow">›</div>
+      <div class="panel step lit" style="flex:1"><div class="n">2</div>
+        <svg class="icon" width="64" height="64" viewBox="0 0 16 16"><rect x="3" y="3" width="10" height="9" fill="#ffb347"/><rect x="5" y="5" width="2" height="2" fill="#12152a"/><rect x="9" y="5" width="2" height="2" fill="#12152a"/><rect x="5" y="9" width="6" height="1" fill="#12152a"/><rect x="7" y="1" width="2" height="2" fill="#ffb347"/><rect x="2" y="12" width="12" height="2" fill="#e8743b"/></svg>
+        <div class="t">AI agent</div><div class="d"><span class="tag ai">AI</span><br>Gemini picks one action by tool call</div></div>
+      <div class="arrow">›</div>
+      <div class="panel step" style="flex:1"><div class="n">3</div>
+        <svg class="icon" width="64" height="64" viewBox="0 0 16 16"><rect x="2" y="2" width="2" height="12" fill="#8fa3bf"/><rect x="12" y="2" width="2" height="12" fill="#8fa3bf"/><rect x="4" y="4" width="8" height="2" fill="#8fa3bf"/><rect x="4" y="9" width="8" height="2" fill="#8fa3bf"/><rect x="6" y="6" width="4" height="3" fill="#e05a6d"/></svg>
+        <div class="t">Gate</div><div class="d"><span class="tag code">code</span><br>refuses forbidden actions and says why</div></div>
+      <div class="arrow">›</div>
+      <div class="panel step" style="flex:1"><div class="n">4</div>
+        <svg class="icon" width="64" height="64" viewBox="0 0 16 16"><rect x="1" y="2" width="14" height="11" fill="#2e3a5c"/><rect x="1" y="2" width="14" height="2" fill="#8fa3bf"/><rect x="2" y="5" width="12" height="7" fill="#f3e9d2"/><rect x="3" y="6" width="5" height="1" fill="#8a3b12"/><rect x="3" y="8" width="8" height="1" fill="#8fa3bf"/><rect x="3" y="10" width="4" height="1" fill="#8fa3bf"/></svg>
+        <div class="t">Real browser</div><div class="d"><span class="tag code">code</span><br>real key presses and clicks on real sites</div></div>
+      <div class="arrow">›</div>
+      <div class="panel step" style="flex:1"><div class="n">5</div>
+        <svg class="icon" width="64" height="64" viewBox="0 0 16 16"><rect x="5" y="2" width="6" height="2" fill="#8fa3bf"/><rect x="3" y="3" width="10" height="12" fill="#f3e9d2"/><rect x="5" y="6" width="2" height="2" fill="#6fae75"/><rect x="8" y="6" width="4" height="1" fill="#2e3a5c"/><rect x="5" y="10" width="2" height="2" fill="#e05a6d"/><rect x="8" y="10" width="4" height="1" fill="#2e3a5c"/></svg>
+        <div class="t">Checker</div><div class="d"><span class="tag code">code</span><br>scores every step for leakage</div></div>
+      <div class="arrow">›</div>
+      <div class="panel step" style="flex:1"><div class="n">6</div>
+        <svg class="icon" width="64" height="64" viewBox="0 0 16 16"><rect x="2" y="11" width="3" height="4" fill="#ffb347"/><rect x="6" y="7" width="3" height="8" fill="#e8743b"/><rect x="10" y="3" width="3" height="12" fill="#6fae75"/><rect x="1" y="15" width="14" height="1" fill="#8fa3bf"/></svg>
+        <div class="t">Results</div><div class="d">comparison, failures, plain-language explanation</div></div>
+    </div>
+    <p style="margin-top:26px;text-align:center">An LLM never counts, scores or checks a rule. <span class="amber">Leakage is decided by code</span>, shared by the gate and the checker.</p>
   </div>
-  <p style="margin-top:34px">Four test sites built separately to a written kit, each with planted barriers and honeytokens: Tallowmere (shop), Willowbrook (clinic), Northgate (library), Riverside (council, with a 24-notice prompt-injection set).</p>
-  <footer><span>docs/results/functional-tests.md</span><span>6</span></footer>
+  <div class="foot"><span>Vanguard</span><span>3</span></div>
 </section>
 
+<!-- 4 Live -->
 <section>
-  <h2>Next (A4)</h2>
-  <ul>
-    <li><b>Live in-app walkthrough:</b> stream the browser so characters are watched moving through sites inside Vanguard</li>
-    <li>Fewer model calls per run (several actions per call); local models for the bulk of runs</li>
-    <li>Bounded perception and verifier batches; screen-reader and magnifier personas fully checked</li>
-    <li>≥ 100 labelled steps per component, including information leaks and honeytokens</li>
-    <li>Public deployment on a VPS; demonstration paper, documentation, pitch</li>
-  </ul>
-  <footer><span>github.com/FaatehHaneef/Vanguard</span><span>7</span></footer>
+  <div class="hills"></div>
+  <div class="content">
+    <p class="kicker">On a real website</p>
+    <h2>Knock reaches for the mouse, <em>the gate says no</em></h2>
+    <div class="grid2" style="margin-top:8px">
+      <div>
+        <div class="browser"><div class="bar"><i></i><i></i><i></i><span>localhost:3100 · Tallowmere</span></div>
+          <img src="assets/live-knock-refused.png" alt=""></div>
+        <p style="margin-top:16px"><span class="tag bad">refused · H1</span> Knock proposes a click on "Add to cart". A keyboard-only user can't, so the gate refuses and tells him why.</p>
+      </div>
+      <div>
+        <div class="browser"><div class="bar"><i></i><i></i><i></i><span>localhost:3100 · Tallowmere</span></div>
+          <img src="assets/live-knock-enter.png" alt=""></div>
+        <p style="margin-top:16px"><span class="tag good">allowed</span> He presses Enter instead, a real key press, and the candle goes into the cart.</p>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span>The character overlay is decoration only: never seen by the agent or the checker</span><span>4</span></div>
 </section>
 
+<!-- 5 Product -->
+<section>
+  <div class="hills"></div>
+  <div class="content">
+    <p class="kicker">The product</p>
+    <h2>Pick a party, pick a site, <em>watch them try</em></h2>
+    <div class="grid2" style="gap:24px 30px">
+      <div class="browser" style="height:228px"><div class="bar"><i></i><i></i><i></i><span>Vanguard · landing</span></div>
+        <img src="assets/app-landing.png" alt=""></div>
+      <div class="browser" style="height:228px"><div class="bar"><i></i><i></i><i></i><span>Vanguard · lobby</span></div>
+        <img src="assets/app-lobby.png" alt=""></div>
+      <div class="browser" style="height:228px"><div class="bar"><i></i><i></i><i></i><span>Vanguard · site and enforcement</span></div>
+        <img src="assets/app-picker.png" alt=""></div>
+      <div class="browser" style="height:228px"><div class="bar"><i></i><i></i><i></i><span>Vanguard · blind labelling desk</span></div>
+        <img src="assets/app-labelling.png" alt=""></div>
+    </div>
+  </div>
+  <div class="foot"><span>Next.js web app · FastAPI backend · Playwright worker · PostgreSQL · Docker Compose</span><span>5</span></div>
+</section>
+
+<!-- 6 Test sites -->
+<section>
+  <div class="hills"></div>
+  <div class="content">
+    <p class="kicker">Test sites</p>
+    <h2>Four real websites, each with <em>planted barriers</em></h2>
+    <div class="grid4" style="margin-top:6px">
+      <div><div class="browser"><div class="bar"><i></i><i></i><i></i><span>Tallowmere</span></div><img src="assets/site-tallowmere.jpg" alt=""></div>
+        <p class="px" style="margin:14px 0 4px;font-size:20px">Tallowmere</p><p class="small">Candle shop · Next.js · Braintree sandbox. Cart + and − work only with a mouse.</p></div>
+      <div><div class="browser"><div class="bar"><i></i><i></i><i></i><span>Willowbrook</span></div><img src="assets/site-willowbrook.jpg" alt=""></div>
+        <p class="px" style="margin:14px 0 4px;font-size:20px">Willowbrook</p><p class="small">Clinic · plain HTML. Calendar slots are mouse-only; free times shown only by colour.</p></div>
+      <div><div class="browser"><div class="bar"><i></i><i></i><i></i><span>Northgate</span></div><img src="assets/site-northgate.png" alt=""></div>
+        <p class="px" style="margin:14px 0 4px;font-size:20px">Northgate</p><p class="small">Library · Vue + Vite. Filter chips are mouse-only; availability is a coloured dot.</p></div>
+      <div><div class="browser"><div class="bar"><i></i><i></i><i></i><span>Riverside</span></div><img src="assets/site-riverside.png" alt=""></div>
+        <p class="px" style="margin:14px 0 4px;font-size:20px">Riverside</p><p class="small">Council · Flask. Click-only map; a 24-notice prompt-injection set.</p></div>
+    </div>
+    <p style="margin-top:22px">Each site hides <span class="amber">honeytokens</span>: strings only a forbidden channel could reveal. If one shows up in the agent's output, that's a proven leak.</p>
+  </div>
+  <div class="foot"><span>Built to a written test-site kit; nothing in the sites mentions Vanguard</span><span>6</span></div>
+</section>
+
+<!-- 7 Baseline comparison -->
+<section>
+  <div class="hills"></div>
+  <div class="content">
+    <p class="kicker">Baseline comparison · Gemini <span class="num">3.6</span> Flash · <span class="num">24</span> runs</p>
+    <h2>Same tasks, same model: <em>only the gate keeps Knock in character</em></h2>
+    <div class="grid2" style="margin-top:10px">
+      <div class="panel" style="display:flex;gap:24px;align-items:center">
+        <div><canvas class="sprite" data-sprite="knock" data-frame="worry" data-scale="7"></canvas><div class="shadow"></div></div>
+        <div><p class="px muted" style="font-size:18px;margin:0">Prompt-only (baseline)</p>
+          <span class="big rose">5 / 6</span><p style="margin-top:6px">runs broke the no-mouse limit</p>
+          <p class="small">success 6 / 6 · 4.7 steps</p></div>
+      </div>
+      <div class="panel lit" style="display:flex;gap:24px;align-items:center">
+        <div><canvas class="sprite" data-sprite="knock" data-frame="happy" data-scale="7"></canvas><div class="shadow"></div></div>
+        <div><p class="px muted" style="font-size:18px;margin:0">Gate (ours)</p>
+          <span class="big moss">0 / 6</span><p style="margin-top:6px">4 clicks refused; finished by keyboard</p>
+          <p class="small">success 6 / 6 · 6.5 steps</p></div>
+      </div>
+    </div>
+    <table style="margin-top:26px">
+      <tr><th>Knock, by task</th><th>Prompt-only: runs leaked</th><th>Gate: runs leaked</th><th>Success</th><th>Steps (prompt / gate)</th></tr>
+      <tr><td>Tallowmere · cheapest candle</td><td class="rose">2 / 3</td><td class="moss">0 / 3</td><td>100% both</td><td>2.0 / 1.3</td></tr>
+      <tr><td>Willowbrook · request a callback</td><td class="rose">3 / 3</td><td class="moss">0 / 3</td><td>100% both</td><td>7.3 / 11.7</td></tr>
+    </table>
+  </div>
+  <div class="foot"><span>3 runs per persona, task and option · Cog (control) leaks by design, as the reference rate</span><span>7</span></div>
+</section>
+
+<!-- 8 Trust -->
+<section>
+  <div class="hills"></div>
+  <div class="content">
+    <p class="kicker">Can we trust the checker?</p>
+    <h2>Two people labelled <em><span class="num">60</span> real steps</em>, blind</h2>
+    <div class="grid3" style="margin-top:14px">
+      <div class="panel lit" style="text-align:center"><span class="big amber">60</span>
+        <p style="margin-top:10px">steps from real runs, a fixed blind sample, labelled independently</p></div>
+      <div class="panel" style="text-align:center"><span class="big moss">κ 1.00</span>
+        <p style="margin-top:10px">agreement between the two labellers (60 of 60)</p></div>
+      <div class="panel" style="text-align:center"><span class="big moss">100%</span>
+        <p style="margin-top:10px">checker precision and recall against the agreed labels (κ 1.00)</p></div>
+    </div>
+    <div class="panel" style="margin-top:28px;display:flex;gap:22px;align-items:center">
+      <canvas class="sprite" data-sprite="echo" data-scale="5"></canvas>
+      <p style="margin:0"><b>Stated plainly:</b> this sample is mostly clear-cut input cases (a click by a persona that may not click). Harder information leaks, for screen-reader and magnifier personas and honeytokens, are labelled in A4, growing the set to 100+.</p>
+    </div>
+  </div>
+  <div class="foot"><span>data/labelling/a3 · data/labels/ · docs/labelling-guide.md</span><span>8</span></div>
+</section>
+
+<!-- 9 Errors, speed, cost -->
+<section>
+  <div class="hills"></div>
+  <div class="content">
+    <p class="kicker">Error analysis · latency · cost · tests</p>
+    <h2><span class="num">15</span> failures, <em>two causes</em>, and what we do about them</h2>
+    <div class="grid2" style="margin-top:6px">
+      <div class="panel"><p class="px" style="font-size:22px;margin:0"><span class="amber num">8</span> · model unavailable</p>
+        <p style="font-size:17px;margin-top:6px">free-tier quota (20 requests per project a day) ran out mid-run.</p>
+        <p class="small" style="margin:0">Fix: several actions per model call; local models for volume.</p></div>
+      <div class="panel"><p class="px" style="font-size:22px;margin:0"><span class="rose num">7</span> · persona leak</p>
+        <p style="font-size:17px;margin-top:6px">Knock clicked with a mouse, every one under prompt-only.</p>
+        <p class="small" style="margin:0">Fix: this is what the gate is for: 0 leaks under the gate.</p></div>
+    </div>
+    <div class="grid4" style="margin-top:28px">
+      <div class="panel" style="text-align:center"><span class="big amber" style="font-size:50px">8.5 s</span><p class="small" style="margin-top:8px">step latency p50<br>(p95 26.6 s)</p></div>
+      <div class="panel" style="text-align:center"><span class="big amber" style="font-size:50px">$0.008</span><p class="small" style="margin-top:8px">per run at paid price<br>($0 on the free tier)</p></div>
+      <div class="panel" style="text-align:center"><span class="big amber" style="font-size:50px">1,919</span><p class="small" style="margin-top:8px">input tokens<br>per step</p></div>
+      <div class="panel lit" style="text-align:center"><span class="big moss" style="font-size:50px">206/206</span><p class="small" style="margin-top:8px">functional test cases<br>passed (100%)</p></div>
+    </div>
+  </div>
+  <div class="foot"><span>37 A3 runs with the real model · every number regenerated by backend/scripts/a3_results.py</span><span>9</span></div>
+</section>
+
+<!-- 10 Next -->
+<section>
+  <div class="hills"></div>
+  <div class="content">
+    <p class="kicker">Next, for A4</p>
+    <h2>Watch the party <em>walk through real sites, live</em></h2>
+    <div class="row" style="gap:40px;align-items:center;margin-top:8px">
+      <div style="flex:1">
+        <p>▸ Live in-app walkthrough: the browser streamed into Vanguard as the characters move</p>
+        <p>▸ All four enforcement options compared (bounded perception, verifier)</p>
+        <p>▸ Echo, Iris and Wren fully checked; 100+ labelled steps with information leaks</p>
+        <p>▸ Fewer calls per run; local models for 5 runs per group; diversity report</p>
+        <p>▸ Public deployment, demonstration paper, documentation, pitch</p>
+      </div>
+      <div class="row" style="gap:22px;align-items:flex-end">
+        <div><canvas class="sprite" data-sprite="cog" data-frame="walk1" data-scale="5"></canvas><div class="shadow"></div></div>
+        <div><canvas class="sprite" data-sprite="echo" data-frame="walk2" data-scale="5"></canvas><div class="shadow"></div></div>
+        <div><canvas class="sprite" data-sprite="knock" data-frame="walk1" data-scale="6"></canvas><div class="shadow"></div></div>
+      </div>
+    </div>
+    <p class="px" style="margin-top:34px;font-size:18px;color:var(--mist);letter-spacing:.05em">github.com/FaatehHaneef/Vanguard</p>
+  </div>
+  <div class="foot"><span>Vanguard</span><span>10</span></div>
+</section>
+
+<script>
+  for (const canvas of document.querySelectorAll("canvas.sprite")) {
+    const art = window.SPRITES[canvas.dataset.sprite];
+    const rows = art.frames[canvas.dataset.frame || "idle"] || art.frames.idle;
+    const scale = Number(canvas.dataset.scale || 6);
+    canvas.width = rows[0].length * scale;
+    canvas.height = rows.length * scale;
+    const ctx = canvas.getContext("2d");
+    rows.forEach((row, y) => [...row].forEach((ch, x) => {
+      const colour = art.palette[ch];
+      if (!colour) return;
+      ctx.fillStyle = colour;
+      ctx.fillRect(x * scale, y * scale, scale, scale);
+    }));
+  }
+  document.fonts.ready.then(() => { window.__ready = true; });
+</script>
 </body>
 </html>
