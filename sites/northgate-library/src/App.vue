@@ -1,19 +1,18 @@
 <script setup>
-import { nextTick, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { nextTick } from 'vue'
+import { START_LOCATION, useRoute, useRouter } from 'vue-router'
 
 const route = useRoute()
+const router = useRouter()
 
-// After moving to another page, put focus on its main heading, as a full page load would
-// start reading from the top of the new page.
-watch(
-  () => route.path,
-  async (now, before) => {
-    if (before === undefined) return
-    await nextTick()
-    document.querySelector('main h1')?.focus()
-  },
-)
+// After moving to another page within the site, put focus on its main heading, as a full
+// page load would start reading from the top of the new page. The first load leaves focus
+// where the browser puts it.
+router.afterEach(async (to, from) => {
+  if (from === START_LOCATION || to.path === from.path) return
+  await nextTick()
+  document.querySelector('main h1')?.focus()
+})
 </script>
 
 <template>
