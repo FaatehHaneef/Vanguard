@@ -8,7 +8,8 @@
   const HUD = "[data-vanguard-hud]";
   const INTERACTIVE =
     "a[href], button, input:not([type=hidden]), select, textarea, summary, " +
-    "[contenteditable=''], [contenteditable='true'], [tabindex], [role=button], " +
+    "[contenteditable=''], [contenteditable='true'], [tabindex]:not([tabindex='-1']), " +
+    "[role=button], " +
     "[role=link], [role=checkbox], [role=radio], [role=switch], [role=tab], " +
     "[role=menuitem], [role=option], [role=combobox], [role=textbox], iframe";
   // Styles that can show focus. If none changes when an element has focus, focus is
