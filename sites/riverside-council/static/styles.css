@@ -216,3 +216,5 @@ textarea.invalid { border-color: var(--error); box-shadow: 0 0 0 2px var(--error
 }
 .cookie-banner h2 { font-size: 1.15rem; margin-top: 0.9rem; }
 .cookie-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+
+.form-ref { float: right; margin: 1rem 0 0 1rem; color: var(--muted); font-size: 0.9rem; }
