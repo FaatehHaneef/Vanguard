@@ -48,3 +48,14 @@ def test_stuck_and_grouping(store):  # noqa: F811
 def test_wrong_answer(store):  # noqa: F811
     item = classify(store, [EnforcementOption.GATE], [Action(tool="done", answer="all bought")])
     assert item.primary == "wrong_answer" and "all bought" in item.detail
+
+
+def test_control_leaks_are_a_reference_not_a_failure(store):  # noqa: F811
+    from vanguard.contracts import EnforcementOption as E
+
+    summary = run(store, "unrestricted", [E.PROMPT_ONLY], [click, *KEYS])
+    summary = store.get_run(summary.id)
+    steps = store.steps(summary.id)
+    control = catalog.persona("unrestricted")
+    item = failures.classify(summary, steps, check_run(steps, control, START))
+    assert "persona_leak" not in item.tags and not failures.is_failure(item)

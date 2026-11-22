@@ -48,6 +48,12 @@ def _longest_refusal_run(steps: list[StepRecord]) -> int:
     return best
 
 
+def _is_control(summary: RunSummary) -> bool:
+    from vanguard import catalog
+
+    return catalog.persona(summary.config.persona_id).is_control
+
+
 def classify(summary: RunSummary, steps: list[StepRecord], leakage: RunLeakage) -> RunFailure:
     tags: list[str] = []
     detail = ""
@@ -57,7 +63,9 @@ def classify(summary: RunSummary, steps: list[StepRecord], leakage: RunLeakage) 
             "model_unavailable" if error.startswith("model unavailable") else "executor_error"
         )
         detail = error
-    if leakage.executed_steps:
+    # The control persona is scored as if every limit applied (a reference rate); its
+    # "leaks" are expected behaviour, not failures.
+    if leakage.executed_steps and not _is_control(summary):
         tags.append("persona_leak")
     if any(step.proposed is None for step in steps):
         tags.append("invalid_output")
