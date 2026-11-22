@@ -370,3 +370,10 @@ td {
 .actions {
   margin-top: 20px;
 }
+
+caption {
+  text-align: left;
+  font-weight: 700;
+  padding: 0 0 8px;
+  color: var(--teal-dark);
+}

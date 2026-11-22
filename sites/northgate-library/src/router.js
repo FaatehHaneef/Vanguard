@@ -5,6 +5,7 @@ import SearchView from './views/SearchView.vue'
 import BookView from './views/BookView.vue'
 import ReserveView from './views/ReserveView.vue'
 import ReservedView from './views/ReservedView.vue'
+import HoursView from './views/HoursView.vue'
 import NotFoundView from './views/NotFoundView.vue'
 
 const routes = [
@@ -13,6 +14,7 @@ const routes = [
   { path: '/book/:id', component: BookView },
   { path: '/reserve/:id', component: ReserveView },
   { path: '/reserved', component: ReservedView, meta: { title: 'Reservation confirmed' } },
+  { path: '/hours', component: HoursView, meta: { title: 'Opening hours' } },
   { path: '/about', component: AboutView, meta: { title: 'About the library' } },
   { path: '/:rest(.*)*', component: NotFoundView, meta: { title: 'Page not found' } },
 ]
