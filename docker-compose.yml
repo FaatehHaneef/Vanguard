@@ -1,6 +1,17 @@
 # Start everything with: docker compose up --build
-# Further test sites (sites/*) join this file as they are built.
 # Then open http://localhost:3000.
+# Each test site brings its own compose.yml, included below; add a line here when a new
+# site folder is created. Sites are ordinary websites with no knowledge of Vanguard.
+
+include:
+  - apps/tallowmere/compose.yml
+  - sites/willowbrook-clinic/compose.yml
+  - sites/northgate-library/compose.yml
+  - sites/riverside-council/compose.yml
+  - sites/emberline-kitchen/compose.yml
+  - sites/marquee-tickets/compose.yml
+  - sites/harbour-herald/compose.yml
+  - sites/pantry-notes/compose.yml
 
 services:
   db:
@@ -18,8 +29,7 @@ services:
       interval: 5s
       retries: 10
 
-  # The API runs trials in-process for A3, so it uses the worker image (Playwright and
-  # Chromium). A separate queue-fed worker process takes runs over later.
+  # The API runs trials in-process, so it uses the worker image (Playwright and Chromium).
   api:
     build:
       context: ./backend
@@ -31,8 +41,9 @@ services:
       VANGUARD_DATABASE_URL: postgresql+psycopg://vanguard:vanguard@db:5432/vanguard
       VANGUARD_DATA_DIR: /data
       VANGUARD_EXECUTOR: playwright
-      # Sites keep their localhost addresses; the browser's requests go to the containers.
-      VANGUARD_ORIGIN_REWRITES: '{"http://localhost:3100": "http://tallowmere:3100", "http://localhost:3101": "http://willowbrook:3101", "http://localhost:3102": "http://northgate:3102", "http://localhost:3103": "http://riverside:3103"}'
+      # Sites keep their localhost addresses; the browser's requests go to each site's
+      # service, as given by the catalog (Site.docker_host).
+      VANGUARD_IN_DOCKER: "true"
     ports:
       - "8000:8000"
     volumes:
@@ -40,14 +51,6 @@ services:
     depends_on:
       db:
         condition: service_healthy
-      tallowmere:
-        condition: service_started
-      willowbrook:
-        condition: service_started
-      northgate:
-        condition: service_started
-      riverside:
-        condition: service_started
 
   web:
     build:
@@ -58,30 +61,6 @@ services:
       - "3000:3000"
     depends_on:
       - api
-
-  # Test sites. Each is an ordinary website with no knowledge of Vanguard.
-  tallowmere:
-    build: ./apps/tallowmere
-    env_file:
-      - path: apps/tallowmere/.env.local
-        required: false
-    ports:
-      - "3100:3100"
-
-  willowbrook:
-    build: ./sites/willowbrook-clinic
-    ports:
-      - "3101:3101"
-
-  northgate:
-    build: ./sites/northgate-library
-    ports:
-      - "3102:3102"
-
-  riverside:
-    build: ./sites/riverside-council
-    ports:
-      - "3103:3103"
 
 volumes:
   db-data:

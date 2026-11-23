@@ -1,0 +1,7 @@
+# This site's service, included by the repository's docker-compose.yml.
+# Paths here are relative to this folder.
+services:
+  northgate:
+    build: .
+    ports:
+      - "3102:3102"
