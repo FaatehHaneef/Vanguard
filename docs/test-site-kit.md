@@ -29,11 +29,12 @@ Because team members build these sites knowing the project, documents describe t
 
 ## 4. What to hand in per site
 - The site in `sites/<site-id>/`, with a `README.md` that says how to run it, a `Dockerfile`, and a fixed port (3101, 3102, ... agree them in the team chat).
-- An entry in `backend/vanguard/catalog/data/sites.json` (site, tasks, expected outcome per persona). Leave the `split` field for the team to assign: train, dev or test.
+- A catalog file `backend/vanguard/catalog/data/sites/<site-id>.json` with the site and its tasks (`{"site": {...}, "tasks": [...]}`, expected outcome per persona), including `docker_host` (the Compose service and port, for example `"emberline:3104"`) and a `scenario` for each task. Leave the `split` field for the team to assign: train, dev or test. Its origin is allowed automatically; no other file needs the site added.
+- A `compose.yml` in the site folder with one service named as in `docker_host`, already included by the root `docker-compose.yml`.
 - `sites/<site-id>/MANIFEST.md`, which is **kept out of the served site**: every barrier (where, which limit, expected effect, workaround), every honeytoken (string, location, limit) and every task's success check. The checker and the labelling guide use this file.
 
 ## 5. Checks before a site counts
-- It starts with one command, and `docker compose up` works once it has been added to the Compose file.
+- It starts with one command, and `docker compose up` from the repository root starts it with everything else.
 - A person can complete every task with a mouse and keyboard.
 - A keyboard-only person can do exactly what the manifest says, and no more.
 - `grep -ri vanguard` over the served site finds nothing.

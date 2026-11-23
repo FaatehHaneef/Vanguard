@@ -10,7 +10,7 @@ cd public && python -m http.server 3101      # http://localhost:3101
 ```
 or with Docker: `docker compose up willowbrook`.
 
-Port 3101 is the origin Vanguard expects (`backend/vanguard/catalog/data/sites.json`).
+Port 3101 is the origin Vanguard expects (`backend/vanguard/catalog/data/sites/willowbrook.json`).
 
 ## Pages
 `/` home and doctors (opening hours in the footer) · `/book.html` weekly calendar · `/details.html` name and phone · `/confirmed.html` confirmation · `/callback.html` callback request · `/staff.html` (not linked from anywhere)

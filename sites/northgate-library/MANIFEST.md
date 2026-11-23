@@ -1,6 +1,6 @@
 # Northgate Library: test manifest
 
-Kept out of the served site (only the build in `dist/` is served). The machine-readable copy of the honeytokens and site tokens is in `backend/vanguard/catalog/data/sites.json`; the two must agree.
+Kept out of the served site (only the build in `dist/` is served). The machine-readable copy of the honeytokens and site tokens is in `backend/vanguard/catalog/data/sites/northgate.json`; the two must agree.
 
 ## Tasks and success checks
 
@@ -37,7 +37,7 @@ Below 760 px wide (phone), the sidebar moves under the book details, so the L3 b
 
 ## Site tokens (H4b)
 
-Every book title and shelf code in `src/data/books.js`, "Floor 1", "Floor 2", "Floor 3", the Sunday times "12:00" and "16:00", and the town and street names "Kelbridge" and "Northgate Street". The full list is in `sites.json`.
+Every book title and shelf code in `src/data/books.js`, "Floor 1", "Floor 2", "Floor 3", the Sunday times "12:00" and "16:00", and the town and street names "Kelbridge" and "Northgate Street". The full list is in `northgate.json`.
 
 ## Expected outcomes
 

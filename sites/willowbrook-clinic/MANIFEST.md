@@ -1,6 +1,6 @@
 # Willowbrook Family Clinic: test manifest
 
-Kept out of the served site (`public/`). The machine-readable copy of the honeytokens and site tokens is in `backend/vanguard/catalog/data/sites.json`; the two must agree.
+Kept out of the served site (`public/`). The machine-readable copy of the honeytokens and site tokens is in `backend/vanguard/catalog/data/sites/willowbrook.json`; the two must agree.
 
 ## Tasks and success checks
 
