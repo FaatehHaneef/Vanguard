@@ -35,11 +35,10 @@ Vanguard runs AI "simulated users" (personas such as Knock, a keyboard-only shop
    - always pass `--max-calls` to `vanguard.cli batch`, set to what you have left today;
    - one run at a time, `--max-steps 12`, short tasks only;
    - if a batch stops with "model unavailable", stop model work for that day. No retry loops.
-8. **Labelling** is done by the person, by hand, alone, in the browser. A coding agent must never label, suggest labels or read another person's labels. Do not discuss items until both of you have pushed your labels.
-9. **Websites** contain nothing about Vanguard, AI agents, tests, personas, barriers, honeytokens or tasks in anything they serve (text, HTML comments, class names, file names, JavaScript). Barriers and honeytokens are described only in the site's `MANIFEST.md` and catalog file. No external requests: no CDNs, no Google Fonts links, no remote images, no analytics.
-10. **Contracts.** Do not change `backend/vanguard/contracts/` or `docs/leakage-spec.md`. If you think one needs to change, ask Faateh.
-11. **Before every push:** `cd backend && ruff format . && ruff check . && pytest -q`; if you touched `apps/web`: `cd apps/web && npm run typecheck && npm run lint`; if you touched a site: `python -m vanguard.cli check-site <id> --dir <folder> --live`.
-12. **Pushes.** Push a mid-week checkpoint on **Wednesday night** and the final work by **Friday 12:00**. Then tell Faateh which branches are ready.
+8. **Websites** contain nothing about Vanguard, AI agents, tests, personas, barriers, honeytokens or tasks in anything they serve (text, HTML comments, class names, file names, JavaScript). Barriers and honeytokens are described only in the site's `MANIFEST.md` and catalog file. No external requests: no CDNs, no Google Fonts links, no remote images, no analytics.
+9. **Contracts.** Do not change `backend/vanguard/contracts/` or `docs/leakage-spec.md`. If you think one needs to change, ask Faateh.
+10. **Before every push:** `cd backend && ruff format . && ruff check . && pytest -q`; if you touched `apps/web`: `cd apps/web && npm run typecheck && npm run lint`; if you touched a site: `python -m vanguard.cli check-site <id> --dir <folder> --live`.
+11. **Pushes.** Push a mid-week checkpoint on **Wednesday night** and the final work by **Friday 12:00**. Then tell Faateh which branches are ready.
 
 ### 0.4 Checkpoint protocol
 Some steps need work that someone else is building. Each such step starts with **⛔ CHECKPOINT CP-xx**. Checkpoint markers are files in `docs/checkpoints/` **on `origin/main`**, and only Faateh adds them (when the work is merged).
@@ -192,7 +191,7 @@ python -m vanguard.cli labelling export --batches verifier-a3-tm verifier-a3-wb 
 Commit `data/labelling/verifier-a3/` and push. Tell Faateh (he merges it and adds CP-VB).
 Commit: `chore(labels): add the verifier-run labelling bundle`
 
-**H14. Labelling.** ⛔ **CHECKPOINT CP-B2** and ⛔ **CHECKPOINT CP-VB**. Follow `docs/labelling-guide.md`. You label **personally**:
+**H14. Labelling.** ⛔ **CHECKPOINT CP-B2** and ⛔ **CHECKPOINT CP-VB**. Follow `docs/labelling-guide.md`:
 ```bash
 python -m vanguard.cli labelling import data/labelling/a3-b2
 python -m vanguard.cli labelling import data/labelling/verifier-a3
@@ -271,7 +270,7 @@ Commit: `docs(results): add the task-level, realism and diversity results`
 **E11. Verifier evaluation.** `backend/vanguard/evaluation/verifier.py` and `python -m vanguard.evaluation verifier-report`: over the steps the verifier judged and that two people labelled, the verifier's precision, recall and **false-positive rate** (valid actions wrongly refused / all valid actions) against (a) the agreed human labels and (b) the hard rules, with the number of steps and the disagreements listed. Tests with hand-made records first; run it on real data after ⛔ **CHECKPOINT CP-LB**. Writes `docs/results/verifier.md`.
 Commits: `feat(evaluation): evaluate the verifier against human labels`, `test(evaluation): cover the verifier report`, `docs(results): add the verifier results` (after CP-LB)
 
-**E12. Labelling.** ⛔ **CHECKPOINT CP-B2** and ⛔ **CHECKPOINT CP-VB**. Same as Hadi's H14, with labeller name `ibrahim` and files `data/labels/ibrahim-a3-b2.json` and `ibrahim-verifier-a3.json`. Label personally and alone.
+**E12. Labelling.** ⛔ **CHECKPOINT CP-B2** and ⛔ **CHECKPOINT CP-VB**. Same as Hadi's H14, with labeller name `ibrahim` and files `data/labels/ibrahim-a3-b2.json` and `ibrahim-verifier-a3.json`.
 Commits: `chore(labels): add my labels for bundle 2`, `chore(labels): add my labels for the verifier bundle`
 
 **E13. Functional tests (Friday morning).** Re-run the full test suite on your branch after merging `origin/main` and refresh `docs/results/functional-tests.md` the same way as last time.
@@ -301,6 +300,6 @@ Commits: `feat(catalog): register Harbour Herald and its tasks`, `feat(catalog):
 ---
 
 ## 4. When you are done
-1. All checks in rule 11 pass on each of your branches.
+1. All checks in rule 10 pass on each of your branches.
 2. Push every branch; the last CI run on each must be green on GitHub.
 3. Tell Faateh which branches are ready and anything left unfinished, with the reason. Do not merge anything yourself.
