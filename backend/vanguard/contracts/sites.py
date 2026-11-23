@@ -25,6 +25,17 @@ class Honeytoken(BaseModel):
     where: str = ""
 
 
+class TaskScenario(StrEnum):
+    """What kind of interaction a task exercises (task-level evaluation)."""
+
+    SEARCH = "search"
+    ADD_TO_CART = "add_to_cart"
+    CHECKOUT = "checkout"
+    FORM = "form"
+    RECOVERY = "recovery"
+    INFORMATION = "information"
+
+
 class Site(BaseModel):
     id: str
     name: str
@@ -32,6 +43,11 @@ class Site(BaseModel):
     kind: SiteKind = SiteKind.TEST
     split: SiteSplit = SiteSplit.DEV
     description: str = ""
+    docker_host: str | None = Field(
+        None,
+        exclude=True,
+        description="Compose service host:port, used to reach the site inside Docker",
+    )
     # The test manifest. Never serialised (so never sent by the API or shown to an agent).
     honeytokens: list[Honeytoken] = Field(default_factory=list, exclude=True)
     site_tokens: list[str] = Field(
@@ -57,6 +73,9 @@ class Task(BaseModel):
     id: str
     site_id: str
     instruction: str = Field(description="What the persona is asked to do, in plain words")
+    scenario: TaskScenario | None = Field(
+        None, description="Interaction type, for task-level results"
+    )
     start_path: str = "/"
     success: SuccessCheck
     expected: dict[str, str] = Field(

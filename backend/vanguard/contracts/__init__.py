@@ -6,13 +6,22 @@ change affects leakage, then bump CONTRACT_VERSION.
 
 from .actions import TOOL_GROUPS, Action, Tool, ToolGroup
 from .batches import BatchGroup, BatchRequest, BatchStatus
+from .compare import (
+    CompareGroup,
+    CompareMatch,
+    Comparison,
+    FailureChange,
+    GroupSnapshot,
+    MetricChange,
+    Verdict,
+)
 from .limits import LimitId
 from .persona import Knowledge, PerceptionMode, PersonaSpec, PersonaStatus
 from .runs import Condition, EnforcementOption, RunConfig, RunOutcome, RunStatus, RunSummary
-from .sites import Honeytoken, Site, SiteKind, SiteSplit, SuccessCheck, Task
+from .sites import Honeytoken, Site, SiteKind, SiteSplit, SuccessCheck, Task, TaskScenario
 from .steps import BrowserEvent, GateDecision, Observation, Rect, StepRecord
 
-CONTRACT_VERSION = "0.6.0"
+CONTRACT_VERSION = "0.7.0"
 
 __all__ = [
     "CONTRACT_VERSION",
@@ -22,12 +31,18 @@ __all__ = [
     "BatchRequest",
     "BatchStatus",
     "BrowserEvent",
+    "CompareGroup",
+    "CompareMatch",
+    "Comparison",
     "Condition",
     "EnforcementOption",
+    "FailureChange",
     "GateDecision",
+    "GroupSnapshot",
     "Honeytoken",
     "Knowledge",
     "LimitId",
+    "MetricChange",
     "Observation",
     "PerceptionMode",
     "PersonaSpec",
@@ -43,6 +58,8 @@ __all__ = [
     "StepRecord",
     "SuccessCheck",
     "Task",
+    "TaskScenario",
     "Tool",
     "ToolGroup",
+    "Verdict",
 ]
