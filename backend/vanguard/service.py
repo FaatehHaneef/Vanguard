@@ -4,7 +4,7 @@ For A3, runs execute in the API process as background tasks. The worker service 
 Docker Compose takes this over when runs move to a queue.
 """
 
-from vanguard import catalog
+from vanguard import catalog, origins
 from vanguard.agent import run_once
 from vanguard.contracts import EnforcementOption, PersonaStatus, RunConfig, RunSummary
 from vanguard.executor import Executor, FakeExecutor
@@ -71,7 +71,7 @@ async def execute(
         make_provider(config.provider, settings),
         make_executor(settings, config),
         store,
-        allowed_origins=settings.allowed_origins,
+        allowed_origins=origins.allowed_origins(settings),
         max_steps=config.max_steps or settings.max_steps_per_run,
         stuck_after=settings.stuck_after_steps,
     )

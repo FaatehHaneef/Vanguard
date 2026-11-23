@@ -35,13 +35,10 @@ class Settings(BaseSettings):
     # Each name must also be listed in enabled_providers.
     openai_compatible: dict[str, dict[str, str]] = {}
 
-    # Where the worker is allowed to send the browser. Anything else is blocked by the gate.
-    allowed_origins: list[str] = [
-        "http://localhost:3100",
-        "http://localhost:3101",
-        "http://localhost:3102",
-        "http://localhost:3103",
-    ]
+    # Where the worker may send the browser; anything else is blocked by the gate. Every
+    # catalog site (built-in or custom) is always allowed (vanguard.origins); list only
+    # additional origins here.
+    allowed_origins: list[str] = []
     # Payment providers the agent may reach, sandbox hosts only.
     allowed_payment_hosts: list[str] = [
         "sandbox.braintreegateway.com",
@@ -60,6 +57,8 @@ class Settings(BaseSettings):
     # the value origin instead, while the page keeps its usual address, for example
     # {"http://localhost:3100": "http://tallowmere:3100"}.
     origin_rewrites: dict[str, str] = {}
+    # Inside Docker Compose: route each catalog site's origin to its service (Site.docker_host).
+    in_docker: bool = False
     # Screenshots of every observation, saved under data_dir/screenshots/<session>/.
     screenshots: bool = True
     cors_origins: list[str] = ["http://localhost:3000"]
