@@ -1,3 +1,5 @@
+> **OUTDATED (round 1, completed 2026-11-22).** Do not follow this file. The current tasks are in `docs/tasks-A3-round2.md`.
+
 # A3 tasks: Abdul Hadi and Ibrahim Malik
 
 This file is written so that you, or a coding agent working for you, can follow it from a fresh clone. Do the sections in order. Each numbered step ends with the commit to make; commit after every step, not in one batch at the end.

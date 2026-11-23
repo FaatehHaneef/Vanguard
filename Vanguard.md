@@ -322,6 +322,8 @@ Against the rubric, this also needs: functional tests with a pass rate (D6), at 
 4. **Playwright executor and worker**: real browser, real key presses, input-event recording, screenshots, HUD/sprite overlay injected as decoration only.
 5. **Remaining reusable code copied**: Synthetic Users' statistics helpers (Wilson interval, entropy) and resumable-run pattern; Sentinel's verdict prompt (Wick) as the starting point for the explanation generator.
 
+> **Superseded (2026-11-24):** the current division of work, checkpoints and file ownership are in `docs/tasks-A3-round2.md`. The split below is the earlier proposal, kept for history.
+
 **Team split after the foundation (proposed, to confirm):** teammates get self-contained building work inside this repo, mostly agent and evaluation components, each covering both AI and engineering as A3 Table 3 row 12 requires.
 
 | Member | Builds |
