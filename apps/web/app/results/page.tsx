@@ -24,6 +24,12 @@ export default function ResultsPage() {
         <Link href="/labelling" className="pixel-button quiet">
           Labelling
         </Link>
+        <Link href="/compare" className="pixel-button quiet">
+          Compare
+        </Link>
+        <Link href="/studio" className="pixel-button quiet">
+          Studio
+        </Link>
       </nav>
       <h1 className="mb-2 font-display text-4xl font-bold text-parchment">
         Results
