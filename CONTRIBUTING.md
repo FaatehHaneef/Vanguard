@@ -2,7 +2,7 @@
 
 ## Branches and commits
 - `main` always passes CI.
-- If you were given tasks in `docs/tasks-A3.md`, work only on your own branch named there. Otherwise use the standing branch for your area: `websites` (test sites), `engine`, `evaluation`, `app` or `docs` (see `Vanguard.md`, Section 4.6b).
+- If you were given tasks in `docs/tasks-A3-round2.md` (the current task file; `docs/tasks-A3.md` is outdated), work only on your own branches named there. Otherwise use the standing branch for your area: `websites` (test sites), `engine`, `evaluation`, `app` or `docs` (see `Vanguard.md`, Section 4.6b).
 - Never commit to, push to or merge into `main`, and never delete a branch. Push your branch and tell Faateh; Faateh merges into `main` with `--no-ff`.
 - Small commits with conventional messages: `feat(scope): ...`, `fix: ...`, `docs: ...`, `test: ...`, `chore: ...`, `ci: ...`.
 - Commit your own work from your own GitHub account and git identity. Never commit for someone else.
