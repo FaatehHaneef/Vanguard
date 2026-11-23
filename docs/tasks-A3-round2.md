@@ -23,7 +23,7 @@ Vanguard runs AI "simulated users" (personas such as Knock, a keyboard-only shop
 7. Worked examples: `sites/willowbrook-clinic/` (with `MANIFEST.md`), `sites/northgate-library/`, `sites/riverside-council/`, `apps/tallowmere/`.
 
 ### 0.3 Hard rules (not optional)
-1. **Branches.** Work only on your own branches, named in your section. Never commit to, push to or merge into `main`. Never delete a branch. Faateh merges.
+1. **Branches.** Work only on your own branches, with exactly the names given in your section: plain module names like the team's standing branches (`engine`, `evaluation`, `websites`), never your own name and never a prefix such as `feat/` or `mod/`. Never commit to, push to or merge into `main`, and never open a merge yourself: Faateh reviews and merges every branch into `main`. Never delete a branch.
 2. **Identity.** Commit under your own GitHub account and git identity. No AI attribution anywhere: no `Co-Authored-By`, "Generated with ...", or similar lines in commits, pull requests or files. Declare your AI tool use in your own row of `AI_USE.md`.
 3. **Commits.** Small conventional commits, one per step (or per item where a step says so): `feat(scope): ...`, `fix`, `test`, `docs`, `style`, `chore`. Expect 25 to 35 commits each.
 4. **Ownership.** Edit only files in your rows of the ownership map (Section 0.5). If you need a change in someone else's file, stop that step and ask that person.
@@ -137,12 +137,12 @@ Each site has its own file `backend/vanguard/catalog/data/sites/<site-id>.json`:
 
 ## 2. Abdul Hadi: configuration studio, comparison UI, two sites, verifier runs
 
-**Branches:** `feat/configuration-studio` (product work: steps H1 to H14) and `feat/sites-emberline-marquee` (websites: steps S1 to S12). **Model budget:** your own keys, at most 4 a day (80 calls), Wednesday to Thursday.
+**Branches:** `studio` (product work: steps H1 to H14) and `dining-tickets` (websites: steps S1 to S12). **Model budget:** your own keys, at most 4 a day (80 calls), Wednesday to Thursday.
 
 **Why this matters (instructor's points 14, 15, 16, 12):** users must be able to create, edit and save their own personas, add any website and define tasks without code changes, compare results across runs or website versions, and the verifier must be measured against human labels.
 
-### 2A. Product (branch `feat/configuration-studio`)
-**H1. Branch.** `git switch -c feat/configuration-studio` then `git push -u origin feat/configuration-studio`. (Do Section 0.6 setup first.)
+### 2A. Product (branch `studio`)
+**H1. Branch.** `git switch -c studio` then `git push -u origin studio`. (Do Section 0.6 setup first.)
 
 **H2. ⛔ CHECKPOINT CP-G1.** While waiting, start the website steps S1 to S6 on the other branch.
 
@@ -205,8 +205,8 @@ Commits: `docs(studio): describe the configuration studio`, `docs(ai-use): decla
 
 **What can run while you wait:** before CP-G1, the website steps S1 to S6; before CP-G2, H8 to H11; before CP-B2 or CP-VB, the website steps.
 
-### 2B. Websites (branch `feat/sites-emberline-marquee`)
-**S1. Branch.** `git switch main && git switch -c feat/sites-emberline-marquee` then push it.
+### 2B. Websites (branch `dining-tickets`)
+**S1. Branch.** `git switch main && git switch -c dining-tickets` then push it.
 
 **Emberline Kitchen** (`sites/emberline-kitchen/`, id `emberline`, port **3104**, **React + Vite + TypeScript**, a restaurant that takes pickup orders): home with hero and featured dishes; full menu with category tabs and a search box; dish detail in a modal with options (size, spice level, extras); cart drawer; checkout (name, phone, pickup time) with a confirmation page; opening hours and location page; about page.
 - **S2.** Scaffold and design system (tokens, self-hosted fonts, base components). Commit: `chore(emberline): scaffold the site and its design system`
@@ -225,12 +225,12 @@ Commits: `feat(catalog): register Emberline Kitchen and its tasks`, `feat(catalo
 
 ## 3. Ibrahim Malik: task-level evaluation, metrics, verifier evaluation, two sites
 
-**Branches:** `feat/task-level-evaluation` (steps E1 to E14) and `feat/sites-herald-pantry` (steps S1 to S12). **Model budget:** your own keys, at most 4 a day (80 calls), Wednesday to Thursday.
+**Branches:** `task-evaluation` (steps E1 to E14) and `news-recipes` (steps S1 to S12). **Model budget:** your own keys, at most 4 a day (80 calls), Wednesday to Thursday.
 
 **Why this matters (instructor's points 4, 5, 10, 12, 13):** single steps do not show whole failures, so tasks must be evaluated as tasks across scenarios; behaviour must be compared with real users, not only with the rules; diversity must be measured; the verifier's precision, recall and false-positive rate must be measured against human labels; and completion, actions, repeated attempts, latency and cost must be reported.
 
-### 3A. Evaluation (branch `feat/task-level-evaluation`)
-**E1. Branch.** `git switch -c feat/task-level-evaluation` then push. (Section 0.6 setup first.)
+### 3A. Evaluation (branch `task-evaluation`)
+**E1. Branch.** `git switch -c task-evaluation` then push. (Section 0.6 setup first.)
 
 **E2. Package and command.** `backend/vanguard/evaluation/__init__.py` and `backend/vanguard/evaluation/__main__.py`, giving `python -m vanguard.evaluation <command>` with subcommands added in later steps. Do not edit `vanguard/cli.py`.
 Commit: `chore(evaluation): add the evaluation package and command`
@@ -282,8 +282,8 @@ Commits: `docs(evaluation): describe the evaluation design`, `docs(ai-use): decl
 
 **What can run while you wait:** before CP-G1, E2 to E3 and the website steps S1 to S6; before CP-G2, E5 to E8 (with tests) and the websites; before CP-B2 or CP-VB, E10, E11 tests, and the websites.
 
-### 3B. Websites (branch `feat/sites-herald-pantry`)
-**S1. Branch.** `git switch main && git switch -c feat/sites-herald-pantry` then push.
+### 3B. Websites (branch `news-recipes`)
+**S1. Branch.** `git switch main && git switch -c news-recipes` then push.
 
 **Harbour Herald** (`sites/harbour-herald/`, id `herald`, port **3106**, **Astro** static site, a local news site): front page with a lead story and a card grid; section pages (city, business, sport, culture); article pages with related stories; search; a newsletter sign-up in a modal with validation; an events listing; about and contact.
 - **S2.** Scaffold and design system. Commit: `chore(herald): scaffold the site and its design system`
