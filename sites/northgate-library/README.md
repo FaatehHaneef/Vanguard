@@ -13,7 +13,7 @@ A production build is faster and closer to a real site: `npm run build && npm ru
 
 With Docker: `docker compose up northgate` from the repository root. The image builds the site with Node 22 and serves `dist/` with nginx on port 3102, sending every client-side route to `index.html`.
 
-Port 3102 is the origin Vanguard expects (`backend/vanguard/catalog/data/sites.json`). The port is fixed (`strictPort`), so the dev server stops with an error instead of moving to another port if 3102 is taken.
+Port 3102 is the origin Vanguard expects (`backend/vanguard/catalog/data/sites/northgate.json`). The port is fixed (`strictPort`), so the dev server stops with an error instead of moving to another port if 3102 is taken.
 
 ## Pages
 `/` home, events and borrowing rules · `/search` catalogue search (`/search?q=...`) · `/book/<id>` book details · `/reserve/<id>` reservation form · `/reserved` confirmation · `/hours` opening hours · `/about` about the library · `/staff-picks` (not linked from anywhere)

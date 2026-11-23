@@ -7,7 +7,17 @@ from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 
-from vanguard import __version__, batch, catalog, explain, failures, labels, results, service
+from vanguard import (
+    __version__,
+    batch,
+    catalog,
+    explain,
+    failures,
+    labels,
+    results,
+    routes,
+    service,
+)
 from vanguard.agent import PROMPT_VERSION
 from vanguard.catalog import CatalogError
 from vanguard.contracts import (
@@ -21,24 +31,15 @@ from vanguard.contracts import (
     StepRecord,
     Task,
 )
+from vanguard.deps import get_store, open_store
 from vanguard.providers import ProviderUnavailable, make_provider
 from vanguard.settings import Settings, get_settings
 from vanguard.store import RunStore
 
-_store: RunStore | None = None
-
-
-def get_store() -> RunStore:
-    if _store is None:
-        raise RuntimeError("store not initialised")
-    return _store
-
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    global _store
-    _store = RunStore(get_settings().database_url)
-    _store.create_schema()
+    open_store(get_settings())
     yield
 
 
@@ -49,6 +50,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+# Feature routes (vanguard/routes/*.py), each a module with a `router`.
+for _name, _router in routes.routers():
+    app.include_router(_router)
 
 
 @app.get("/health")

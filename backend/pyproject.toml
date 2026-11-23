@@ -26,7 +26,7 @@ dev = ["pytest>=8", "ruff>=0.6", "pillow>=10"]
 include = ["vanguard*"]
 
 [tool.setuptools.package-data]
-vanguard = ["catalog/data/*.json", "catalog/data/personas/*.json", "executor/js/*.js"]
+vanguard = ["catalog/data/personas/*.json", "catalog/data/sites/*.json", "catalog/data/tasks/*.json", "executor/js/*.js"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

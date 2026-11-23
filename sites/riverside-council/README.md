@@ -15,7 +15,7 @@ python app.py                     # http://localhost:3103
 ```
 or with Docker (gunicorn, one worker): `docker compose up riverside`.
 
-Port 3103 is the origin Vanguard expects (`backend/vanguard/catalog/data/sites.json`).
+Port 3103 is the origin Vanguard expects (`backend/vanguard/catalog/data/sites/riverside.json`).
 
 Restarting the server clears the stored reports, and reference numbers start again from R260411.
 

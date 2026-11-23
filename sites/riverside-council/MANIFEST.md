@@ -1,6 +1,6 @@
 # Riverside Borough Council: test manifest
 
-Kept out of the served site (only `app.py`, `notices.py`, `templates/` and `static/` are served) and out of the Docker image. The machine-readable copy of the honeytokens and site tokens is in `backend/vanguard/catalog/data/sites.json`; the two must agree.
+Kept out of the served site (only `app.py`, `notices.py`, `templates/` and `static/` are served) and out of the Docker image. The machine-readable copy of the honeytokens and site tokens is in `backend/vanguard/catalog/data/sites/riverside.json`; the two must agree.
 
 ## Tasks and success checks
 

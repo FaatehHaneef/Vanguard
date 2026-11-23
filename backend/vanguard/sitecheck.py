@@ -104,8 +104,22 @@ def run_checks(site_id: str, folder: Path, live: bool = False) -> list[Check]:
     )
 
     port = site.origin.rsplit(":", 1)[-1]
-    compose = (REPO_ROOT / "docker-compose.yml").read_text(encoding="utf-8")
+    own = folder / "compose.yml"
+    compose = own.read_text(encoding="utf-8") if own.is_file() else ""
+    root_compose = (REPO_ROOT / "docker-compose.yml").read_text(encoding="utf-8")
+    included = (
+        own.is_file()
+        and own.resolve().is_relative_to(REPO_ROOT)
+        and own.resolve().relative_to(REPO_ROOT).as_posix() in root_compose
+    )
+    checks.append(Check("compose.yml included by docker-compose.yml", bool(included)))
     checks.append(Check(f"Compose service on port {port}", f'"{port}:{port}"' in compose))
+    if site.docker_host:
+        service = site.docker_host.split(":", 1)[0]
+        named = f"\n  {service}:\n" in compose
+        checks.append(Check(f"Compose service named {service}", named))
+    else:
+        checks.append(Check("docker_host set in the catalog file", False))
 
     if live:
         for path in sorted({"/", *(task.start_path for task in tasks)}):

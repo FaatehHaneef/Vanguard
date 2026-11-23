@@ -1,0 +1,10 @@
+# This site's service, included by the repository's docker-compose.yml.
+# Paths here are relative to this folder.
+services:
+  tallowmere:
+    build: .
+    env_file:
+      - path: .env.local
+        required: false
+    ports:
+      - "3100:3100"

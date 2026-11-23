@@ -130,12 +130,14 @@ class PlaywrightExecutor:
         self._page_size = (0.0, 0.0)
         self._focus_rect: Rect | None = None
         self.conditions = set(conditions or [])
-        self.allowed_origins = {_origin(origin) for origin in settings.allowed_origins}
+        from vanguard import origins  # catalog sites are always allowed
+
+        self.allowed_origins = {_origin(o) for o in origins.allowed_origins(settings)}
         self.payment_hosts = {host.lower() for host in settings.allowed_payment_hosts}
         self.headless = settings.headless if headless is None else headless
         self.rewrites = {
             _origin(source): target.rstrip("/")
-            for source, target in settings.origin_rewrites.items()
+            for source, target in origins.rewrites(settings).items()
         }
         if screenshot_dir is None and settings.screenshots:
             screenshot_dir = Path(settings.data_dir) / "screenshots"
