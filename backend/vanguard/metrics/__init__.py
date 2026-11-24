@@ -20,6 +20,7 @@ from dataclasses import asdict, dataclass
 
 from vanguard.checker import RunLeakage, pointer_evidence
 from vanguard.contracts import RunOutcome, RunSummary, StepRecord
+from vanguard.usage import calls_in
 
 from .repetition import repeated_attempts
 from .stats import precision_recall, wilson_interval
@@ -63,6 +64,10 @@ class RunMetrics:
     verifier_recall: float | None = None
     # Proposals that repeat the previous one without effect (see metrics/repetition.py).
     repeated_attempts: int = 0
+    # Model calls (agent calls plus verifier checks, as vanguard.usage counts them) and
+    # actions (steps). With several actions per call, a run makes fewer calls than actions.
+    model_calls: int = 0
+    actions: int = 0
 
     def as_dict(self) -> dict:
         return asdict(self)
@@ -121,6 +126,8 @@ def run_metrics(
         verifier_precision=verifier_precision,
         verifier_recall=verifier_recall,
         repeated_attempts=repeated_attempts(steps),
+        model_calls=calls_in(steps),
+        actions=n,
     )
 
 
@@ -143,6 +150,8 @@ class GroupMetrics:
     latency_p95_ms: float
     mean_cost_usd: float
     mean_repeated_attempts: float = 0.0
+    mean_model_calls: float = 0.0
+    mean_actions: float = 0.0
 
     def as_dict(self) -> dict:
         return asdict(self)
@@ -185,6 +194,8 @@ def group_metrics(
                 latency_p95_ms=percentile(latencies, 95),
                 mean_cost_usd=sum(m.cost_usd for m in metrics) / n,
                 mean_repeated_attempts=sum(m.repeated_attempts for m in metrics) / n,
+                mean_model_calls=sum(m.model_calls for m in metrics) / n,
+                mean_actions=sum(m.actions for m in metrics) / n,
             )
         )
     return out
