@@ -36,6 +36,10 @@ def about(request):
     return render(request, "recipes/about.html")
 
 
+def club(request):
+    return render(request, "recipes/club.html")
+
+
 def _words(text: str) -> list[str]:
     return [word for word in text.lower().replace(",", " ").split() if word]
 
