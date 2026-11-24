@@ -52,10 +52,13 @@ export function Header() {
           <Link to="/menu" className="btn btn--primary btn--sm header-cta">
             Order for pickup
           </Link>
-          <button type="button" className="btn btn--ghost btn--sm cart-btn" onClick={cart.openDrawer}>
+          <button type="button" className="icon-btn cart-btn" onClick={cart.openDrawer}>
             <Icon name="bag" />
-            <span>Your order</span>
-            <span className="cart-count">{cart.count}</span>
+            {cart.count > 0 && (
+              <span className="cart-count" aria-hidden="true">
+                {cart.count}
+              </span>
+            )}
           </button>
           <div className="dropdown site-nav-mobile" ref={menuRef}>
             <button
