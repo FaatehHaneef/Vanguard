@@ -40,6 +40,7 @@ export function DishDialog({ dish, onClose }: Props) {
       unitPrice,
     })
     onClose()
+    cart.openDrawer()
   }
 
   return (

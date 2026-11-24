@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink, useLocation } from 'react-router'
+import { useCart } from '../lib/cart'
 import { Icon } from './Icon'
 import { Logo } from './Logo'
 
@@ -11,6 +12,7 @@ const links = [
 
 export function Header() {
   const [open, setOpen] = useState(false)
+  const cart = useCart()
   const location = useLocation()
   const menuRef = useRef<HTMLDivElement>(null)
 
@@ -50,6 +52,11 @@ export function Header() {
           <Link to="/menu" className="btn btn--primary btn--sm header-cta">
             Order for pickup
           </Link>
+          <button type="button" className="btn btn--ghost btn--sm cart-btn" onClick={cart.openDrawer}>
+            <Icon name="bag" />
+            <span>Your order</span>
+            <span className="cart-count">{cart.count}</span>
+          </button>
           <div className="dropdown site-nav-mobile" ref={menuRef}>
             <button
               type="button"

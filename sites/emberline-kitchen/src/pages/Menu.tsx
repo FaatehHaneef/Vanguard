@@ -1,9 +1,10 @@
 import { type KeyboardEvent, useMemo, useRef, useState } from 'react'
-import { useNavigate, useParams } from 'react-router'
+import { Link, useNavigate, useParams } from 'react-router'
 import { DishCard } from '../components/DishCard'
 import { DishDialog } from '../components/DishDialog'
 import { Icon } from '../components/Icon'
-import { type CategoryId, categories, dishBySlug, dishes } from '../data/menu'
+import { type CategoryId, categories, dishBySlug, dishes, formatPrice } from '../data/menu'
+import { useCart } from '../lib/cart'
 import { usePage } from '../lib/page'
 
 type Tab = 'all' | CategoryId
@@ -17,6 +18,7 @@ export function Menu() {
   const { slug } = useParams()
   const navigate = useNavigate()
   const dish = dishBySlug(slug)
+  const cart = useCart()
   const heading = usePage('Menu', Boolean(dish))
   const [tab, setTab] = useState<Tab>('all')
   const [query, setQuery] = useState('')
@@ -127,6 +129,19 @@ export function Menu() {
           </div>
         )}
       </section>
+      {cart.count > 0 && (
+        <div className="order-bar">
+          <div className="container order-bar__inner">
+            <p>
+              <strong>{cart.count === 1 ? '1 item' : `${cart.count} items`}</strong> in your order ·{' '}
+              {formatPrice(cart.subtotal)}
+            </p>
+            <Link to="/checkout" className="btn btn--light btn--sm">
+              Check out
+            </Link>
+          </div>
+        </div>
+      )}
       {dish && <DishDialog key={dish.slug} dish={dish} onClose={() => navigate('/menu')} />}
     </>
   )
