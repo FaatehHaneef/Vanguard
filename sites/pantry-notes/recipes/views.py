@@ -10,6 +10,12 @@ from .data import BY_SLUG, CUISINES, DIETS, RECIPES, TIMES
 from .forms import SubmitRecipeForm
 
 MAX_SERVINGS = 12
+SORTS = {
+    "recommended": ("Recommended", None),
+    "quickest": ("Quickest first", lambda r: (r.minutes, r.title)),
+    "fewest": ("Fewest ingredients", lambda r: (len(r.ingredients), r.title)),
+    "name": ("Name, A to Z", lambda r: r.title),
+}
 
 # Submitted recipes are kept in memory only, for as long as the server runs.
 submissions: dict[int, dict] = {}
@@ -55,7 +61,15 @@ def recipe_list(request):
         found = [r for r in found if r.minutes <= int(time)]
     if query:
         found = [r for r in found if matches(r, _words(query))]
+    sort = request.GET.get("sort", "recommended")
+    if sort not in SORTS:
+        sort = "recommended"
+    key = SORTS[sort][1]
+    if key is not None:
+        found.sort(key=key)
     filtered = bool(cuisine or diet or time or query)
+    params = request.GET.copy()
+    params.pop("sort", None)
     return render(
         request,
         "recipes/recipes.html",
@@ -66,6 +80,10 @@ def recipe_list(request):
             "times": TIMES,
             "selected": {"cuisine": cuisine, "diet": diet, "time": time, "q": query},
             "filtered": filtered,
+            "sorts": [(value, label) for value, (label, _) in SORTS.items()],
+            "sort": sort,
+            "sort_label": SORTS[sort][0],
+            "base_query": params.urlencode(),
         },
     )
 

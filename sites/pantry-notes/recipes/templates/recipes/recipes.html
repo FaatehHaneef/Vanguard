@@ -44,6 +44,13 @@
   <section class="results" aria-labelledby="results-heading">
     <div class="results-bar">
       <h2 id="results-heading" class="results-count">{{ recipes|length }} recipe{{ recipes|length|pluralize }}{% if filtered %} match{{ recipes|length|pluralize:"es," }}{% endif %}</h2>
+      <div class="sort" data-sort>
+        <span class="sort-label">Sort by</span>
+        <div class="sort-current" data-sort-toggle>{{ sort_label }}</div>
+        <div class="sort-options" data-sort-options hidden>
+          {% for value, label in sorts %}<div class="sort-option{% if value == sort %} selected{% endif %}" data-href="?{% if base_query %}{{ base_query }}&amp;{% endif %}sort={{ value }}">{{ label }}</div>{% endfor %}
+        </div>
+      </div>
     </div>
     {% if recipes %}
     <ul class="grid">
@@ -56,4 +63,23 @@
     {% endif %}
   </section>
 </div>
+{% endblock %}
+{% block scripts %}
+<script>
+  (function () {
+    var sort = document.querySelector("[data-sort]");
+    if (!sort) return;
+    var options = sort.querySelector("[data-sort-options]");
+    sort.querySelector("[data-sort-toggle]").addEventListener("click", function () {
+      options.hidden = !options.hidden;
+      sort.classList.toggle("open", !options.hidden);
+    });
+    sort.querySelectorAll(".sort-option").forEach(function (option) {
+      option.addEventListener("click", function () { window.location.href = option.dataset.href; });
+    });
+    document.addEventListener("click", function (event) {
+      if (!sort.contains(event.target)) { options.hidden = true; sort.classList.remove("open"); }
+    });
+  })();
+</script>
 {% endblock %}
