@@ -16,7 +16,7 @@ import {
   StudioError,
   TOOL_GROUPS,
 } from "@/lib/studio";
-import { Field, FieldError, INPUT, ListField } from "./fields";
+import { Choice, Field, FieldError, INPUT, ListField } from "./fields";
 
 const BLANK: PersonaDraft = {
   name: "",
@@ -226,20 +226,14 @@ export function PersonaEditor({ personaId, fromId }: { personaId?: string; fromI
             the limits you tick here.
           </p>
           {LIMITS.map((limit) => (
-            <label key={limit.id} className="flex cursor-pointer items-start gap-3">
-              <input
-                type="checkbox"
-                className="round-check mt-1"
-                checked={draft.limits.includes(limit.id)}
-                onChange={() => update({ limits: toggle(draft.limits, limit.id) })}
-              />
-              <span>
-                <span className="font-bold text-parchment">
-                  {limit.id} {limit.name}
-                </span>
-                <span className="block text-mist">{limit.meaning}</span>
-              </span>
-            </label>
+            <Choice
+              key={limit.id}
+              type="checkbox"
+              title={`${limit.id} ${limit.name}`}
+              meaning={limit.meaning}
+              checked={draft.limits.includes(limit.id)}
+              onChange={() => update({ limits: toggle(draft.limits, limit.id) })}
+            />
           ))}
           <FieldError error={errors.limits} />
         </fieldset>
@@ -248,25 +242,20 @@ export function PersonaEditor({ personaId, fromId }: { personaId?: string; fromI
           <legend className="font-bold text-parchment">Perception</legend>
           <p className="text-sm text-mist">What the model is given of each page.</p>
           {PERCEPTIONS.map((perception) => (
-            <label key={perception.id} className="flex cursor-pointer items-start gap-3">
-              <input
-                type="radio"
-                name="perception"
-                className="mt-1 size-5 accent-amber"
-                checked={draft.perception === perception.id}
-                onChange={() =>
-                  update({
-                    perception: perception.id,
-                    magnification:
-                      perception.id === "magnified" ? (draft.magnification ?? 4) : null,
-                  })
-                }
-              />
-              <span>
-                <span className="font-bold text-parchment">{perception.name}</span>
-                <span className="block text-mist">{perception.meaning}</span>
-              </span>
-            </label>
+            <Choice
+              key={perception.id}
+              type="radio"
+              name="perception"
+              title={perception.name}
+              meaning={perception.meaning}
+              checked={draft.perception === perception.id}
+              onChange={() =>
+                update({
+                  perception: perception.id,
+                  magnification: perception.id === "magnified" ? (draft.magnification ?? 4) : null,
+                })
+              }
+            />
           ))}
           <FieldError error={errors.perception} />
         </fieldset>
@@ -297,18 +286,14 @@ export function PersonaEditor({ personaId, fromId }: { personaId?: string; fromI
         <fieldset className="grid gap-3">
           <legend className="font-bold text-parchment">Actions it may use</legend>
           {TOOL_GROUPS.map((group) => (
-            <label key={group.id} className="flex cursor-pointer items-start gap-3">
-              <input
-                type="checkbox"
-                className="round-check mt-1"
-                checked={draft.tool_groups.includes(group.id)}
-                onChange={() => update({ tool_groups: toggle(draft.tool_groups, group.id) })}
-              />
-              <span>
-                <span className="font-bold text-parchment">{group.name}</span>
-                <span className="block text-mist">{group.meaning}</span>
-              </span>
-            </label>
+            <Choice
+              key={group.id}
+              type="checkbox"
+              title={group.name}
+              meaning={group.meaning}
+              checked={draft.tool_groups.includes(group.id)}
+              onChange={() => update({ tool_groups: toggle(draft.tool_groups, group.id) })}
+            />
           ))}
           <FieldError error={errors.tool_groups} />
         </fieldset>

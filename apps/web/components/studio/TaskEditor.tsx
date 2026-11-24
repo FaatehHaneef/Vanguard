@@ -9,7 +9,7 @@ import {
   type StudioTask,
   type TaskDraft,
 } from "@/lib/studio";
-import { Field, FieldError, INPUT, ListField } from "./fields";
+import { Choice, Field, FieldError, INPUT, ListField } from "./fields";
 
 type CheckKind = "url_prefix" | "text_present" | "answer_contains";
 
@@ -153,19 +153,15 @@ export function TaskEditor({
         <legend className="font-bold text-parchment">How Vanguard knows it was done</legend>
         <p className="text-sm text-mist">Checked by code after every step, never by a model.</p>
         {CHECKS.map((check) => (
-          <label key={check.id} className="flex cursor-pointer items-start gap-3">
-            <input
-              type="radio"
-              name="check"
-              className="mt-1 size-5 accent-amber"
-              checked={kind === check.id}
-              onChange={() => setKind(check.id)}
-            />
-            <span>
-              <span className="font-bold text-parchment">{check.name}</span>
-              <span className="block text-mist">{check.meaning}</span>
-            </span>
-          </label>
+          <Choice
+            key={check.id}
+            type="radio"
+            name="check"
+            title={check.name}
+            meaning={check.meaning}
+            checked={kind === check.id}
+            onChange={() => setKind(check.id)}
+          />
         ))}
         {kind === "answer_contains" ? (
           <ListField

@@ -109,3 +109,43 @@ export function ListField({
     </fieldset>
   );
 }
+
+/** A checkbox or radio button named by `title`, with `meaning` as its description. */
+export function Choice({
+  type,
+  name,
+  checked,
+  onChange,
+  title,
+  meaning,
+}: {
+  type: "checkbox" | "radio";
+  name?: string;
+  checked: boolean;
+  onChange: () => void;
+  title: string;
+  meaning: string;
+}) {
+  const id = useId();
+  return (
+    <div className="flex items-start gap-3">
+      <input
+        id={id}
+        type={type}
+        name={name}
+        className={type === "checkbox" ? "round-check mt-1" : "mt-1 size-5 accent-amber"}
+        checked={checked}
+        onChange={onChange}
+        aria-describedby={`${id}-meaning`}
+      />
+      <div>
+        <label htmlFor={id} className="cursor-pointer font-bold text-parchment">
+          {title}
+        </label>
+        <p id={`${id}-meaning`} className="text-mist">
+          {meaning}
+        </p>
+      </div>
+    </div>
+  );
+}

@@ -111,15 +111,11 @@ export function SiteEditor({ site, onSaved }: { site?: StudioSite; onSaved?: (si
             className={INPUT}
             value={draft.origin}
             placeholder="https://shop.example.com"
-            onChange={(event) => setDraft({ ...draft, origin: event.target.value })}
-            onBlur={() => {
-              const checked = checkOrigin(draft.origin);
-              setErrors((current) => {
-                const next = { ...current };
-                delete next.origin;
-                if (draft.origin && checked.error) next.origin = checked.error;
-                return next;
-              });
+            onChange={(event) => {
+              setDraft({ ...draft, origin: event.target.value });
+              // Clear the message while typing (not on blur: moving the form under the
+              // pointer as it leaves the field would make the next click miss).
+              if (errors.origin) setErrors({ ...errors, origin: "" });
             }}
           />
         )}
