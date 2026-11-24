@@ -324,3 +324,28 @@ def test_tabindex_minus_one_containers_do_not_hide_their_content(site):
         assert "[e1] main" not in obs.content and "clickable" not in obs.content
 
     _run(site, body)
+
+
+def test_live_view_writes_frames_and_clears_them(site, tmp_path):
+    frame = tmp_path / "live" / "run1.jpg"
+
+    async def main():
+        settings = Settings(allowed_origins=[site.origin], screenshots=False)
+        executor = PlaywrightExecutor(settings, live_path=frame)
+        try:
+            await executor.start(site, _task(), persona=None)
+        except Exception as error:  # Chromium not installed
+            await executor.close()
+            pytest.skip(f"browser unavailable: {error}")
+        try:
+            await executor.execute(Action(tool=Tool.PRESS, key="Tab"))
+            for _ in range(50):  # the first frame arrives within a moment
+                if frame.exists():
+                    break
+                await asyncio.sleep(0.1)
+            return frame.read_bytes()[:2]
+        finally:
+            await executor.close()
+
+    assert asyncio.run(main()) == b"\xff\xd8"  # a JPEG
+    assert not frame.exists()  # removed when the run ends
