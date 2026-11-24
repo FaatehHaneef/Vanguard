@@ -1,7 +1,9 @@
 import { type KeyboardEvent, useMemo, useRef, useState } from 'react'
+import { useNavigate, useParams } from 'react-router'
 import { DishCard } from '../components/DishCard'
+import { DishDialog } from '../components/DishDialog'
 import { Icon } from '../components/Icon'
-import { type CategoryId, categories, dishes } from '../data/menu'
+import { type CategoryId, categories, dishBySlug, dishes } from '../data/menu'
 import { usePage } from '../lib/page'
 
 type Tab = 'all' | CategoryId
@@ -12,7 +14,10 @@ function matches(query: string, text: string) {
 }
 
 export function Menu() {
-  const heading = usePage('Menu')
+  const { slug } = useParams()
+  const navigate = useNavigate()
+  const dish = dishBySlug(slug)
+  const heading = usePage('Menu', Boolean(dish))
   const [tab, setTab] = useState<Tab>('all')
   const [query, setQuery] = useState('')
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([])
@@ -122,6 +127,7 @@ export function Menu() {
           </div>
         )}
       </section>
+      {dish && <DishDialog key={dish.slug} dish={dish} onClose={() => navigate('/menu')} />}
     </>
   )
 }

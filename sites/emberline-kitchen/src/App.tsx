@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { Route, Routes, useLocation } from 'react-router'
 import { Footer } from './components/Footer'
 import { Header } from './components/Header'
@@ -10,8 +10,11 @@ import { NotFound } from './pages/NotFound'
 
 function ScrollToTop() {
   const { pathname } = useLocation()
+  const previous = useRef(pathname)
   useEffect(() => {
-    window.scrollTo(0, 0)
+    const withinMenu = previous.current.startsWith('/menu') && pathname.startsWith('/menu')
+    previous.current = pathname
+    if (!withinMenu) window.scrollTo(0, 0)
   }, [pathname])
   return null
 }
