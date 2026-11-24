@@ -2,11 +2,14 @@
 {% block title %}Report a problem{% endblock %}
 {% block content %}
 <p class="form-ref" aria-hidden="true">Form RF-6093</p>
-<h1>Report a pothole</h1>
-<p class="lead">Tell us where the pothole is and what it looks like. We inspect reported road defects within five working days and repair dangerous ones within 24 hours.</p>
-<p>If the pothole is causing an immediate danger, call 0300 555 0142 instead, at any time of day.</p>
+<div class="page-head">
+  <span class="eyebrow">Roads and pavements</span>
+  <h1>Report a pothole</h1>
+  <p class="lead">Tell us where the pothole is and what it looks like. We inspect reported road defects within five working days and repair dangerous ones within 24 hours.</p>
+</div>
+<p class="panel warm">If the pothole is causing an immediate danger, call 0300 555 0142 instead, at any time of day.</p>
 
-<form class="form" method="post" action="/report" novalidate>
+<form class="form form-card" method="post" action="/report" novalidate>
   <div class="field">
     <label for="street">Street name</label>
     <span class="hint" id="street-hint">For example, Mill Lane or Orchard Street</span>
