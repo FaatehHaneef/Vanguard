@@ -44,6 +44,13 @@ function PersonaCard({
         {custom ? "Your persona" : "Built in, read-only"} · <code className="text-xs">{persona.id}</code>
       </p>
       <div className="mt-auto flex flex-wrap gap-2">
+        <Link
+          href={`/studio/personas/new?from=${encodeURIComponent(persona.id)}`}
+          className={custom ? "pixel-button quiet" : "pixel-button"}
+          aria-label={`Duplicate ${persona.name}`}
+        >
+          Duplicate
+        </Link>
         {custom ? (
           <>
             <Link href={`/studio/personas/${encodeURIComponent(persona.id)}`} className="pixel-button">
