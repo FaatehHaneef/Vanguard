@@ -1,0 +1,52 @@
+{
+  "tasks": [
+    {
+      "id": "ng-author",
+      "site_id": "northgate",
+      "scenario": "search",
+      "instruction": "Find out who wrote The Remains of the Day.",
+      "start_path": "/",
+      "success": {"answer_contains": ["Ishiguro"]},
+      "expected": {
+        "keyboard-only": "success: the search field, Enter and the result links all work with the keyboard; the filter chips are not needed",
+        "unrestricted": "success"
+      }
+    },
+    {
+      "id": "tm-add-moss",
+      "site_id": "tallowmere",
+      "scenario": "add_to_cart",
+      "instruction": "Add one Moss Path candle to the cart, then open the cart.",
+      "start_path": "/",
+      "success": {"text_present": "Total $16.00"},
+      "expected": {
+        "keyboard-only": "success: Add to cart works with Enter, although its focus outline is hidden",
+        "unrestricted": "success"
+      }
+    },
+    {
+      "id": "rc-report-recover",
+      "site_id": "riverside",
+      "scenario": "recovery",
+      "instruction": "Report a pothole on Mill Lane, as Sara Khan. Send the form once without an email address; when it is not accepted, add sara@example.com and send it again.",
+      "start_path": "/",
+      "success": {"url_prefix": "/reported/"},
+      "expected": {
+        "keyboard-only": "success: the rejected form keeps the entered values and every field and the submit button are keyboard reachable; the error is shown only as a red border, so the agent must notice that the page did not change",
+        "unrestricted": "success"
+      }
+    },
+    {
+      "id": "wb-ahmed-days",
+      "site_id": "willowbrook",
+      "scenario": "information",
+      "instruction": "Find out on which days of the week Dr Ahmed sees patients.",
+      "start_path": "/",
+      "success": {"answer_contains": ["Tuesday", "Thursday"]},
+      "expected": {
+        "keyboard-only": "success: the doctors' days are text on the home page",
+        "unrestricted": "success"
+      }
+    }
+  ]
+}
