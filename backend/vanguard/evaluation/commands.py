@@ -20,7 +20,7 @@ class Command:
 COMMANDS: dict[str, Command] = {}
 
 # Modules that define commands, imported by the command line. Later steps add to it.
-MODULES: list[str] = ["vanguard.evaluation.tasks"]
+MODULES: list[str] = ["vanguard.evaluation.tasks", "vanguard.evaluation.realism"]
 
 
 def register(command: Command) -> Command:

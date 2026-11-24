@@ -1,0 +1,206 @@
+"""Realism: each persona's input profile next to real users' (Reduced A11y-CUA).
+
+    python -m vanguard.evaluation realism --batches <ids...> [--reference <folder>] [--out <file>]
+
+For each persona, over the executed actions of its finished runs:
+  - pointer share: pointer actions / (pointer actions + key presses);
+  - Tab and arrow share: Tab, Shift+Tab and arrow presses / all key presses;
+  - Enter share: Enter presses / all key presses.
+Key presses count every press of a repeated key, and one press per typed character, as
+A11y-CUA's logs record typing. Navigation tools (goto, back, reload), screen-reader and
+magnifier commands, and done or give_up are not input actions and are left out.
+
+Real users' values come from vanguard.reference.a11y_cua over the same definitions.
+Keyboard-only is compared with blind and low-vision users, unrestricted with sighted
+users; other personas have no matching group here. A11y-CUA's tasks were desktop
+application and web tasks, not these sites' tasks, so the comparison is of input habits,
+not of task performance.
+"""
+
+import argparse
+from dataclasses import dataclass
+from pathlib import Path
+
+from vanguard.contracts import StepRecord, Tool, ToolGroup
+from vanguard.reference.a11y_cua import GROUP_NAMES, GroupStats, collect
+from vanguard.settings import get_settings
+
+from .commands import Command, register
+from .data import ScoredRun, add_batch_arguments, load_runs, open_store, write
+
+MATCHING_GROUP = {
+    "keyboard-only": GROUP_NAMES["BLVU"],
+    "unrestricted": GROUP_NAMES["SU"],
+}
+TAB_AND_ARROWS = {"Tab", "Shift+Tab", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"}
+REFERENCE_TAB_AND_ARROWS = {"Tab", "Up", "Down", "Left", "Right"}
+REFERENCE_ENTER = {"Enter", "Return"}
+
+
+@dataclass
+class Profile:
+    runs: int = 0
+    pointer: int = 0
+    key_presses: int = 0
+    tab_and_arrows: int = 0
+    enter: int = 0
+
+    @property
+    def pointer_share(self) -> float:
+        total = self.pointer + self.key_presses
+        return self.pointer / total if total else 0.0
+
+    @property
+    def tab_and_arrow_share(self) -> float:
+        return self.tab_and_arrows / self.key_presses if self.key_presses else 0.0
+
+    @property
+    def enter_share(self) -> float:
+        return self.enter / self.key_presses if self.key_presses else 0.0
+
+
+def add_steps(profile: Profile, steps: list[StepRecord]) -> None:
+    for step in steps:
+        action = step.proposed
+        if action is None or not step.executed:
+            continue
+        if action.group is ToolGroup.POINTER:
+            profile.pointer += 1
+        elif action.tool is Tool.PRESS and action.key:
+            presses = action.repeat or 1
+            profile.key_presses += presses
+            if action.key in TAB_AND_ARROWS:
+                profile.tab_and_arrows += presses
+            if action.key == "Enter":
+                profile.enter += presses
+        elif action.tool is Tool.TYPE and action.text:
+            profile.key_presses += len(action.text)
+
+
+def persona_profiles(runs: list[ScoredRun]) -> dict[str, Profile]:
+    profiles: dict[str, Profile] = {}
+    for run in runs:
+        profile = profiles.setdefault(run.persona_id, Profile())
+        profile.runs += 1
+        add_steps(profile, run.steps)
+    return dict(sorted(profiles.items()))
+
+
+def reference_profile(stats: GroupStats) -> Profile:
+    """A11y-CUA group statistics on the same definitions as a persona's profile.
+
+    Key presses are A11y-CUA's key presses and hotkeys (Shift+Tab is a hotkey there, a
+    press here). `runs` holds the number of log files."""
+    return Profile(
+        runs=stats.files,
+        pointer=stats.pointer,
+        key_presses=stats.keyboard,
+        tab_and_arrows=sum(stats.keys[key] for key in REFERENCE_TAB_AND_ARROWS),
+        enter=sum(stats.keys[key] for key in REFERENCE_ENTER),
+    )
+
+
+@dataclass
+class Comparison:
+    persona_id: str
+    group: str | None
+    persona: Profile
+    users: Profile | None
+
+    def differences(self) -> dict[str, float] | None:
+        if self.users is None:
+            return None
+        return {
+            name: abs(getattr(self.persona, name) - getattr(self.users, name))
+            for name in ("pointer_share", "tab_and_arrow_share", "enter_share")
+        }
+
+
+def compare(runs: list[ScoredRun], reference: dict[str, GroupStats]) -> list[Comparison]:
+    out = []
+    for persona_id, profile in persona_profiles(runs).items():
+        group = MATCHING_GROUP.get(persona_id)
+        users = reference_profile(reference[group]) if group and group in reference else None
+        out.append(Comparison(persona_id, group, profile, users))
+    return out
+
+
+def _share(value: float | None) -> str:
+    return "-" if value is None else f"{value:.1%}"
+
+
+def report(comparisons: list[Comparison], batch_ids: list[str], reference_found: bool) -> str:
+    lines = [
+        "# Realism: personas' input compared with real users'",
+        "",
+        "Generated by `python -m vanguard.evaluation realism` from batches "
+        f"{', '.join(f'`{b}`' for b in batch_ids)}.",
+        "",
+        "Pointer share is pointer actions over pointer actions plus key presses. Tab and arrow "
+        "share and Enter share are over all key presses (repeated keys counted per press, typing "
+        "one press per character). Persona values use executed actions only. Real users' values "
+        "are from Reduced A11y-CUA (CC BY 4.0), aggregates only: keyboard-only is compared with "
+        "blind and low-vision users, unrestricted with sighted users. A11y-CUA's tasks were "
+        "desktop tasks, not these sites' tasks, so this compares input habits, not performance.",
+        "",
+    ]
+    if not reference_found:
+        lines += [
+            "**The A11y-CUA data was not found**, so only the personas' profiles are shown. "
+            "Set `VANGUARD_DATA_DIR` or pass `--reference`.",
+            "",
+        ]
+    if not comparisons:
+        lines.append("No finished runs in these batches.")
+        return "\n".join(lines) + "\n"
+    lines += [
+        "| persona | runs | real-user group | pointer share (persona / users / difference) "
+        "| Tab and arrow share | Enter share | key presses | pointer actions |",
+        "|---|---|---|---|---|---|---|---|",
+    ]
+    for item in comparisons:
+        lines.append(
+            f"| {item.persona_id} | {item.persona.runs} | {item.group or 'no matching group'} "
+            f"| {_cell(item, 'pointer_share')} | {_cell(item, 'tab_and_arrow_share')} "
+            f"| {_cell(item, 'enter_share')} | {item.persona.key_presses} "
+            f"| {item.persona.pointer} |"
+        )
+    return "\n".join(lines) + "\n"
+
+
+def _cell(item: Comparison, name: str) -> str:
+    """persona / users / absolute difference, for one share."""
+    mine = _share(getattr(item.persona, name))
+    if item.users is None:
+        return f"{mine} / - / -"
+    difference = (item.differences() or {})[name]
+    return f"{mine} / {_share(getattr(item.users, name))} / {_share(difference)}"
+
+
+def _add_arguments(parser: argparse.ArgumentParser) -> None:
+    add_batch_arguments(parser, "realism.md")
+    parser.add_argument(
+        "--reference",
+        type=Path,
+        default=None,
+        help="the Reduced A11y-CUA folder (default VANGUARD_DATA_DIR/a11y-cua-reduced)",
+    )
+
+
+def _run(args: argparse.Namespace) -> int:
+    store, settings = open_store()
+    runs = load_runs(store, args.batches, settings)
+    root = args.reference or Path(get_settings().data_dir) / "a11y-cua-reduced"
+    reference = collect(root) if root.is_dir() else {}
+    write(args.out, report(compare(runs, reference), args.batches, bool(reference)))
+    return 0
+
+
+register(
+    Command(
+        "realism",
+        "Compare each persona's input profile with real users' (A11y-CUA).",
+        _add_arguments,
+        _run,
+    )
+)
