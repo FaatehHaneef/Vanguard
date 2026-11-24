@@ -67,6 +67,11 @@
       <circle cx="250" cy="160" r="14" fill="#fff" opacity="0.4" />
     {/if}
   </g>
+  {#if wide}
+    <text x="388" y="210" text-anchor="end" fill="#fff" opacity="0.7" font-size="9" font-family="monospace" letter-spacing="1">
+      PRINT MB-3926
+    </text>
+  {/if}
   {#each [20, 60, 100, 140, 180, 220, 260, 300, 340, 380] as x (x)}
     <circle cx={x} cy="8" r="3" fill="#ffc93c" opacity="0.85" />
   {/each}
