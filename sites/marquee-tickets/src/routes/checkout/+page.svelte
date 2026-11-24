@@ -2,6 +2,7 @@
   import { goto } from '$app/navigation'
   import { onMount } from 'svelte'
   import { basket, lineText, placeBooking } from '$lib/basket.svelte'
+  import { codeDiscount } from '$lib/codes'
   import Steps from '$lib/components/Steps.svelte'
   import { formatPrice } from '$lib/data/events'
 
@@ -18,7 +19,7 @@
 
   onMount(() => (ready = true))
 
-  const discount = $derived(0)
+  const discount = $derived(codeDiscount(code, basket.subtotal) ?? 0)
 
   function validate(): Partial<Record<Field, string>> {
     const found: Partial<Record<Field, string>> = {}
@@ -26,7 +27,7 @@
     if (!email.trim()) found.email = 'Enter an email address so that we can send your booking.'
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()))
       found.email = 'Enter an email address in the right format, like name@example.com.'
-    if (code.trim()) found.code = 'We do not recognise that code. Check it, or leave the box empty.'
+    if (code.trim() && codeDiscount(code, basket.subtotal) === null) found.code = 'We do not recognise that code. Check it, or leave the box empty.'
     if (!terms) found.terms = 'Tick the box to agree to the terms of sale.'
     return found
   }
