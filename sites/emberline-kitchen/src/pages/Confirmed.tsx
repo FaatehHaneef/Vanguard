@@ -1,5 +1,6 @@
 import { Link } from 'react-router'
 import { formatPrice } from '../data/menu'
+import { Ticket } from '../components/Ticket'
 import { lastOrder } from '../lib/order'
 import { usePage } from '../lib/page'
 import { CheckoutSteps } from './Checkout'
@@ -70,6 +71,7 @@ export function Confirmed() {
           )}
         </div>
         <div className="panel confirmed__where">
+          <Ticket number={order.number} time={order.time} />
           <h2>Where to collect</h2>
           <p>
             Emberline Kitchen

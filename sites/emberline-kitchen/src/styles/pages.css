@@ -665,3 +665,12 @@
 .diet-swatch--vegetarian {
   background: var(--leaf-300);
 }
+
+.ticket {
+  width: 100%;
+  max-width: 340px;
+  height: auto;
+  margin-bottom: var(--space-5);
+  filter: drop-shadow(0 8px 16px rgb(42 29 23 / 0.25));
+  animation: rise-in var(--duration-slow) var(--ease);
+}
