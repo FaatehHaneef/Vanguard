@@ -97,7 +97,7 @@ async def start_run(
         summary = service.create(config, settings, store)
     except (CatalogError, service.RunRejected) as error:
         raise HTTPException(422, str(error)) from None
-    background.add_task(service.execute, summary.id, config, settings, store)
+    background.add_task(service.execute, summary.id, summary.config, settings, store)
     return summary
 
 

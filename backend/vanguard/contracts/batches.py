@@ -20,6 +20,10 @@ class BatchRequest(BaseModel):
     provider: str = "gemini"
     repeats: int = Field(3, ge=1, le=50)
     max_steps: int | None = None
+    actions_per_call: int | None = Field(None, ge=1, le=8)
+    max_calls: int | None = Field(
+        None, ge=1, description="Stop before a run that could take the batch past this"
+    )
     seed: int = 0
 
 

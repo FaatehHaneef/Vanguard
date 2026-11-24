@@ -69,6 +69,11 @@ class Settings(BaseSettings):
     price_out_per_mtok: float = 0.0
 
     max_steps_per_run: int = 40
+    # The model may return up to this many actions in one call (tool calls in order).
+    # Each is gated and recorded as its own step; 1 restores one action per call.
+    actions_per_call: int = 4
+    # Free-tier requests per key, per model, per day (Pacific time), for `cli usage`.
+    calls_per_key_per_day: int = 20
     stuck_after_steps: int = 5
 
 
