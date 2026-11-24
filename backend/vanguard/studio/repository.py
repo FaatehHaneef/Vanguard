@@ -168,7 +168,11 @@ def _persona(data: dict, persona_id: str) -> PersonaSpec:
         )
     fields = {**data, "id": persona_id, "name": name, "status": "preview", "is_control": False}
     if fields.get("perception") == "magnified":
-        if not fields.get("magnification") or float(fields["magnification"]) <= 1:
+        try:
+            magnification = float(fields.get("magnification") or 0)
+        except (TypeError, ValueError):
+            magnification = 0
+        if magnification <= 1:
             raise StudioError(
                 "A magnified view needs a magnification above 1, for example 4.", "magnification"
             )
