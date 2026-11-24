@@ -75,6 +75,11 @@ export type Step = {
   proposed: Action | null;
   model_error: string | null;
   gate: { allowed: boolean; rule: string | null; message: string | null };
+  verifier?: {
+    allowed: boolean;
+    rule: string | null;
+    message: string | null;
+  } | null;
   executed: boolean;
   execution_error: string | null;
   events: { type: string; trusted: boolean; target?: string | null }[];
@@ -116,6 +121,46 @@ export type RunReport = {
   run: RunSummary;
   metrics: RunMetrics;
   steps: { index: number; attempted: Violation[]; executed: Violation[] }[];
+};
+
+export type FindingKind =
+  | "inaccessible_control"
+  | "navigation_failure"
+  | "repeated_actions"
+  | "confusing_workflow"
+  | "failed_task";
+
+export type Attribution =
+  "site" | "restriction" | "agent" | "infrastructure" | "unknown";
+
+export type Finding = {
+  kind: FindingKind;
+  run_id: string;
+  steps: number[];
+  summary: string;
+  element: string | null;
+  url: string | null;
+};
+
+export type RunAttribution = {
+  run_id: string;
+  label: string;
+  outcome: string | null;
+  attribution: Attribution;
+  reason: string;
+  control_runs: number;
+  control_success_rate: number | null;
+  expected: string | null;
+};
+
+export type FindingsReport = {
+  scope: string;
+  runs: number;
+  findings: Finding[];
+  attributions: RunAttribution[];
+  counts: Record<string, number>;
+  attribution_counts: Record<string, number>;
+  limits_statement: string;
 };
 
 export type GroupMetrics = {
@@ -268,6 +313,14 @@ export const api = {
     ),
   report: (id: string) =>
     request<RunReport>(`/runs/${encodeURIComponent(id)}/report`),
+  runFindings: (id: string) =>
+    request<FindingsReport>(`/runs/${encodeURIComponent(id)}/findings`),
+  findings: (batchIds: string[]) =>
+    request<FindingsReport>(
+      `/findings?${batchIds.map((b) => `batches=${encodeURIComponent(b)}`).join("&")}`,
+    ),
+  liveFrameUrl: (id: string) =>
+    `${API_BASE}/runs/${encodeURIComponent(id)}/live/frame`,
   screenshotUrl: (id: string, index: number) =>
     `${API_BASE}/runs/${encodeURIComponent(id)}/steps/${index}/screenshot`,
   batchMetrics: (batchId: string) =>

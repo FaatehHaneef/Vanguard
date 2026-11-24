@@ -22,14 +22,18 @@ class RunRejected(ValueError):
 PREVIEW_OPTIONS = {EnforcementOption.PROMPT_ONLY, EnforcementOption.BOUNDED_PERCEPTION}
 
 
-def make_executor(settings: Settings, config: RunConfig | None = None) -> Executor:
+def make_executor(
+    settings: Settings, config: RunConfig | None = None, run_id: str | None = None
+) -> Executor:
     if settings.executor == "fake":
         return FakeExecutor()
     if settings.executor == "playwright":
+        from vanguard import live
         from vanguard.executor.playwright import PlaywrightExecutor  # added with the worker
 
         return PlaywrightExecutor(
             settings,
+            live_path=live.frame_path(settings, run_id) if run_id and settings.live_view else None,
             conditions=config.conditions if config else None,
             bounded_perception=bool(
                 config and EnforcementOption.BOUNDED_PERCEPTION in config.enforcement
@@ -78,7 +82,7 @@ async def execute(
         site,
         catalog.task(config.task_id),
         make_provider(config.provider, settings),
-        make_executor(settings, config),
+        make_executor(settings, config, run_id),
         store,
         allowed_origins=origins.allowed_origins(settings),
         max_steps=config.max_steps or settings.max_steps_per_run,
