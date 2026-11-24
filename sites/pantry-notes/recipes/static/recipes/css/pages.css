@@ -617,3 +617,10 @@
 .save-button:active {
   transform: scale(0.95);
 }
+.kitchen-ref {
+  float: right;
+  margin: 0;
+  color: var(--ink-faint);
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+}
