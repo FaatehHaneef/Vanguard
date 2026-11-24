@@ -6,6 +6,8 @@
     python -m vanguard.cli show <run_id>
     python -m vanguard.cli batch --personas keyboard-only unrestricted --tasks buy-two \
         --repeats 5 --batch a3-baseline   # prompt_only and gate, balanced, resumable
+    python -m vanguard.cli usage                              # model calls left today
+    python -m vanguard.cli batch ... --max-calls 80           # stop before the budget runs out
     python -m vanguard.cli failures --batch a3-baseline     # failing runs grouped by cause
     python -m vanguard.cli check-site willowbrook --dir sites/willowbrook-clinic --live
     python -m vanguard.cli labelling export --batches a3-tallowmere a3-willowbrook --name a3
@@ -23,7 +25,7 @@ import asyncio
 import sys
 from pathlib import Path
 
-from vanguard import batch, bundle, failures, results, service, sitecheck
+from vanguard import batch, bundle, failures, results, service, sitecheck, usage
 from vanguard.contracts import BatchRequest, EnforcementOption, RunConfig, StepRecord
 from vanguard.settings import REPO_ROOT, get_settings
 from vanguard.store import RunStore
@@ -77,10 +79,11 @@ async def _run(args: argparse.Namespace) -> int:
             seed=args.seed + repeat,
             repeat_index=repeat,
             max_steps=args.max_steps,
+            actions_per_call=args.actions_per_call,
             batch_id=args.batch,
         )
         summary = service.create(config, settings, store)
-        await service.execute(summary.id, config, settings, store)
+        await service.execute(summary.id, summary.config, settings, store)
         _print_run(store, summary.id)
     return 0
 
@@ -100,6 +103,8 @@ async def _batch(args: argparse.Namespace) -> int:
         provider=args.provider or settings.default_provider,
         repeats=args.repeats,
         max_steps=args.max_steps,
+        actions_per_call=args.actions_per_call,
+        max_calls=args.max_calls,
     )
     request = batch.prepare(request, settings)
     store.save_batch(request)
@@ -161,6 +166,9 @@ def main(argv: list[str] | None = None) -> int:
     run.add_argument("--repeats", type=int, default=1)
     run.add_argument("--seed", type=int, default=0)
     run.add_argument("--max-steps", type=int, default=None)
+    run.add_argument(
+        "--actions-per-call", type=int, default=None, help="default: VANGUARD_ACTIONS_PER_CALL"
+    )
     run.add_argument("--batch", default=None)
 
     show = sub.add_parser("show", help="print a run and its steps")
@@ -180,6 +188,13 @@ def main(argv: list[str] | None = None) -> int:
     many.add_argument("--repeats", type=int, default=3)
     many.add_argument("--max-steps", type=int, default=None)
     many.add_argument("--max-runs", type=int, default=None)
+    many.add_argument(
+        "--max-calls",
+        type=int,
+        default=None,
+        help="stop before a run that could go past this many model calls (see `usage`)",
+    )
+    many.add_argument("--actions-per-call", type=int, default=None)
     many.add_argument("--batch", default=None)
 
     failing = sub.add_parser("failures", help="failing runs grouped by cause")
@@ -205,6 +220,8 @@ def main(argv: list[str] | None = None) -> int:
     exl.add_argument("--labeller", required=True)
     iml = lab_sub.add_parser("import-labels", help="load label files")
     iml.add_argument("files", nargs="+", type=Path)
+
+    sub.add_parser("usage", help="model calls made today against today's budget")
 
     report = sub.add_parser("report", help="metrics table for a batch (or all runs)")
     report.add_argument("--batch", default=None)
@@ -235,6 +252,12 @@ def main(argv: list[str] | None = None) -> int:
         if args.out:
             args.out.write_text(table + "\n", encoding="utf-8")
         print(table)
+        return 0
+    if args.command == "usage":
+        settings = get_settings()
+        store = RunStore(settings.database_url)
+        store.create_schema()
+        print(usage.report(usage.usage_since(store, usage.quota_day_start()), settings))
         return 0
     if args.command == "show":
         settings = get_settings()

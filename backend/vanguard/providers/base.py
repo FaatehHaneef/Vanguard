@@ -5,8 +5,9 @@ already contain the persona, the task, a short history and the current observati
 There is no growing chat history, so context stays bounded and every provider
 (Gemini, a local model, Groq, OpenAI) is called the same way.
 
-The provider must answer with exactly one tool call. The tool names and argument
-schemas come from vanguard.providers.tools.
+The provider answers with one or more tool calls, in order (at most
+ModelRequest.max_actions). The tool names and argument schemas come from
+vanguard.providers.tools.
 """
 
 from dataclasses import dataclass, field
@@ -25,12 +26,16 @@ class ModelRequest:
     user: str
     tool_names: list[str]  # tools offered this step
     seed: int = 0
+    max_actions: int = 1  # most tool calls used from the reply
 
 
 @dataclass
 class ModelReply:
     action: Action | None  # None when the reply could not be turned into a valid Action
     model: str
+    # Every usable action of the reply in order, starting with `action`. Parsing stops at
+    # the first unusable tool call, so a bad later call never hides a good first one.
+    actions: list[Action] = field(default_factory=list)
     raw: dict = field(default_factory=dict)
     error: str | None = None
     latency_ms: float = 0
@@ -48,6 +53,20 @@ class JsonReply:
     latency_ms: float = 0
     input_tokens: int = 0
     output_tokens: int = 0
+
+
+def parse_calls(calls: list[tuple[str, dict]], max_actions: int) -> tuple[list[Action], str | None]:
+    """Turn (name, args) tool calls into actions, up to max_actions, stopping at the
+    first one that is not a valid action. The error is set only when the first fails."""
+    from .tools import to_action
+
+    actions: list[Action] = []
+    for name, args in calls[: max(1, max_actions)]:
+        action, problem = to_action(name, args)
+        if action is None:
+            return actions, (problem if not actions else None)
+        actions.append(action)
+    return actions, None
 
 
 class Provider(Protocol):

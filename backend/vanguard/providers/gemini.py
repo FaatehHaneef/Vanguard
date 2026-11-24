@@ -1,4 +1,4 @@
-"""Gemini provider: one forced function call per step.
+"""Gemini provider: a forced function call per step (several, in order, when allowed).
 
 Works through the configured models and keys in turn. A key refused for quota is
 rested, as in the team's earlier Gemini clients. If nothing answers, the caller gets
@@ -15,8 +15,8 @@ from google.genai import errors, types
 
 from vanguard.contracts import Tool
 
-from .base import JsonReply, ModelReply, ModelRequest, ProviderUnavailable
-from .tools import description, json_schema, to_action
+from .base import JsonReply, ModelReply, ModelRequest, ProviderUnavailable, parse_calls
+from .tools import description, json_schema
 
 AUTH_REST_SECONDS = 600  # a key refused outright (401/403) is left alone for a while
 RATE_REST_SECONDS = 65  # a key over its per-minute quota (429) is tried again after a minute
@@ -57,7 +57,7 @@ class GeminiProvider:
             automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
         )
         response, model, latency = await self._generate(request.user, config)
-        return self._reply(response, model, latency)
+        return self._reply(response, model, latency, request.max_actions)
 
     async def generate_json(self, system: str, user: str, schema: dict) -> JsonReply:
         """One JSON answer matching `schema` (Gemini's OpenAPI-style schema)."""
@@ -123,7 +123,9 @@ class GeminiProvider:
             await asyncio.sleep(max(1.0, soonest - time.time()))
 
     @staticmethod
-    def _reply(response: types.GenerateContentResponse, model: str, latency: float) -> ModelReply:
+    def _reply(
+        response: types.GenerateContentResponse, model: str, latency: float, max_actions: int = 1
+    ) -> ModelReply:
         usage = response.usage_metadata
         tokens_in = (usage.prompt_token_count or 0) if usage else 0
         tokens_out = (usage.candidates_token_count or 0) if usage else 0
@@ -137,12 +139,13 @@ class GeminiProvider:
                 input_tokens=tokens_in,
                 output_tokens=tokens_out,
             )
-        call = calls[0]
-        action, problem = to_action(call.name, dict(call.args or {}))
+        parsed = [(call.name or "", dict(call.args or {})) for call in calls]
+        actions, problem = parse_calls(parsed, max_actions)
         return ModelReply(
-            action=action,
+            action=actions[0] if actions else None,
+            actions=actions,
             model=model,
-            raw={"name": call.name, "args": dict(call.args or {})},
+            raw={"calls": [{"name": name, "args": args} for name, args in parsed]},
             error=problem,
             latency_ms=latency,
             input_tokens=tokens_in,

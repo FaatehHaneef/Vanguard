@@ -6,11 +6,14 @@ from .base import JsonReply, ModelReply, ModelRequest
 
 
 class ScriptedProvider:
-    """Replays a fixed list of actions, then gives up."""
+    """Replays a fixed list of actions, then gives up. A list inside the script is one
+    call that returns several actions."""
 
     name = "fake"
 
-    def __init__(self, script: list[Action] | None = None, json_replies: list | None = None):
+    def __init__(
+        self, script: list[Action | list[Action]] | None = None, json_replies: list | None = None
+    ):
         self.script = list(script or [])
         self.json_replies = list(json_replies or [])
         self.calls = 0
@@ -25,7 +28,11 @@ class ScriptedProvider:
     async def next_action(self, request: ModelRequest) -> ModelReply:
         self.calls += 1
         if self.script:
-            action = self.script.pop(0)
+            item = self.script.pop(0)
+            actions = list(item) if isinstance(item, list) else [item]
         else:
-            action = Action(tool="give_up", reason="script finished", rationale="no more steps")
-        return ModelReply(action=action, model="scripted", raw={"call": self.calls})
+            actions = [Action(tool="give_up", reason="script finished", rationale="no more steps")]
+        actions = actions[: max(1, request.max_actions)]
+        return ModelReply(
+            action=actions[0], actions=actions, model="scripted", raw={"call": self.calls}
+        )

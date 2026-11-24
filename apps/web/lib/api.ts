@@ -80,6 +80,9 @@ export type Step = {
   events: { type: string; trusted: boolean; target?: string | null }[];
   url_after: string | null;
   focus_after?: string | null;
+  // Which model call proposed the step, and its place in that call (0 = first).
+  call?: number | null;
+  in_call?: number;
   latency_ms: number;
 };
 

@@ -16,8 +16,8 @@ import httpx
 
 from vanguard.contracts import Tool
 
-from .base import JsonReply, ModelReply, ModelRequest, ProviderUnavailable
-from .tools import description, json_schema, to_action
+from .base import JsonReply, ModelReply, ModelRequest, ProviderUnavailable, parse_calls
+from .tools import description, json_schema
 
 TIMEOUT_SECONDS = 120
 
@@ -94,6 +94,7 @@ class OpenAICompatibleProvider:
             ],
             "tools": tools,
             "tool_choice": "required",
+            "parallel_tool_calls": request.max_actions > 1,
             "temperature": self.temperature,
             "seed": request.seed,
         }
@@ -111,20 +112,23 @@ class OpenAICompatibleProvider:
                 input_tokens=tokens_in,
                 output_tokens=tokens_out,
             )
-        function = calls[0].get("function") or {}
-        try:
-            args = json.loads(function.get("arguments") or "{}")
-        except json.JSONDecodeError:
-            args, problem = {}, "tool arguments are not JSON"
-        else:
-            problem = None
-        action, invalid = to_action(
-            function.get("name", ""), args if isinstance(args, dict) else {}
-        )
+        parsed: list[tuple[str, dict]] = []
+        problem = None
+        for call in calls:
+            function = call.get("function") or {}
+            try:
+                args = json.loads(function.get("arguments") or "{}")
+            except json.JSONDecodeError:
+                if not parsed:
+                    problem = "tool arguments are not JSON"
+                break
+            parsed.append((function.get("name", ""), args if isinstance(args, dict) else {}))
+        actions, invalid = parse_calls(parsed, request.max_actions)
         return ModelReply(
-            action=action if problem is None else None,
+            action=actions[0] if actions else None,
+            actions=actions,
             model=self.model,
-            raw={"name": function.get("name"), "args": args},
+            raw={"calls": [{"name": name, "args": args} for name, args in parsed]},
             error=problem or invalid,
             latency_ms=latency,
             input_tokens=tokens_in,

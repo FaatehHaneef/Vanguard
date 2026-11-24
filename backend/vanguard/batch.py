@@ -128,6 +128,7 @@ def _config(request: BatchRequest, task, persona, option, repeat: int) -> RunCon
         seed=request.seed + repeat,
         repeat_index=repeat,
         max_steps=request.max_steps,
+        actions_per_call=request.actions_per_call,
         batch_id=request.batch_id,
     )
 
@@ -135,18 +136,28 @@ def _config(request: BatchRequest, task, persona, option, repeat: int) -> RunCon
 MAX_CONSECUTIVE_ERRORS = 3
 
 
+def worst_case_calls(config: RunConfig, settings) -> int:
+    """Most model calls one run can make: one per step, twice with the verifier."""
+    steps = config.max_steps or settings.max_steps_per_run
+    return steps * (2 if EnforcementOption.VERIFIER in config.enforcement else 1)
+
+
 async def run_batch(request: BatchRequest, settings, store, *, max_runs: int | None = None):
     """Run the batch one run at a time until every group meets its target.
 
     Safe to call again with the same batch_id: finished runs are counted, not repeated.
-    Stops early when the model is unavailable or several runs in a row fail.
+    Stops early when the model is unavailable or several runs in a row fail, and, with
+    request.max_calls, before a run that could take this call past that many model calls.
     """
     from vanguard import service
+    from vanguard.usage import calls_in
 
     assert request.batch_id is not None
     targets = targets_for(request)
     errors = 0
     started = 0
+    calls = 0
+    biggest = 0  # most calls any run of this call has used
     while True:
         done = done_counts(store, request.batch_id)
         key = next_group(done, targets)
@@ -156,9 +167,18 @@ async def run_batch(request: BatchRequest, settings, store, *, max_runs: int | N
             return status(store, request, "run cap reached")
         task, persona, option = key
         config = _config(request, task, persona, option, done.get(key, 0))
+        if request.max_calls is not None:
+            need = biggest or worst_case_calls(config, settings)
+            if calls + need > request.max_calls:
+                return status(
+                    store, request, f"call budget reached ({calls} of {request.max_calls} used)"
+                )
         summary = service.create(config, settings, store)
         started += 1
-        result = await service.execute(summary.id, config, settings, store)
+        result = await service.execute(summary.id, summary.config, settings, store)
+        used = calls_in(store.steps(summary.id))
+        calls += used
+        biggest = max(biggest, used)
         if result.outcome is RunOutcome.ERROR:
             errors += 1
             if (result.error or "").startswith("model unavailable"):

@@ -82,3 +82,19 @@ def test_configured_by_name():
     )
     made = make_provider("ollama", settings)
     assert made.name == "ollama" and made.model == "m"
+
+
+def test_several_tool_calls_become_several_actions():
+    def handler(request: httpx.Request) -> httpx.Response:
+        body = json.loads(request.content)
+        assert body["parallel_tool_calls"] is True
+        calls = [
+            {"function": {"name": "press", "arguments": json.dumps({"key": key})}}
+            for key in ["Tab", "Tab", "Enter"]
+        ]
+        return httpx.Response(200, json={"choices": [{"message": {"tool_calls": calls}}]})
+
+    request = ModelRequest(system="s", user="u", tool_names=["press"], max_actions=2)
+    reply = asyncio.run(provider(handler).next_action(request))
+    assert [action.key for action in reply.actions] == ["Tab", "Tab"]
+    assert reply.action.key == "Tab"

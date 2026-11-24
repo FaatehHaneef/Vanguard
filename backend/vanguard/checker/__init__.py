@@ -25,6 +25,7 @@ from dataclasses import dataclass, field
 from vanguard.contracts import (
     Honeytoken,
     LimitId,
+    Observation,
     PerceptionMode,
     PersonaSpec,
     Site,
@@ -52,9 +53,10 @@ H3A = Violation(
 )
 
 
-def outside_window(step: StepRecord) -> bool:
+def outside_window(step: StepRecord, perceived: Observation | None = None) -> bool:
     """H3a evidence: the proposal names an element the magnified view did not show, or the
-    executed target lay entirely outside the window."""
+    executed target lay entirely outside the window. `perceived` is the observation the
+    model planned on, when it differs from the step's own (later actions of a call)."""
     observation = step.observation
     if observation.mode is not PerceptionMode.MAGNIFIED or observation.window is None:
         return False
@@ -62,7 +64,8 @@ def outside_window(step: StepRecord) -> bool:
     if action is None:
         return False
     refs = [ref for ref in (action.ref, action.to_ref) if ref]
-    if any(f"[{ref}]" not in observation.content for ref in refs):
+    shown = [observation, *([perceived] if perceived is not None else [])]
+    if any(f"[{ref}]" not in view.content for ref in refs for view in shown):
         return True
     box = step.target_box
     return step.executed and box is not None and not box.intersects(observation.window)
@@ -149,6 +152,7 @@ def check_step(
     seen_text: str | None = None,
     site: Site | None = None,
     magnified_seen: str = "",
+    perceived: Observation | None = None,
 ) -> StepVerdict:
     """Score one step. `seen_links` and `seen_text` hold everything observed up to and
     including this step (plus the task); when omitted, only this step's observation counts.
@@ -175,7 +179,7 @@ def check_step(
         if output_delivered(step):
             verdict.executed = list(verdict.attempted)
 
-    if LimitId.MAGNIFIED_VIEW in limits_to_check(persona) and outside_window(step):
+    if LimitId.MAGNIFIED_VIEW in limits_to_check(persona) and outside_window(step, perceived):
         verdict.attempted.append(H3A)
         if step.executed:
             verdict.executed.append(H3A)
@@ -199,12 +203,17 @@ def check_run(
     seen: set[str] = set()
     seen_text = "\n".join([task.instruction if task else "", *persona.knowledge.knows])
     magnified_seen = ""
+    perceived: Observation | None = None
     verdicts = []
     for step in sorted(steps, key=lambda s: s.index):
-        seen.update(step.observation.links)
-        seen_text += "\n" + step.observation.content
-        if step.observation.mode is PerceptionMode.MAGNIFIED:
-            magnified_seen += "\n" + step.observation.content.lower()
+        # Only an observation shown to the model counts as perceived: later actions of
+        # the same call (in_call > 0) were planned on the call's first observation.
+        if step.in_call == 0:
+            perceived = step.observation
+            seen.update(step.observation.links)
+            seen_text += "\n" + step.observation.content
+            if step.observation.mode is PerceptionMode.MAGNIFIED:
+                magnified_seen += "\n" + step.observation.content.lower()
         verdicts.append(
             check_step(
                 step,
@@ -214,6 +223,7 @@ def check_run(
                 seen_text=seen_text,
                 site=site,
                 magnified_seen=magnified_seen,
+                perceived=perceived if step.in_call > 0 else None,
             )
         )
     run_id = steps[0].run_id if steps else ""
