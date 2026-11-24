@@ -115,7 +115,7 @@
         <div class="field">
           <label for="quantity">Number of tickets</label>
           <div class="stepper-input">
-            <button type="button" class="icon-btn" aria-label="Fewer tickets" onclick={() => change(-1)}>
+            <button type="button" class="icon-btn icon-btn--round" onclick={() => change(-1)}>
               <Icon name="minus" />
             </button>
             <input
@@ -129,7 +129,7 @@
               aria-invalid={Boolean(error)}
               aria-describedby={error ? 'booking-error' : undefined}
             />
-            <button type="button" class="icon-btn" aria-label="More tickets" onclick={() => change(1)}>
+            <button type="button" class="icon-btn icon-btn--round" onclick={() => change(1)}>
               <Icon name="plus" />
             </button>
           </div>

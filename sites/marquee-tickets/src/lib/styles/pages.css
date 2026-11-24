@@ -645,3 +645,7 @@
 .input--short {
   max-width: 260px;
 }
+
+.icon-btn--round {
+  border-radius: 50%;
+}
