@@ -518,11 +518,38 @@
 }
 
 .availability {
-  min-width: 7.5em;
+  display: inline-block;
+  flex: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  vertical-align: middle;
+}
+
+.availability--available {
+  background: var(--go-600);
+}
+
+.availability--few {
+  background: var(--few-500);
+}
+
+.availability--soldout {
+  background: var(--gone-500);
+}
+
+.availability-key {
+  display: flex;
+  gap: var(--space-5);
+  margin: var(--space-2) 0 0;
   color: var(--night-500);
   font-size: var(--text-sm);
-  font-weight: 700;
-  text-align: right;
+}
+
+.availability-key > span {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
 }
 
 .stepper-input {

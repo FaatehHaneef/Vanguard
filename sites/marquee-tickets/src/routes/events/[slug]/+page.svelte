@@ -3,17 +3,11 @@
   import { basket } from '$lib/basket.svelte'
   import Icon from '$lib/components/Icon.svelte'
   import Poster from '$lib/components/Poster.svelte'
-  import { type Availability, formatPrice, genreName, longDate, MAX_TICKETS_PER_ORDER } from '$lib/data/events'
+  import { formatPrice, genreName, longDate, MAX_TICKETS_PER_ORDER } from '$lib/data/events'
 
   let { data } = $props()
   const event = $derived(data.event)
   const venue = $derived(data.venue)
-
-  const availabilityText: Record<Availability, string> = {
-    available: 'Available',
-    few: 'Only a few left',
-    soldout: 'Sold out',
-  }
 
   let ticketId = $state('')
   let quantity = $state<number | null>(1)
@@ -108,10 +102,15 @@
                   <span class="muted">{ticket.note}</span>
                 </span>
                 <span class="radio-card__price">{formatPrice(ticket.price)}</span>
-                <span class="availability">{availabilityText[ticket.availability]}</span>
+                <span class={`availability availability--${ticket.availability}`}></span>
               </label>
             {/each}
           </div>
+          <p class="availability-key" aria-hidden="true">
+            <span><span class="availability availability--available"></span> Available</span>
+            <span><span class="availability availability--few"></span> Selling fast</span>
+            <span><span class="availability availability--soldout"></span> Sold out</span>
+          </p>
         </fieldset>
         <div class="field">
           <label for="quantity">Number of tickets</label>
