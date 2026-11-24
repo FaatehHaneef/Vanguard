@@ -48,6 +48,13 @@ class RunConfig(BaseModel):
     seed: int = 0
     repeat_index: int = 0
     max_steps: int | None = None
+    actions_per_call: int | None = Field(
+        None,
+        ge=1,
+        le=8,
+        description="Most actions the model may return in one call; filled from the "
+        "settings when a run is created. None in older runs, which used one.",
+    )
     batch_id: str | None = None
 
     def label(self) -> str:
