@@ -75,6 +75,7 @@ export type Step = {
   proposed: Action | null;
   model_error: string | null;
   gate: { allowed: boolean; rule: string | null; message: string | null };
+  verifier?: { allowed: boolean; rule: string | null; message: string | null } | null;
   executed: boolean;
   execution_error: string | null;
   events: { type: string; trusted: boolean; target?: string | null }[];
@@ -268,6 +269,8 @@ export const api = {
     ),
   report: (id: string) =>
     request<RunReport>(`/runs/${encodeURIComponent(id)}/report`),
+  liveFrameUrl: (id: string) =>
+    `${API_BASE}/runs/${encodeURIComponent(id)}/live/frame`,
   screenshotUrl: (id: string, index: number) =>
     `${API_BASE}/runs/${encodeURIComponent(id)}/steps/${index}/screenshot`,
   batchMetrics: (batchId: string) =>

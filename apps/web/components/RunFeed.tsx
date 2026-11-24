@@ -12,7 +12,9 @@ import {
   type Step,
 } from "@/lib/api";
 import { characterFor } from "@/lib/cast";
+import { LiveView } from "./LiveView";
 import { Sprite } from "./Sprite";
+import { TraceReplay } from "./TraceReplay";
 import { outcomeText } from "./TrialBoard";
 
 function describe(action: Action): string {
@@ -180,20 +182,15 @@ export function RunFeed() {
         </div>
       </header>
 
-      {latest ? (
-        <figure className="pixel-panel grid gap-2">
-          {/* eslint-disable-next-line @next/next/no-img-element -- served by the API */}
-          <img
-            src={api.screenshotUrl(run.id, latest.index)}
-            alt={`What the browser showed before step ${latest.index + 1}`}
-            className="w-full rounded border border-line"
-          />
-          <figcaption className="text-sm text-mist">
-            {done ? "Last view" : "Live view"} before step {latest.index + 1} ·{" "}
-            {latest.observation.url}
-          </figcaption>
-        </figure>
-      ) : null}
+      {!done ? (
+        <LiveView
+          runId={run.id}
+          characterId={character?.id ?? null}
+          latest={steps[steps.length - 1] ?? latest}
+        />
+      ) : (
+        <TraceReplay runId={run.id} steps={steps} report={report} />
+      )}
 
       {story ? (
         <section
