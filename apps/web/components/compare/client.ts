@@ -53,6 +53,17 @@ export type Comparison = {
   resolved_failures: FailureChange[];
 };
 
+/** "keyboard-only/buy-one/gate/fake" into readable parts. */
+export function describeKey(key: string, names: Record<string, string>) {
+  const [persona, task, method, provider] = key.split("/");
+  return {
+    persona: names[persona] ?? persona,
+    task: task ?? "",
+    method: method ? method.replaceAll("+", " + ").replaceAll("_", " ") : "",
+    provider: provider ?? "",
+  };
+}
+
 export async function fetchComparison(baseline: string, candidate: string, match: Match): Promise<Comparison> {
   const query = new URLSearchParams({ baseline, candidate, match });
   let response: Response;

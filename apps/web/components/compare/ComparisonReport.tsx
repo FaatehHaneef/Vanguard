@@ -3,7 +3,15 @@
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { api, type BatchStatus } from "@/lib/api";
-import { type CompareGroup, type Comparison, fetchComparison, type Match, type Verdict } from "./client";
+import {
+  type CompareGroup,
+  type Comparison,
+  describeKey,
+  fetchComparison,
+  type Match,
+  type Verdict,
+} from "./client";
+import { FailureChanges } from "./FailureChanges";
 
 const VERDICT_TEXT: Record<Verdict, string> = {
   better: "Better",
@@ -55,17 +63,6 @@ export function VerdictBadge({ verdict }: { verdict: Verdict }) {
       {VERDICT_TEXT[verdict]}
     </span>
   );
-}
-
-/** "keyboard-only/buy-one/gate/fake" into readable parts. */
-export function describeKey(key: string, names: Record<string, string>) {
-  const [persona, task, method, provider] = key.split("/");
-  return {
-    persona: names[persona] ?? persona,
-    task: task ?? "",
-    method: method ? method.replaceAll("+", " + ").replaceAll("_", " ") : "",
-    provider: provider ?? "",
-  };
 }
 
 function cell(group: CompareGroup, column: Column) {
@@ -126,9 +123,14 @@ export function ComparisonReport() {
   const params = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
-  const baseline = params.get("baseline") ?? "";
-  const candidate = params.get("candidate") ?? "";
-  const match: Match = params.get("match") === "persona_task" ? "persona_task" : "full";
+  // The choice lives here and is copied to the address (for sharing), so two quick
+  // changes never undo each other while the address is still updating.
+  const [choice, setChoice] = useState(() => ({
+    baseline: params.get("baseline") ?? "",
+    candidate: params.get("candidate") ?? "",
+    match: (params.get("match") === "persona_task" ? "persona_task" : "full") as Match,
+  }));
+  const { baseline, candidate, match } = choice;
 
   const [batches, setBatches] = useState<BatchStatus[] | null>(null);
   const [names, setNames] = useState<Record<string, string>>({});
@@ -158,13 +160,11 @@ export function ComparisonReport() {
     };
   }, [wanted, baseline, candidate, match]);
 
-  const choose = (changes: Record<string, string>) => {
-    const next = new URLSearchParams(params.toString());
-    for (const [key, value] of Object.entries(changes)) {
-      if (value) next.set(key, value);
-      else next.delete(key);
-    }
-    router.replace(`${pathname}?${next}`, { scroll: false });
+  const choose = (changes: Partial<typeof choice>) => {
+    const next = { ...choice, ...changes };
+    setChoice(next);
+    const query = new URLSearchParams(Object.entries(next).filter(([, value]) => value));
+    router.replace(`${pathname}?${query}`, { scroll: false });
   };
 
   const comparison = result?.key === wanted ? result.comparison : undefined;
@@ -220,7 +220,7 @@ export function ComparisonReport() {
         </label>
         <label className="grid gap-1">
           <span className="font-bold text-parchment">Match groups on</span>
-          <select className={select} value={match} onChange={(event) => choose({ match: event.target.value })}>
+          <select className={select} value={match} onChange={(event) => choose({ match: event.target.value as Match })}>
             <option value="full">The same setup (persona, task, method, model)</option>
             <option value="persona_task">Persona and task only (compare methods or models)</option>
           </select>
@@ -284,6 +284,27 @@ export function ComparisonReport() {
             backend&rsquo;s checker, never from a model.
           </p>
         </section>
+      ) : null}
+
+      {comparison ? (
+        <div className="grid gap-6 lg:grid-cols-2">
+          <FailureChanges
+            tone="new"
+            title="New failures"
+            intro="Failure causes a group has in the candidate but not in the baseline: what the change may have broken."
+            empty="No new failures: nothing failed in the candidate that did not already fail before."
+            items={comparison.new_failures}
+            names={names}
+          />
+          <FailureChanges
+            tone="resolved"
+            title="Resolved failures"
+            intro="Failure causes a group had in the baseline that are gone from the candidate."
+            empty="No failures were resolved."
+            items={comparison.resolved_failures}
+            names={names}
+          />
+        </div>
       ) : null}
     </div>
   );
