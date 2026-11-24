@@ -7,6 +7,7 @@ import "@fontsource/libre-franklin/700.css";
 import "../styles/global.css";
 import "../styles/layout.css";
 import "../styles/pages.css";
+import Newsletter from "../components/Newsletter.astro";
 import { sections } from "../data/sections.js";
 
 interface Props {
@@ -43,6 +44,7 @@ const pageTitle = title === "Harbour Herald" ? title : `${title} | Harbour Heral
         <p class="edition">Monday 23 November 2026</p>
         <div class="header-actions">
           <a class="icon-link" href="/search">Search</a>
+          <button class="button signal" type="button" data-open-newsletter>Newsletter</button>
           <button class="menu-button" type="button" aria-expanded="false" aria-controls="drawer" data-drawer-open>
             <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"></path></svg>
             <span>Menu</span>
@@ -89,6 +91,8 @@ const pageTitle = title === "Harbour Herald" ? title : `${title} | Harbour Heral
       <slot />
     </main>
 
+    <Newsletter />
+
     <footer class="site-footer">
       <div class="wrap footer-grid">
         <div>
@@ -109,6 +113,7 @@ const pageTitle = title === "Harbour Herald" ? title : `${title} | Harbour Heral
             <li><a href="/about">About us</a></li>
             <li><a href="/contact">Contact the newsroom</a></li>
             <li><a href="/search">Search the archive</a></li>
+            <li><button class="footer-button" type="button" data-open-newsletter>Sign up to our newsletters</button></li>
           </ul>
         </div>
       </div>

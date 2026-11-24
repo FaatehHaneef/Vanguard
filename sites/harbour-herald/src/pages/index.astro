@@ -62,6 +62,14 @@ const mostRead = [
       </aside>
     </div>
 
+    <section class="cta-band" aria-labelledby="cta-heading">
+      <div>
+        <h2 id="cta-heading">The Morning Briefing</h2>
+        <p>The five stories you need before work, every weekday at 7:00. Free.</p>
+      </div>
+      <button class="button signal" type="button" data-open-newsletter>Get the Morning Briefing</button>
+    </section>
+
     {
       sections.map((section) => (
         <section aria-labelledby={`h-${section.slug}`}>

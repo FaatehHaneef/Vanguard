@@ -376,3 +376,104 @@ th {
     justify-self: start;
   }
 }
+
+/* Newsletter modal and call to action */
+.modal {
+  width: min(34rem, calc(100% - 2rem));
+  max-height: calc(100% - 2rem);
+  padding: var(--space-6);
+  border: 0;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--shadow-lg);
+}
+.modal[open] {
+  animation: modal-in var(--medium) var(--ease);
+}
+.modal::backdrop {
+  background: rgb(11 35 53 / 0.55);
+}
+@keyframes modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+}
+.modal-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+.modal-head h2 {
+  font-size: var(--step-3);
+}
+.modal-intro {
+  color: var(--ink-soft);
+}
+.choice-group {
+  border: 0;
+  padding: 0;
+  margin: 0 0 var(--space-4);
+  display: grid;
+  gap: var(--space-2);
+}
+.error-title {
+  font-weight: 700;
+  margin-bottom: var(--space-1);
+}
+.alert ul {
+  margin: 0;
+  padding-left: var(--space-5);
+}
+.newsletter-done {
+  text-align: center;
+  padding-block: var(--space-4);
+}
+.newsletter-done:focus {
+  outline: none;
+}
+.done-badge {
+  display: grid;
+  place-items: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  margin: 0 auto var(--space-3);
+  border-radius: 50%;
+  background: var(--ok-soft);
+  color: var(--ok);
+  font-size: var(--step-3);
+  font-weight: 700;
+}
+.cta-band {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-top: var(--space-7);
+  padding: var(--space-5) var(--space-6);
+  border-radius: var(--radius-lg);
+  background: var(--signal-soft);
+  border: 1px solid #f6c3a8;
+}
+.cta-band h2 {
+  margin-bottom: var(--space-1);
+}
+.cta-band p {
+  margin: 0;
+}
+.footer-button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #fff;
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.footer-button:hover {
+  color: #7fc3d8;
+}

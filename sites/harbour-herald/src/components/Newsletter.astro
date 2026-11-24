@@ -1,0 +1,120 @@
+---
+// The newsletter sign-up, in a modal dialog opened by any [data-open-newsletter] button.
+// Nothing is sent anywhere: the sign-up is confirmed in the page.
+---
+
+<dialog class="modal" id="newsletter" aria-labelledby="newsletter-title">
+  <div class="modal-head">
+    <h2 id="newsletter-title">Get the Herald in your inbox</h2>
+    <button class="close-button modal-close" type="button" data-close-newsletter>
+      <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"></path></svg>
+      <span>Close</span>
+    </button>
+  </div>
+
+  <form class="newsletter-form" novalidate data-newsletter-form>
+    <p class="modal-intro">Free emails written by our reporters. Unsubscribe at any time.</p>
+    <div class="alert error" role="alert" data-errors hidden>
+      <p class="error-title">Your sign-up could not be completed</p>
+      <ul data-error-list></ul>
+    </div>
+
+    <div class="field">
+      <label for="nl-email">Email address</label>
+      <p class="error-text" id="nl-email-error" hidden></p>
+      <input class="input" id="nl-email" name="email" type="email" autocomplete="email" aria-describedby="nl-email-error" />
+    </div>
+
+    <fieldset class="field choice-group">
+      <legend>Newsletters</legend>
+      <label class="check"><input type="checkbox" name="list" value="Morning Briefing" checked /> <span><strong>Morning Briefing</strong>, every weekday at 7:00</span></label>
+      <label class="check"><input type="checkbox" name="list" value="Weekend Sport" /> <span><strong>Weekend Sport</strong>, results every Sunday evening</span></label>
+      <label class="check"><input type="checkbox" name="list" value="What's On" /> <span><strong>What's On</strong>, events for the week every Thursday</span></label>
+      <p class="error-text" id="nl-lists-error" hidden></p>
+    </fieldset>
+
+    <div class="field">
+      <p class="error-text" id="nl-consent-error" hidden></p>
+      <label class="check"><input id="nl-consent" name="consent" type="checkbox" aria-describedby="nl-consent-error" /> <span>I agree to receive emails from the Harbour Herald and have read how my details are used.</span></label>
+    </div>
+
+    <button class="button signal" type="submit">Sign up</button>
+  </form>
+
+  <div class="newsletter-done" data-newsletter-done hidden tabindex="-1">
+    <div class="done-badge" aria-hidden="true">✓</div>
+    <h3>You're on the list</h3>
+    <p data-done-text></p>
+    <button class="button secondary" type="button" data-close-newsletter>Back to the news</button>
+  </div>
+</dialog>
+
+<script>
+  const dialog = document.getElementById("newsletter") as HTMLDialogElement;
+  const form = dialog.querySelector("[data-newsletter-form]") as HTMLFormElement;
+  const done = dialog.querySelector("[data-newsletter-done]") as HTMLElement;
+  const summary = dialog.querySelector("[data-errors]") as HTMLElement;
+  const list = dialog.querySelector("[data-error-list]") as HTMLElement;
+  const EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+
+  function reset() {
+    form.hidden = false;
+    done.hidden = true;
+    summary.hidden = true;
+  }
+
+  document.querySelectorAll("[data-open-newsletter]").forEach((button) =>
+    button.addEventListener("click", () => {
+      reset();
+      dialog.showModal();
+      (dialog.querySelector("#nl-email") as HTMLInputElement).focus();
+    }),
+  );
+  dialog.querySelectorAll("[data-close-newsletter]").forEach((button) =>
+    button.addEventListener("click", () => dialog.close()),
+  );
+
+  function setError(id: string, message: string, field?: HTMLElement) {
+    const text = document.getElementById(id) as HTMLElement;
+    text.textContent = message;
+    text.hidden = !message;
+    field?.setAttribute("aria-invalid", message ? "true" : "false");
+  }
+
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const email = form.querySelector("#nl-email") as HTMLInputElement;
+    const consent = form.querySelector("#nl-consent") as HTMLInputElement;
+    const lists = [...form.querySelectorAll<HTMLInputElement>('input[name="list"]:checked')].map((i) => i.value);
+    const errors: [string, string, HTMLElement | undefined][] = [];
+    const value = email.value.trim();
+    if (!value) errors.push(["nl-email-error", "Enter your email address.", email]);
+    else if (!EMAIL.test(value))
+      errors.push(["nl-email-error", "Enter an email address in the right format, like name@example.com.", email]);
+    if (lists.length === 0) errors.push(["nl-lists-error", "Choose at least one newsletter.", undefined]);
+    if (!consent.checked)
+      errors.push(["nl-consent-error", "Tick the box to agree to receive emails before you sign up.", consent]);
+
+    setError("nl-email-error", "", email);
+    setError("nl-lists-error", "");
+    setError("nl-consent-error", "", consent);
+    list.replaceChildren();
+    if (errors.length) {
+      for (const [id, message, field] of errors) {
+        setError(id, message, field);
+        const item = document.createElement("li");
+        item.textContent = message;
+        list.append(item);
+      }
+      summary.hidden = false;
+      summary.setAttribute("tabindex", "-1");
+      summary.focus();
+      return;
+    }
+    (done.querySelector("[data-done-text]") as HTMLElement).textContent =
+      `Thanks for subscribing. We will send ${lists.join(", ")} to ${value}.`;
+    form.hidden = true;
+    done.hidden = false;
+    done.focus();
+  });
+</script>
