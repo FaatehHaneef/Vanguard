@@ -27,7 +27,7 @@ from statistics import median
 
 from vanguard import catalog, failures, results
 from vanguard.checker import RunLeakage
-from vanguard.contracts import Action, RunOutcome, RunStatus, RunSummary, StepRecord
+from vanguard.contracts import RunOutcome, RunStatus, RunSummary, StepRecord
 from vanguard.contracts.findings import (
     LIMITS_STATEMENT,
     Attribution,
@@ -36,6 +36,7 @@ from vanguard.contracts.findings import (
     FindingsReport,
     RunAttribution,
 )
+from vanguard.metrics import repeated_attempts
 from vanguard.settings import Settings
 from vanguard.store import RunStore
 
@@ -51,12 +52,6 @@ LIMIT_SHARE = 0.25
 
 
 # ---------------------------------------------------------------- per-step helpers
-
-
-def _signature(action: Action | None) -> str | None:
-    if action is None:
-        return None
-    return action.model_dump_json(exclude={"rationale"})
 
 
 def element_label(step: StepRecord, ref: str) -> str:
@@ -176,23 +171,15 @@ def navigation_failures(summary: RunSummary, steps: list[StepRecord]) -> list[Fi
 
 
 def repeated_steps(steps: list[StepRecord]) -> list[int]:
-    """Steps that repeat the previous action while nothing changed, or repeat an action
-    that was just refused."""
-    out = []
-    for before, step in zip(steps, steps[1:], strict=False):
-        same = _signature(step.proposed) is not None and _signature(step.proposed) == _signature(
-            before.proposed
-        )
-        if not same:
-            continue
-        refused_again = not before.gate.allowed
-        unchanged = (
-            before.url_after == step.url_after
-            and before.focus_after == step.focus_after
-            and before.observation.content == step.observation.content
-        )
-        if refused_again or unchanged:
-            out.append(step.index)
+    """The steps that vanguard.metrics.repeated_attempts counts (one definition for the
+    metric and the finding): a step is a repeat when the count rises at it."""
+    ordered = sorted(steps, key=lambda step: step.index)
+    out, before = [], 0
+    for position in range(1, len(ordered)):
+        now = repeated_attempts(ordered[: position + 1])
+        if now > before:
+            out.append(ordered[position].index)
+        before = now
     return out
 
 

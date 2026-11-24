@@ -31,6 +31,8 @@ class GroupSnapshot(BaseModel):
     stuck_rate: float
     mean_blocked: float
     mean_cost_usd: float
+    mean_repeated_attempts: float = 0.0
+    mean_model_calls: float = 0.0
     failures: int = Field(description="Runs that failed or leaked (vanguard.failures)")
 
 

@@ -12,7 +12,7 @@ import {
   type RunSummary,
   type Step,
 } from "@/lib/api";
-import { characterFor } from "@/lib/cast";
+import { castFor, characterFor } from "@/lib/cast";
 import { FindingsPanel } from "./FindingsPanel";
 import { LiveView } from "./LiveView";
 import { Sprite } from "./Sprite";
@@ -143,7 +143,9 @@ export function RunFeed() {
   if (error) return <p className="font-bold text-rose">{error}</p>;
   if (!run) return <p className="text-mist">Loading…</p>;
 
-  const character = characterFor(run.config.persona_id);
+  const character = persona
+    ? castFor(persona)
+    : characterFor(run.config.persona_id);
   const done = run.status === "finished" || run.status === "failed";
   const latest = [...steps]
     .reverse()
