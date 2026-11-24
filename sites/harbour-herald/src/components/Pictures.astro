@@ -1,0 +1,60 @@
+---
+import Art from "./Art.astro";
+
+// The week in pictures: a sideways-scrolling strip with previous and next buttons.
+const pictures = [
+  { art: "ferry", caption: "The first winter crossing to Saltmarsh leaves the Quay Street pier in the dark." },
+  { art: "lantern", caption: "Pupils from St Brendan's carry their paper seal through Market Place at the rehearsal." },
+  { art: "rowing", caption: "A junior four on the water at the opening of the new boathouse at Ferry Point." },
+  { art: "market", caption: "Fruit and flowers at the first Saturday of the reopened market hall." },
+  { art: "football", caption: "Ellis Mbeki rises highest for the late winner against Westport Rovers." },
+  { art: "gallery", caption: "Visitors at the sea glass exhibition in the Customs House gallery." },
+  { art: "cranes", caption: "Timber unloads at the outer berth during the port's busiest week of the year." },
+  { art: "choir", caption: "Harbour Voices rehearse for their Christmas concert at St Peter's Church." },
+];
+---
+
+<section class="pictures" aria-labelledby="pictures-heading" data-carousel>
+  <div class="section-head">
+    <h2 id="pictures-heading">The week in pictures</h2>
+    <div class="carousel-controls">
+      <button class="carousel-button" type="button" data-prev>
+        <span aria-hidden="true">←</span> Previous pictures
+      </button>
+      <button class="carousel-button" type="button" data-next>
+        Next pictures <span aria-hidden="true">→</span>
+      </button>
+    </div>
+  </div>
+  <ul class="carousel-track" data-track>
+    {
+      pictures.map((picture, index) => (
+        <li class="slide">
+          <figure>
+            <div class="slide-art">
+              <Art name={picture.art} />
+            </div>
+            <figcaption>
+              <span class="slide-count">
+                {index + 1} of {pictures.length}
+              </span>
+              {picture.caption}
+            </figcaption>
+          </figure>
+        </li>
+      ))
+    }
+  </ul>
+</section>
+
+<script>
+  for (const carousel of document.querySelectorAll("[data-carousel]")) {
+    const track = carousel.querySelector("[data-track]") as HTMLElement;
+    const step = () => (track.querySelector(".slide") as HTMLElement).offsetWidth + 24;
+    const smooth = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const move = (direction: number) =>
+      track.scrollBy({ left: direction * step(), behavior: smooth ? "smooth" : "auto" });
+    carousel.querySelector("[data-prev]")?.addEventListener("click", () => move(-1));
+    carousel.querySelector("[data-next]")?.addEventListener("click", () => move(1));
+  }
+</script>
