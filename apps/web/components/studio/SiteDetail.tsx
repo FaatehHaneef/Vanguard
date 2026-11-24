@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { isCustom, studio, type StudioSite } from "@/lib/studio";
 import { SiteEditor } from "./SiteEditor";
+import { TaskManager } from "./TaskManager";
 
 /** One site: its editor (custom sites) or its details (built-in sites, read-only). */
 export function SiteDetail({ siteId }: { siteId: string }) {
@@ -37,6 +38,7 @@ export function SiteDetail({ siteId }: { siteId: string }) {
           </div>
         )}
       </section>
+      <TaskManager siteId={site.id} />
     </div>
   );
 }
