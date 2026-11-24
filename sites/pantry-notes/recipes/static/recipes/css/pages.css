@@ -561,3 +561,34 @@
   font-weight: 800;
   color: var(--tomato-deep);
 }
+
+/* Quick save on recipe cards */
+.quick-save {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-3);
+  z-index: 2;
+  margin: 0;
+}
+.save-button {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 0;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 0.92);
+  color: var(--tomato);
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  transition:
+    transform var(--fast) var(--ease),
+    background var(--fast) var(--ease);
+}
+.save-button:hover {
+  background: #fff;
+  transform: scale(1.08);
+}
+.save-button:active {
+  transform: scale(0.95);
+}
