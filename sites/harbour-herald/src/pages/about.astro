@@ -1,0 +1,57 @@
+---
+import Base from "../layouts/Base.astro";
+
+const questions = [
+  {
+    q: "Who owns the Harbour Herald?",
+    a: "The Herald is owned by the Harbour Herald Trust, a charity set up in 2009 to keep the paper independent. The trust has no shareholders and every pound of profit goes back into reporting.",
+  },
+  {
+    q: "How do I report a mistake in a story?",
+    a: "Email the newsroom with the headline and what is wrong. We correct factual errors as quickly as we can and add a note at the end of the story saying what was changed.",
+  },
+  {
+    q: "Can I place a notice of a birth, marriage or death?",
+    a: "Yes. Family notices are taken by the front office on Quay Street, Monday to Friday from 9:00 to 17:00, and appear online the next morning.",
+  },
+  {
+    q: "Do you accept stories from readers?",
+    a: "We read everything readers send us. Pictures and short reports from community groups are published in our Community section every Thursday.",
+  },
+];
+---
+
+<Base title="About us" current="about">
+  <section class="section-hero">
+    <div class="wrap">
+      <span class="kicker">About us</span>
+      <h1>Local news since 1898</h1>
+      <p class="lead">The Harbour Herald has reported on Harbour Town and the Estuary coast for more than 125 years.</p>
+    </div>
+  </section>
+  <div class="wrap prose">
+    <p>
+      Our newsroom of nine reporters, two photographers and three editors works from the old customs office on
+      Quay Street. We cover the town council, the courts, the port, schools, sport and the arts, and we publish
+      online every day and in print every Friday.
+    </p>
+    <p>
+      We follow the Editors' Code of Practice. If you think we have got something wrong, please tell us: our
+      contact details are on the contact page.
+    </p>
+
+    <h2>Questions readers ask</h2>
+    <div class="accordion">
+      {
+        questions.map((item) => (
+          <details class="accordion-item">
+            <summary>{item.q}</summary>
+            <div class="accordion-body">
+              <p>{item.a}</p>
+            </div>
+          </details>
+        ))
+      }
+    </div>
+  </div>
+</Base>
