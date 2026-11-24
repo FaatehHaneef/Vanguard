@@ -1,0 +1,118 @@
+/* Page-level layouts: front page, sections, articles, search, events, forms. */
+
+.hero {
+  background: linear-gradient(180deg, var(--wash), var(--paper));
+  border-bottom: 1px solid var(--line);
+  padding-block: var(--space-7);
+}
+.hero-grid {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: var(--space-6);
+  align-items: center;
+}
+.hero-title {
+  font-size: var(--step-5);
+}
+.hero-title a {
+  color: var(--ink);
+  text-decoration: none;
+}
+.hero-title a:hover {
+  text-decoration: underline;
+  text-decoration-thickness: 3px;
+}
+.hero-art {
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  aspect-ratio: 16 / 10;
+}
+.hero-art svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.front-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 2.2fr) minmax(16rem, 1fr);
+  gap: var(--space-6);
+}
+.rail {
+  margin-top: var(--space-7);
+}
+.rail-head {
+  font-size: var(--step-2);
+  border-top: 3px solid var(--ink);
+  padding-top: var(--space-3);
+}
+
+.tab-list {
+  display: flex;
+  gap: var(--space-1);
+  border-bottom: 2px solid var(--line);
+}
+.tab {
+  padding: var(--space-2) var(--space-4);
+  border: 0;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+  background: none;
+  color: var(--ink-soft);
+  font: 600 var(--step--1) / 1.4 var(--font-body);
+  cursor: pointer;
+  transition:
+    color var(--fast) var(--ease),
+    border-color var(--fast) var(--ease);
+}
+.tab:hover {
+  color: var(--ink);
+}
+.tab[aria-selected="true"] {
+  color: var(--navy);
+  border-bottom-color: var(--signal);
+}
+.tab-panel {
+  padding-top: var(--space-3);
+}
+.ranked {
+  margin: 0;
+  padding-left: var(--space-5);
+}
+.ranked li {
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--line);
+}
+.ranked a {
+  display: block;
+  color: var(--ink);
+  font-weight: 600;
+  text-decoration: none;
+}
+.ranked a:hover {
+  text-decoration: underline;
+}
+
+.section-hero {
+  background: var(--navy);
+  color: #fff;
+  padding-block: var(--space-7);
+  margin-bottom: var(--space-5);
+}
+.section-hero .kicker {
+  color: #7fc3d8;
+}
+.section-hero .lead {
+  color: #dfe8ee;
+}
+
+@media (max-width: 52rem) {
+  .hero-grid,
+  .front-columns {
+    grid-template-columns: 1fr;
+  }
+  .hero-art {
+    order: -1;
+  }
+}

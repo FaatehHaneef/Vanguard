@@ -1,0 +1,20 @@
+---
+import Art from "./Art.astro";
+import { sectionBySlug } from "../data/sections.js";
+
+interface Props {
+  article: { slug: string; section: string; title: string; standfirst: string; published: string; art: string };
+  showSection?: boolean;
+}
+const { article, showSection = true } = Astro.props;
+---
+
+<li class="card">
+  <div class="art"><Art name={article.art} /></div>
+  <div class="card-body">
+    {showSection && <span class="kicker">{sectionBySlug[article.section].name}</span>}
+    <h3><a href={`/article/${article.slug}`}>{article.title}</a></h3>
+    <p>{article.standfirst}</p>
+    <p class="meta">{article.published}</p>
+  </div>
+</li>
