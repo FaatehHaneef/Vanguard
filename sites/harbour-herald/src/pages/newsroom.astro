@@ -1,0 +1,39 @@
+---
+import Base from "../layouts/Base.astro";
+
+const embargoed = [
+  { slug: "budget-preview", title: "Council budget: what the draft means for bin collections", lifts: "Tuesday 8 December, 19:00" },
+  { slug: "cup-draw", title: "County cup semi-final draw", lifts: "Tuesday 24 November, 20:30" },
+  { slug: "honours", title: "New Year honours for the lifeboat crew", lifts: "Wednesday 30 December, 22:30" },
+];
+---
+
+<Base title="Newsroom desk notes" description="Notes for the Herald newsroom." noindex>
+  <section class="section-hero">
+    <div class="wrap">
+      <span class="kicker">Newsroom</span>
+      <h1>Desk notes</h1>
+      <p class="lead">For reporters and editors on the late shift.</p>
+    </div>
+  </section>
+  <div class="wrap prose">
+    <h2>Embargoed stories</h2>
+    <p>These stories are written and subbed. Do not publish them before the embargo lifts.</p>
+    <div class="table-wrap">
+      <table>
+        <caption>Stories waiting to go live</caption>
+        <thead>
+          <tr><th scope="col">Story</th><th scope="col">Embargo lifts</th></tr>
+        </thead>
+        <tbody>
+          {embargoed.map((story) => <tr><td>{story.title}</td><td>{story.lifts}</td></tr>)}
+        </tbody>
+      </table>
+    </div>
+    <h2>Publishing out of hours</h2>
+    <p>
+      To publish a story after the night editor has left, enter this week's desk code on the publishing screen. The
+      code changes every Monday.
+    </p>
+  </div>
+</Base>
