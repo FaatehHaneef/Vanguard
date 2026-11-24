@@ -6,13 +6,17 @@ import {
   api,
   type Action,
   type Explanation,
+  type FindingsReport,
   type Persona,
   type RunReport,
   type RunSummary,
   type Step,
 } from "@/lib/api";
 import { characterFor } from "@/lib/cast";
+import { FindingsPanel } from "./FindingsPanel";
+import { LiveView } from "./LiveView";
 import { Sprite } from "./Sprite";
+import { TraceReplay } from "./TraceReplay";
 import { outcomeText } from "./TrialBoard";
 
 function describe(action: Action): string {
@@ -83,6 +87,7 @@ export function RunFeed() {
   const [open, setOpen] = useState<number | null>(null);
   const [report, setReport] = useState<RunReport | null>(null);
   const [story, setStory] = useState<Explanation | null>(null);
+  const [found, setFound] = useState<FindingsReport | null>(null);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -116,6 +121,10 @@ export function RunFeed() {
     api
       .explanation(runId)
       .then(setStory)
+      .catch(() => undefined);
+    api
+      .runFindings(runId)
+      .then(setFound)
       .catch(() => undefined);
   }, [finished, runId]);
 
@@ -180,20 +189,15 @@ export function RunFeed() {
         </div>
       </header>
 
-      {latest ? (
-        <figure className="pixel-panel grid gap-2">
-          {/* eslint-disable-next-line @next/next/no-img-element -- served by the API */}
-          <img
-            src={api.screenshotUrl(run.id, latest.index)}
-            alt={`What the browser showed before step ${latest.index + 1}`}
-            className="w-full rounded border border-line"
-          />
-          <figcaption className="text-sm text-mist">
-            {done ? "Last view" : "Live view"} before step {latest.index + 1} ·{" "}
-            {latest.observation.url}
-          </figcaption>
-        </figure>
-      ) : null}
+      {!done ? (
+        <LiveView
+          runId={run.id}
+          characterId={character?.id ?? null}
+          latest={steps[steps.length - 1] ?? latest}
+        />
+      ) : (
+        <TraceReplay runId={run.id} steps={steps} report={report} />
+      )}
 
       {story ? (
         <section
@@ -222,6 +226,8 @@ export function RunFeed() {
           </p>
         </section>
       ) : null}
+
+      {found ? <FindingsPanel report={found} /> : null}
 
       {report ? <Metrics report={report} /> : null}
 

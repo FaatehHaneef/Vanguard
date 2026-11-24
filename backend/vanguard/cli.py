@@ -9,6 +9,7 @@
     python -m vanguard.cli usage                              # model calls left today
     python -m vanguard.cli batch ... --max-calls 80           # stop before the budget runs out
     python -m vanguard.cli failures --batch a3-baseline     # failing runs grouped by cause
+    python -m vanguard.cli findings --batches a3-baseline [--out findings.md]  # usability
     python -m vanguard.cli check-site willowbrook --dir sites/willowbrook-clinic --live
     python -m vanguard.cli labelling export --batches a3-tallowmere a3-willowbrook --name a3
     python -m vanguard.cli labelling import data/labelling/a3
@@ -25,7 +26,7 @@ import asyncio
 import sys
 from pathlib import Path
 
-from vanguard import batch, bundle, failures, results, service, sitecheck, usage
+from vanguard import batch, bundle, failures, findings, results, service, sitecheck, usage
 from vanguard.contracts import BatchRequest, EnforcementOption, RunConfig, StepRecord
 from vanguard.settings import REPO_ROOT, get_settings
 from vanguard.store import RunStore
@@ -223,6 +224,10 @@ def main(argv: list[str] | None = None) -> int:
 
     sub.add_parser("usage", help="model calls made today against today's budget")
 
+    found = sub.add_parser("findings", help="usability findings and failure attribution")
+    found.add_argument("--batches", nargs="+", required=True)
+    found.add_argument("--out", type=Path, default=None)
+
     report = sub.add_parser("report", help="metrics table for a batch (or all runs)")
     report.add_argument("--batch", default=None)
     report.add_argument("--out", type=Path, default=None)
@@ -252,6 +257,14 @@ def main(argv: list[str] | None = None) -> int:
         if args.out:
             args.out.write_text(table + "\n", encoding="utf-8")
         print(table)
+        return 0
+    if args.command == "findings":
+        settings = get_settings()
+        report = findings.batch_report(RunStore(settings.database_url), args.batches, settings)
+        text = findings.markdown(report)
+        if args.out:
+            args.out.write_text(text + "\n", encoding="utf-8")
+        print(text)
         return 0
     if args.command == "usage":
         settings = get_settings()
