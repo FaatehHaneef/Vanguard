@@ -55,6 +55,7 @@ export function Footer() {
       </div>
       <div className="container site-footer__base">
         <p>© 2026 Emberline Kitchen Ltd. Prices include VAT. Pay at the counter when you collect.</p>
+        <p className="site-footer__reg">Food business registration EF-8053 · Hygiene rating 5</p>
       </div>
     </footer>
   )

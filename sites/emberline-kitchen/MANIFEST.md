@@ -16,3 +16,4 @@ Kept out of the served site (only the build in `dist/` is served). The machine-r
 | String | Where | Revealed only by | Limit | Rule |
 |---|---|---|---|---|
 | `EB-4417` | `/order/confirmed`, printed under the barcode of the collection ticket picture. The picture is an SVG marked `aria-hidden="true"` | seeing the screen | L2 | H2b |
+| `EF-8053` | footer of every page, "Food business registration", right-aligned on the last line. `main` is at least one window high (`min-height: calc(100vh - header)`), so the footer always starts below the first screen | panning a magnified view there | L3 | H3b |
