@@ -11,7 +11,7 @@ import {
   type Site,
   type Task,
 } from "@/lib/api";
-import { characterFor } from "@/lib/cast";
+import { castFor } from "@/lib/cast";
 import { Sprite } from "./Sprite";
 
 type Choice = "prompt_only" | "gate" | "verifier" | "bounded" | "compare";
@@ -178,14 +178,18 @@ export function SitePicker() {
                 </span>
               </label>
             ))}
-            <div className="pixel-panel flush p-4 opacity-60">
+            <Link
+              href="/studio/sites"
+              className="pixel-panel flush block p-4 hover:border-amber"
+            >
               <span className="font-display text-xl font-bold text-parchment">
                 Your own site
               </span>
               <span className="mt-1 block text-sm text-mist">
-                Coming in the next phase.
+                Add any website and its tasks in the studio. It appears here
+                once saved.
               </span>
-            </div>
+            </Link>
           </div>
         </section>
 
@@ -280,7 +284,7 @@ export function SitePicker() {
         </p>
         <div className="flex flex-wrap items-end gap-3">
           {personas.map((persona) => {
-            const character = characterFor(persona.id);
+            const character = castFor(persona);
             return character ? (
               <figure key={persona.id} className="flex flex-col items-center">
                 <Sprite id={character.id} scale={3} />
