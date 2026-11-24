@@ -18,6 +18,7 @@ interface Props {
 const { title, description = "Local news for Harbour Town and the Estuary coast.", current = "" } =
   Astro.props;
 const pageTitle = title === "Harbour Herald" ? title : `${title} | Harbour Herald`;
+const topics = ["Ferry", "Flood defences", "Housing", "Port", "Schools", "Football", "Theatre", "Library"];
 ---
 
 <!doctype html>
@@ -64,6 +65,14 @@ const pageTitle = title === "Harbour Herald" ? title : `${title} | Harbour Heral
             ))
           }
           <li><a href="/events" aria-current={current === "events" ? "page" : undefined}>Events</a></li>
+          <li class="topics">
+            <span class="topics-trigger">Topics</span>
+            <div class="topics-menu">
+              <ul>
+                {topics.map((topic) => <li><a href={`/search?q=${encodeURIComponent(topic.toLowerCase())}`}>{topic}</a></li>)}
+              </ul>
+            </div>
+          </li>
         </ul>
       </nav>
     </header>
