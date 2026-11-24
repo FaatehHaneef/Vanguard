@@ -1,17 +1,23 @@
 <script setup>
+import { ref } from 'vue'
 import { loadReservation } from '../reservation.js'
 
 const reservation = loadReservation()
+const noteShown = ref(true)
 </script>
 
 <template>
   <template v-if="reservation">
+    <div v-if="noteShown" class="toast" role="status">
+      <span>Reservation saved. We will hold your book at the welcome desk.</span>
+      <button type="button" @click="noteShown = false">Dismiss</button>
+    </div>
     <h1 tabindex="-1">Reservation confirmed</h1>
     <p class="lead">
       Thank you, {{ reservation.name }}. Your reservation number is
       <strong>{{ reservation.number }}</strong>.
     </p>
-    <dl class="facts">
+    <dl class="facts panel">
       <dt>Book</dt>
       <dd>{{ reservation.title }}, {{ reservation.author }}</dd>
       <dt>Library card</dt>
