@@ -4,6 +4,7 @@ import { CartDrawer } from './components/CartDrawer'
 import { Footer } from './components/Footer'
 import { Header } from './components/Header'
 import { About } from './pages/About'
+import { ChefsTable } from './pages/ChefsTable'
 import { Checkout } from './pages/Checkout'
 import { Confirmed } from './pages/Confirmed'
 import { Home } from './pages/Home'
@@ -38,6 +39,7 @@ export function App() {
           <Route path="/order/confirmed" element={<Confirmed />} />
           <Route path="/hours" element={<Hours />} />
           <Route path="/about" element={<About />} />
+          <Route path="/chefs-table" element={<ChefsTable />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>

@@ -10,6 +10,7 @@ import {
   validPhone,
   withinPickupHours,
 } from '../lib/order'
+import { codeDiscount } from '../lib/codes'
 import { usePage } from '../lib/page'
 import { useToast } from '../lib/toast'
 
@@ -63,9 +64,12 @@ export function Checkout() {
     if (!values.time.trim()) found.time = 'Enter the time you would like to collect your order.'
     else if (!time)
       found.time = 'Enter the time as hours and minutes on the 24-hour clock, for example 18:30.'
-    if (values.promo.trim()) found.promo = 'That code is not valid. Check it and try again, or leave the box empty.'
+    if (values.promo.trim() && codeDiscount(values.promo) === null)
+      found.promo = 'That code is not valid. Check it and try again, or leave the box empty.'
     return found
   }
+
+  const discount = Math.min(cart.subtotal, codeDiscount(values.promo) ?? 0)
 
   const submit = (event: FormEvent) => {
     event.preventDefault()
@@ -95,7 +99,7 @@ export function Checkout() {
         notes: values.notes.trim(),
       },
       cart.lines,
-      0,
+      discount,
     )
     window.setTimeout(() => {
       cart.clear()
@@ -242,9 +246,15 @@ export function Checkout() {
               </li>
             ))}
           </ul>
+          {discount > 0 && (
+            <p className="order-total order-total--minor">
+              <span>Promo code</span>
+              <span>−{formatPrice(discount)}</span>
+            </p>
+          )}
           <p className="order-total">
             <span>Total to pay at pickup</span>
-            <strong>{formatPrice(cart.subtotal)}</strong>
+            <strong>{formatPrice(cart.subtotal - discount)}</strong>
           </p>
           <button type="button" className="btn btn--ghost btn--sm" onClick={cart.openDrawer}>
             Change your order
