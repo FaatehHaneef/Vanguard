@@ -12,5 +12,5 @@ urlpatterns = [
     path("list/clear/", views.list_clear, name="list_clear"),
     path("submit/", views.submit, name="submit"),
     path("submit/thanks/<int:number>/", views.submitted, name="submitted"),
-    path("about/", views.home, name="about"),
+    path("about/", views.about, name="about"),
 ]

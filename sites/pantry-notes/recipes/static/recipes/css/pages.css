@@ -469,3 +469,42 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Prose and the accordion */
+.prose {
+  max-width: 46rem;
+}
+.prose h2 {
+  margin-top: var(--space-6);
+}
+.accordion-item {
+  margin-bottom: var(--space-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.accordion-item summary {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  font-weight: 800;
+  list-style: none;
+  cursor: pointer;
+}
+.accordion-item summary::-webkit-details-marker {
+  display: none;
+}
+.accordion-item summary::after {
+  content: "+";
+  color: var(--tomato);
+  font-size: var(--step-2);
+  line-height: 1;
+  transition: transform var(--fast) var(--ease);
+}
+.accordion-item[open] summary::after {
+  transform: rotate(45deg);
+}
+.accordion-body {
+  padding: 0 var(--space-4) var(--space-2);
+}

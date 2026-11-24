@@ -1,0 +1,35 @@
+{% extends "recipes/base.html" %}
+{% block title %}About{% endblock %}
+{% block content %}
+<section class="page-head">
+  <div class="wrap">
+    <span class="eyebrow">About</span>
+    <h1>A small kitchen with a big notebook</h1>
+    <p class="lead">Pantry Notes started in 2019 as a notebook of meals that worked on busy evenings. It is written by Hannah Ellis and Tomasz Nowak from their kitchen in Bristol.</p>
+  </div>
+</section>
+<div class="wrap prose">
+  <p>Every recipe here has been cooked at least three times: once to write it, once to check it, and once by a friend who has never made it before. If a step confused them, we rewrote it.</p>
+  <p>We keep things simple on purpose. Most recipes use one pan, nothing on the list should need a specialist shop, and every recipe tells you how long it really takes, including the chopping.</p>
+
+  <h2>Questions people ask</h2>
+  <div class="accordion">
+    <details class="accordion-item">
+      <summary>Can I use a different number of servings?</summary>
+      <div class="accordion-body"><p>Yes. Use the plus and minus buttons next to the ingredients on any recipe, and the amounts change to match. Add the recipe to your shopping list and the list uses the same number of servings.</p></div>
+    </details>
+    <details class="accordion-item">
+      <summary>How long does the shopping list last?</summary>
+      <div class="accordion-body"><p>The list is kept in your browser until you clear it or clear your cookies. Nothing is sent to us.</p></div>
+    </details>
+    <details class="accordion-item">
+      <summary>Do you test the gluten-free recipes for coeliacs?</summary>
+      <div class="accordion-body"><p>Recipes marked gluten-free contain no gluten ingredients, but always check the labels on stock, sauces and spice mixes, which sometimes contain wheat.</p></div>
+    </details>
+    <details class="accordion-item">
+      <summary>Can I send you a recipe?</summary>
+      <div class="accordion-body"><p>Please do. Use the <a href="{% url 'submit' %}">submit a recipe</a> form. We read everything and cook the ones we can.</p></div>
+    </details>
+  </div>
+</div>
+{% endblock %}
