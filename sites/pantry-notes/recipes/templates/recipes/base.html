@@ -52,13 +52,12 @@
   </aside>
 
   <main id="content" tabindex="-1">
-    {% if messages %}
-    <div class="wrap messages" role="status">
-      {% for message in messages %}<p class="alert success">{{ message }}</p>{% endfor %}
-    </div>
-    {% endif %}
     {% block content %}{% endblock %}
   </main>
+
+  <div class="toast-region" role="status" aria-live="polite">
+    {% for message in messages %}<p class="toast" data-toast>{{ message }}</p>{% endfor %}
+  </div>
 
   <footer class="site-footer">
     <div class="wrap footer-grid">
@@ -86,6 +85,7 @@
     <div class="wrap footer-base"><p>&copy; 2026 Pantry Notes. Recipes may be shared with credit.</p></div>
   </footer>
   <script src="{% static 'recipes/js/drawer.js' %}"></script>
+  <script src="{% static 'recipes/js/toast.js' %}"></script>
   {% block scripts %}{% endblock %}
 </body>
 </html>
