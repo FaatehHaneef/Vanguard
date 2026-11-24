@@ -11,6 +11,7 @@ import {
   withinPickupHours,
 } from '../lib/order'
 import { usePage } from '../lib/page'
+import { useToast } from '../lib/toast'
 
 type Field = 'name' | 'phone' | 'time' | 'promo'
 type Errors = Partial<Record<Field, string>>
@@ -38,6 +39,7 @@ export function Checkout() {
   const heading = usePage('Checkout')
   const cart = useCart()
   const navigate = useNavigate()
+  const toast = useToast()
   const [values, setValues] = useState({ name: '', phone: '', time: '', notes: '', promo: '' })
   const [errors, setErrors] = useState<Errors>({})
   const [placing, setPlacing] = useState(false)
@@ -61,8 +63,6 @@ export function Checkout() {
     if (!values.time.trim()) found.time = 'Enter the time you would like to collect your order.'
     else if (!time)
       found.time = 'Enter the time as hours and minutes on the 24-hour clock, for example 18:30.'
-    else if (!withinPickupHours(time))
-      found.time = `We take pickup orders from ${PICKUP_OPENS} to ${PICKUP_CLOSES}. Please choose a time in that window.`
     if (values.promo.trim()) found.promo = 'That code is not valid. Check it and try again, or leave the box empty.'
     return found
   }
@@ -70,11 +70,20 @@ export function Checkout() {
   const submit = (event: FormEvent) => {
     event.preventDefault()
     if (placing) return
+    toast.clear()
     const found = validate()
     setErrors(found)
     const first = (['name', 'phone', 'time', 'promo'] as Field[]).find((field) => found[field])
     if (first) {
       refs[first].current?.focus()
+      return
+    }
+    if (!withinPickupHours(parseTime(values.time)!)) {
+      toast.show({
+        tone: 'error',
+        title: 'That pickup time is not available',
+        message: `We take pickup orders from ${PICKUP_OPENS} to ${PICKUP_CLOSES}. Please choose a time in that window.`,
+      })
       return
     }
     setPlacing(true)

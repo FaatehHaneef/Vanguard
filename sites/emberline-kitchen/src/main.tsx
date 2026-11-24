@@ -14,12 +14,15 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router'
 import { App } from './App'
 import { CartProvider } from './lib/cart'
+import { ToastProvider } from './lib/toast'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>
       <CartProvider>
-        <App />
+        <ToastProvider>
+          <App />
+        </ToastProvider>
       </CartProvider>
     </BrowserRouter>
   </StrictMode>,
