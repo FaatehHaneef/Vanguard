@@ -38,6 +38,9 @@ export const sizes = [
 ] as const
 export type SizeId = (typeof sizes)[number]['id']
 
+export const spiceLevels = ['Mild', 'Medium', 'Hot', 'Extra hot'] as const
+export const DEFAULT_SPICE = 'Medium'
+
 const raita: Extra = { id: 'raita', name: 'Cucumber raita', price: 125 }
 const chilli: Extra = { id: 'green-chilli', name: 'Fried green chillies', price: 75 }
 const onions: Extra = { id: 'onions', name: 'Pickled red onions', price: 95 }

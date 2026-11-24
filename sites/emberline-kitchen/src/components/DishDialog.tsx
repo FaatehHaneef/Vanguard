@@ -1,5 +1,5 @@
 import { useId, useRef, useState } from 'react'
-import { type Dish, formatPrice, sizes, type SizeId } from '../data/menu'
+import { DEFAULT_SPICE, type Dish, formatPrice, sizes, type SizeId, spiceLevels } from '../data/menu'
 import { MAX_QUANTITY, useCart } from '../lib/cart'
 import { useFocusTrap } from '../lib/focus'
 import { DishArt } from './DishArt'
@@ -16,6 +16,8 @@ export function DishDialog({ dish, onClose }: Props) {
   const dialog = useRef<HTMLDivElement>(null)
   const [size, setSize] = useState<SizeId>('regular')
   const [extras, setExtras] = useState<string[]>([])
+  const [spice, setSpice] = useState<string>(DEFAULT_SPICE)
+  const [spiceOpen, setSpiceOpen] = useState(false)
   const [quantity, setQuantity] = useState(1)
 
   useFocusTrap(dialog, true, onClose, () =>
@@ -35,6 +37,7 @@ export function DishDialog({ dish, onClose }: Props) {
     cart.add({
       slug: dish.slug,
       size: dish.sizes ? size : undefined,
+      spice: dish.spicy ? spice : undefined,
       extras,
       quantity,
       unitPrice,
@@ -96,6 +99,41 @@ export function DishDialog({ dish, onClose }: Props) {
                 ))}
               </div>
             </fieldset>
+          )}
+
+          {dish.spicy && (
+            <div className="field">
+              <span className="field-label">Spice level</span>
+              <div className="spice-select">
+                <div
+                  className={`spice-select__value${spiceOpen ? ' is-open' : ''}`}
+                  onClick={() => setSpiceOpen((value) => !value)}
+                >
+                  <span className="spice-select__heat" data-level={spiceLevels.indexOf(spice as never)}>
+                    <Icon name="flame" />
+                  </span>
+                  <span>{spice}</span>
+                  <Icon name="chevron-down" className="spice-select__chevron" />
+                </div>
+                {spiceOpen && (
+                  <div className="spice-select__list">
+                    {spiceLevels.map((level) => (
+                      <div
+                        key={level}
+                        className={`spice-select__option${level === spice ? ' is-selected' : ''}`}
+                        onClick={() => {
+                          setSpice(level)
+                          setSpiceOpen(false)
+                        }}
+                      >
+                        {level}
+                        {level === spice && <Icon name="check" />}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
           )}
 
           {!!dish.extras?.length && (
