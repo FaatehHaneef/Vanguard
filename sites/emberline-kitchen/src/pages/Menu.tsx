@@ -1,5 +1,6 @@
 import { type KeyboardEvent, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
+import { DietLegend } from '../components/DietMark'
 import { DishCard } from '../components/DishCard'
 import { DishDialog } from '../components/DishDialog'
 import { Icon } from '../components/Icon'
@@ -104,6 +105,7 @@ export function Menu() {
         role="tabpanel"
         aria-labelledby={`tab-${tab}`}
       >
+        <DietLegend />
         <p className="menu-count" role="status">
           {shown.length === 1 ? '1 dish' : `${shown.length} dishes`}
           {query.trim() ? ` match “${query.trim()}”` : ''}

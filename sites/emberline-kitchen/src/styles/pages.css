@@ -611,3 +611,57 @@
   height: 18px;
   color: var(--leaf-500);
 }
+
+/* Dietary marks */
+.diet-mark {
+  display: inline-grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  vertical-align: middle;
+}
+
+.diet-mark svg {
+  width: 16px;
+  height: 16px;
+}
+
+.diet-mark--vegan {
+  background: var(--leaf-700);
+  color: #fff;
+}
+
+.diet-mark--vegetarian {
+  background: var(--leaf-300);
+  color: var(--leaf-700);
+}
+
+.diet-legend {
+  display: flex;
+  gap: var(--space-5);
+  margin: var(--space-4) 0 0;
+  color: var(--ink-500);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.diet-legend > span {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.diet-swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+}
+
+.diet-swatch--vegan {
+  background: var(--leaf-700);
+}
+
+.diet-swatch--vegetarian {
+  background: var(--leaf-300);
+}

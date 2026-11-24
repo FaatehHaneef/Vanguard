@@ -1,5 +1,6 @@
 import { Link } from 'react-router'
 import { type Dish, formatPrice } from '../data/menu'
+import { DietMark } from './DietMark'
 import { DishArt } from './DishArt'
 
 export function DishCard({ dish }: { dish: Dish }) {
@@ -15,6 +16,7 @@ export function DishCard({ dish }: { dish: Dish }) {
         <p className="dish-card__desc">{dish.description}</p>
         <div className="dish-card__meta">
           <span className="dish-card__price">{formatPrice(dish.price)}</span>
+          <DietMark diet={dish.diet} />
           {dish.glutenFree && <span className="badge">Gluten free</span>}
           {dish.containsNuts && <span className="badge">Contains nuts</span>}
         </div>

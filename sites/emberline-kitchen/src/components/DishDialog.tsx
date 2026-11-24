@@ -2,6 +2,7 @@ import { useId, useRef, useState } from 'react'
 import { DEFAULT_SPICE, type Dish, formatPrice, sizes, type SizeId, spiceLevels } from '../data/menu'
 import { MAX_QUANTITY, useCart } from '../lib/cart'
 import { useFocusTrap } from '../lib/focus'
+import { DietMark } from './DietMark'
 import { DishArt } from './DishArt'
 import { Icon } from './Icon'
 
@@ -69,7 +70,9 @@ export function DishDialog({ dish, onClose }: Props) {
           <h2 id={titleId} className="dish-dialog__title">
             {dish.name}
           </h2>
-          <p className="dish-dialog__price">{formatPrice(dish.price)}</p>
+          <p className="dish-dialog__price">
+            {formatPrice(dish.price)} <DietMark diet={dish.diet} />
+          </p>
           <p>{dish.description}</p>
           {(dish.glutenFree || dish.containsNuts) && (
             <p className="dish-dialog__badges">
