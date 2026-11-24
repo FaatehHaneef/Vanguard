@@ -1,0 +1,59 @@
+{% extends "recipes/base.html" %}
+{% block title %}Recipes{% endblock %}
+{% block content %}
+<section class="page-head">
+  <div class="wrap">
+    <span class="eyebrow">Recipes</span>
+    <h1>Find something to cook</h1>
+    <p class="lead">Every recipe on Pantry Notes. Narrow them down by cuisine, time and diet, or search for an ingredient.</p>
+  </div>
+</section>
+
+<div class="wrap listing">
+  <aside class="filters" aria-labelledby="filters-heading">
+    <h2 id="filters-heading" class="filters-heading">Filter recipes</h2>
+    <form method="get" action="{% url 'recipes' %}">
+      <div class="field">
+        <label for="q">Search</label>
+        <input class="input" id="q" name="q" type="search" value="{{ selected.q }}" placeholder="An ingredient or dish">
+      </div>
+      <div class="field">
+        <label for="cuisine">Cuisine</label>
+        <select class="select" id="cuisine" name="cuisine">
+          <option value="">Any cuisine</option>
+          {% for cuisine in cuisines %}<option value="{{ cuisine }}"{% if selected.cuisine == cuisine %} selected{% endif %}>{{ cuisine }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label for="time">Time</label>
+        <select class="select" id="time" name="time">
+          <option value="">Any time</option>
+          {% for value, label in times %}<option value="{{ value }}"{% if selected.time == value|stringformat:"d" %} selected{% endif %}>{{ label }}</option>{% endfor %}
+        </select>
+      </div>
+      <fieldset class="field diet-field">
+        <legend>Diet</legend>
+        <label class="radio"><input type="radio" name="diet" value=""{% if not selected.diet %} checked{% endif %}> Any</label>
+        {% for value, label in diets %}<label class="radio"><input type="radio" name="diet" value="{{ value }}"{% if selected.diet == value %} checked{% endif %}> {{ label }}</label>{% endfor %}
+      </fieldset>
+      <button class="button" type="submit">Show recipes</button>
+      {% if filtered %}<a class="clear-link" href="{% url 'recipes' %}">Clear filters</a>{% endif %}
+    </form>
+  </aside>
+
+  <section class="results" aria-labelledby="results-heading">
+    <div class="results-bar">
+      <h2 id="results-heading" class="results-count">{{ recipes|length }} recipe{{ recipes|length|pluralize }}{% if filtered %} match{{ recipes|length|pluralize:"es," }}{% endif %}</h2>
+    </div>
+    {% if recipes %}
+    <ul class="grid">
+      {% for recipe in recipes %}{% include "recipes/card.html" %}{% endfor %}
+    </ul>
+    {% else %}
+    <div class="empty">
+      <p>No recipes match all of those filters. Try removing one, or <a href="{% url 'recipes' %}">see every recipe</a>.</p>
+    </div>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

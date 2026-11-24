@@ -1,0 +1,13 @@
+<li class="card">
+  <div class="card-art">{{ recipe.art_svg }}</div>
+  <div class="card-body">
+    <span class="eyebrow">{{ recipe.cuisine }}</span>
+    <h3><a href="{% url 'recipe' recipe.slug %}">{{ recipe.title }}</a></h3>
+    <p class="card-summary">{{ recipe.summary }}</p>
+    <ul class="tags">
+      <li class="tag">{{ recipe.minutes }} min</li>
+      <li class="tag">Serves {{ recipe.serves }}</li>
+      {% for diet in recipe.diets %}<li class="tag diet">{{ diet|capfirst }}</li>{% endfor %}
+    </ul>
+  </div>
+</li>

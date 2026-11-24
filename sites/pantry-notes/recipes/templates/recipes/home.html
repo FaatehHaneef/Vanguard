@@ -1,8 +1,48 @@
 {% extends "recipes/base.html" %}
 {% block title %}Everyday recipes{% endblock %}
 {% block content %}
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <span class="eyebrow">From a small Bristol kitchen</span>
+      <h1>Good food on an ordinary Tuesday</h1>
+      <p class="lead">{{ total }} recipes that work on a weeknight, each cooked at least three times before it was written down. Filter by cuisine, time or diet, scale them for your table, and build a shopping list as you go.</p>
+      <form class="hero-search" action="{% url 'recipes' %}" method="get" role="search">
+        <label class="visually-hidden" for="hero-q">Search recipes</label>
+        <input class="input" id="hero-q" name="q" type="search" placeholder="Try lentils, risotto or tacos">
+        <button class="button" type="submit">Search recipes</button>
+      </form>
+    </div>
+    <div class="hero-art">{{ featured.0.art_svg }}</div>
+  </div>
+</section>
+
 <div class="wrap">
-  <h1>Pantry Notes</h1>
-  <p class="lead">Everyday recipes from a small home kitchen.</p>
+  <section aria-labelledby="featured-heading">
+    <div class="section-head">
+      <h2 id="featured-heading">This week's favourites</h2>
+      <a href="{% url 'recipes' %}">All recipes</a>
+    </div>
+    <ul class="grid">
+      {% for recipe in featured %}{% include "recipes/card.html" %}{% endfor %}
+    </ul>
+  </section>
+
+  <section aria-labelledby="cuisine-heading">
+    <div class="section-head"><h2 id="cuisine-heading">Cook by cuisine</h2></div>
+    <ul class="chips">
+      {% for cuisine in cuisines %}<li><a class="chip" href="{% url 'recipes' %}?cuisine={{ cuisine|urlencode }}">{{ cuisine }}</a></li>{% endfor %}
+    </ul>
+  </section>
+
+  <section aria-labelledby="quick-heading">
+    <div class="section-head">
+      <h2 id="quick-heading">On the table in 25 minutes</h2>
+      <a href="{% url 'recipes' %}?time=30">More quick recipes</a>
+    </div>
+    <ul class="grid">
+      {% for recipe in quick %}{% include "recipes/card.html" %}{% endfor %}
+    </ul>
+  </section>
 </div>
 {% endblock %}
