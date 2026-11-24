@@ -1,0 +1,63 @@
+---
+import Base from "../../layouts/Base.astro";
+import Art from "../../components/Art.astro";
+import StoryCard from "../../components/StoryCard.astro";
+import { articles, related } from "../../data/articles.js";
+import { sectionBySlug } from "../../data/sections.js";
+
+export function getStaticPaths() {
+  return articles.map((article) => ({ params: { slug: article.slug }, props: { article } }));
+}
+const { article } = Astro.props;
+const section = sectionBySlug[article.section];
+const more = related(article);
+---
+
+<Base title={article.title} current={article.section} description={article.standfirst}>
+  <article class="wrap article">
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <ol>
+        <li><a href="/">Home</a></li>
+        <li><a href={`/section/${section.slug}`}>{section.name}</a></li>
+      </ol>
+    </nav>
+    <header class="article-head">
+      <span class="kicker">{section.name}</span>
+      <h1>{article.title}</h1>
+      <p class="lead">{article.standfirst}</p>
+      <div class="byline">
+        <p class="meta">By <strong>{article.author}</strong> · Published {article.published}</p>
+        <button class="button secondary share-button" type="button" data-share>Copy link</button>
+      </div>
+    </header>
+    <figure class="article-art">
+      <Art name={article.art} />
+    </figure>
+    <div class="article-body">
+      {article.body.map((paragraph) => <p>{paragraph}</p>)}
+    </div>
+  </article>
+
+  <section class="wrap" aria-labelledby="related-heading">
+    <div class="section-head">
+      <h2 id="related-heading">More from {section.name}</h2>
+      <a href={`/section/${section.slug}`}>All {section.name.toLowerCase()} stories</a>
+    </div>
+    <ul class="grid">
+      {more.map((story) => <StoryCard article={story} showSection={false} />)}
+    </ul>
+  </section>
+</Base>
+
+<script>
+  import { showToast } from "../../scripts/toast.js";
+
+  document.querySelector("[data-share]")?.addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      showToast("Link copied to your clipboard.");
+    } catch {
+      showToast("Copy the address from your browser's address bar to share this story.");
+    }
+  });
+</script>
