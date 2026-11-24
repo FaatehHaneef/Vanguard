@@ -624,3 +624,9 @@
   font-size: 0.75rem;
   letter-spacing: 0.04em;
 }
+.catalogue-note {
+  margin-top: var(--space-6);
+  color: var(--ink-faint);
+  font-size: var(--step--1);
+  text-align: right;
+}

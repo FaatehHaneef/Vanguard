@@ -56,6 +56,7 @@
     <ul class="grid">
       {% for recipe in recipes %}{% include "recipes/card.html" %}{% endfor %}
     </ul>
+    <p class="catalogue-note">Recipes are checked and updated every season. Catalogue PN-6158.</p>
     {% else %}
     <div class="empty">
       <p>No recipes match all of those filters. Try removing one, or <a href="{% url 'recipes' %}">see every recipe</a>.</p>
