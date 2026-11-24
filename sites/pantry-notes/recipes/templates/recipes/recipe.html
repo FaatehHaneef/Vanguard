@@ -38,6 +38,13 @@
       <ul class="ingredient-list">
         {% for line in ingredients %}<li>{{ line }}</li>{% endfor %}
       </ul>
+      <form method="post" action="{% url 'list_add' recipe.slug %}">
+        {% csrf_token %}
+        <input type="hidden" name="servings" value="{{ servings }}">
+        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+        <button class="button" type="submit">Add ingredients to shopping list</button>
+      </form>
+      {% if on_list %}<p class="muted on-list">On your <a href="{% url 'shopping_list' %}">shopping list</a> for {{ on_list }} servings.</p>{% endif %}
     </section>
 
     <section class="method" aria-labelledby="method-heading">

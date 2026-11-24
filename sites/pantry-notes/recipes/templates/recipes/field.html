@@ -1,0 +1,10 @@
+<div class="field">
+  <label for="id_{{ field.name }}">{{ label }}</label>
+  {% if hint %}<p class="hint" id="{{ field.name }}-hint">{{ hint }}</p>{% endif %}
+  {% for error in field.errors %}<p class="error-text" id="{{ field.name }}-error">{{ error }}</p>{% endfor %}
+  {% if multiline %}
+  <textarea class="textarea" id="id_{{ field.name }}" name="{{ field.name }}"{% if hint or field.errors %} aria-describedby="{% if hint %}{{ field.name }}-hint{% endif %}{% if field.errors %} {{ field.name }}-error{% endif %}"{% endif %}{% if field.errors %} aria-invalid="true"{% endif %}>{{ field.value|default_if_none:"" }}</textarea>
+  {% else %}
+  <input class="input" id="id_{{ field.name }}" name="{{ field.name }}" type="{{ type|default:'text' }}" value="{{ field.value|default_if_none:'' }}"{% if autocomplete %} autocomplete="{{ autocomplete }}"{% endif %}{% if inputmode %} inputmode="{{ inputmode }}"{% endif %}{% if hint or field.errors %} aria-describedby="{% if hint %}{{ field.name }}-hint{% endif %}{% if field.errors %} {{ field.name }}-error{% endif %}"{% endif %}{% if field.errors %} aria-invalid="true"{% endif %}>
+  {% endif %}
+</div>

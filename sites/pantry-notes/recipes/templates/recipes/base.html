@@ -52,6 +52,11 @@
   </aside>
 
   <main id="content" tabindex="-1">
+    {% if messages %}
+    <div class="wrap messages" role="status">
+      {% for message in messages %}<p class="alert success">{{ message }}</p>{% endfor %}
+    </div>
+    {% endif %}
     {% block content %}{% endblock %}
   </main>
 
