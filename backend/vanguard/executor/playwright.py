@@ -20,6 +20,8 @@ only; a screenshot-based perception for the model must hide the HUD first.
 
 from __future__ import annotations
 
+import asyncio
+import base64
 import logging
 import time
 import uuid
@@ -120,6 +122,7 @@ class PlaywrightExecutor:
         screenshot_dir: Path | None = None,
         conditions: list[Condition] | None = None,
         bounded_perception: bool = False,
+        live_path: Path | None = None,
     ):
         # Option 3: perceive only what the persona's mode allows (Section 5 of the spec).
         self.bounded_perception = bounded_perception
@@ -146,6 +149,9 @@ class PlaywrightExecutor:
         self._character: tuple[str, str] | None = None
         self.session = uuid.uuid4().hex[:12]
         self.blocked: list[str] = []  # request URLs aborted by the network filter
+        # Live view (vanguard.live): screencast frames are written here while the run goes.
+        self.live_path = live_path
+        self._screencast = None
 
         self._playwright: Playwright | None = None
         self._browser: Browser | None = None
@@ -193,6 +199,8 @@ class PlaywrightExecutor:
             self._window = Rect(
                 x=0, y=0, width=size["width"] / self._zoom, height=size["height"] / self._zoom
             )
+        if self.live_path is not None:
+            await self._start_screencast()
         if Condition.SLOW_NETWORK in self.conditions:
             cdp = await self._context.new_cdp_session(self._page)
             await cdp.send("Network.enable")
@@ -200,7 +208,45 @@ class PlaywrightExecutor:
         await self._page.goto(site.origin + task.start_path, wait_until="domcontentloaded")
         await self._settle()
 
+    async def _start_screencast(self) -> None:
+        """Stream the page to the live-view file. Never fails the run: without a
+        screencast the run page falls back to the step screenshots."""
+        from vanguard import live
+
+        try:
+            cdp = await self._context.new_cdp_session(self._page)
+
+            def on_frame(params: dict) -> None:
+                live.write_frame(self.live_path, base64.b64decode(params["data"]))
+                asyncio.ensure_future(
+                    cdp.send("Page.screencastFrameAck", {"sessionId": params["sessionId"]})
+                )
+
+            cdp.on("Page.screencastFrame", on_frame)
+            await cdp.send(
+                "Page.startScreencast",
+                {
+                    "format": "jpeg",
+                    "quality": live.FRAME_QUALITY,
+                    "maxWidth": live.MAX_WIDTH,
+                    "maxHeight": live.MAX_HEIGHT,
+                },
+            )
+            self._screencast = cdp
+        except Exception:
+            self._screencast = None
+
     async def close(self) -> None:
+        if self._screencast is not None:
+            try:
+                await self._screencast.send("Page.stopScreencast")
+            except Exception:  # the page is already gone
+                pass
+            self._screencast = None
+        if self.live_path is not None:
+            from vanguard import live
+
+            live.clear(self.live_path)
         for closer in (self._context, self._browser):
             if closer is not None:
                 try:
