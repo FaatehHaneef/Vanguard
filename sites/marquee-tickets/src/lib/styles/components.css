@@ -25,6 +25,12 @@
   transform: translateY(1px) scale(0.98);
 }
 
+.btn svg {
+  flex: none;
+  width: 20px;
+  height: 20px;
+}
+
 .btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;

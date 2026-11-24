@@ -1,5 +1,7 @@
 <script lang="ts">
   import { page } from '$app/state'
+  import { basket } from '$lib/basket.svelte'
+  import Icon from './Icon.svelte'
   import Logo from './Logo.svelte'
 
   const links = [
@@ -23,6 +25,13 @@
             <a href={link.href} aria-current={current(link.href) ? 'page' : undefined}>{link.label}</a>
           </li>
         {/each}
+        <li>
+          <a href="/basket" class="basket-link" aria-current={current('/basket') ? 'page' : undefined}>
+            <Icon name="basket" />
+            Basket
+            <span class="basket-link__count">{basket.count}</span>
+          </a>
+        </li>
       </ul>
     </nav>
   </div>
