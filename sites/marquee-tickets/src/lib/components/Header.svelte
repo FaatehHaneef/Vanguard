@@ -1,0 +1,29 @@
+<script lang="ts">
+  import { page } from '$app/state'
+  import Logo from './Logo.svelte'
+
+  const links = [
+    { href: '/events', label: 'All events' },
+    { href: '/venues', label: 'Venues' },
+    { href: '/faq', label: 'Help' },
+  ]
+  const current = (href: string) => page.url.pathname === href || page.url.pathname.startsWith(href + '/')
+</script>
+
+<header class="site-header">
+  <div class="container site-header__inner">
+    <a href="/" class="brand">
+      <Logo />
+      <span>Marquee<span class="brand__sub">Tickets</span></span>
+    </a>
+    <nav class="site-nav" aria-label="Main">
+      <ul>
+        {#each links as link (link.href)}
+          <li>
+            <a href={link.href} aria-current={current(link.href) ? 'page' : undefined}>{link.label}</a>
+          </li>
+        {/each}
+      </ul>
+    </nav>
+  </div>
+</header>
