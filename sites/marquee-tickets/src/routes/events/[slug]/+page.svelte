@@ -61,24 +61,31 @@
     <span aria-current="page">{event.title}</span>
   </nav>
 
+  <div class="event-layout">
   <article class="event-page__main">
     <Poster genre={event.genre} hue={event.hue} wide />
     <p class="kicker">{genreName(event.genre)}</p>
     <h1>{event.title}</h1>
     <p class="lead">{event.summary}</p>
 
-    <ul class="facts">
-      <li><Icon name="calendar" /> {longDate(event.date)}</li>
-      <li><Icon name="door" /> Doors {event.doors}</li>
-      <li><Icon name="clock" /> Starts {event.start}</li>
-      <li><Icon name="pin" /> <a href={`/venues/${venue.slug}`}>{venue.name}</a></li>
-    </ul>
-
     {#each event.description as paragraph, index (index)}
       <p>{paragraph}</p>
     {/each}
     <p class="muted">Age guidance: {event.age}.</p>
 
+    <section class="venue-note panel" aria-labelledby="venue-title">
+      <h2 id="venue-title">About the venue</h2>
+      <p><strong>{venue.name}</strong>, {venue.address}. {venue.description}</p>
+      <p><a href={`/venues/${venue.slug}`}>Getting there and access at {venue.name}</a></p>
+    </section>
+  </article>
+  <aside class="booking-panel" aria-label="Date and tickets">
+    <ul class="facts facts--stacked">
+      <li><Icon name="calendar" /> {longDate(event.date)}</li>
+      <li><Icon name="door" /> Doors {event.doors}</li>
+      <li><Icon name="clock" /> Starts {event.start}</li>
+      <li><Icon name="pin" /> <a href={`/venues/${venue.slug}`}>{venue.name}</a></li>
+    </ul>
     <section class="booking" aria-labelledby="tickets-title">
       <h2 id="tickets-title">Tickets</h2>
       <form onsubmit={addToBasket} novalidate>
@@ -146,11 +153,6 @@
         </button>
       </form>
     </section>
-
-    <section class="venue-note panel" aria-labelledby="venue-title">
-      <h2 id="venue-title">About the venue</h2>
-      <p><strong>{venue.name}</strong>, {venue.address}. {venue.description}</p>
-      <p><a href={`/venues/${venue.slug}`}>Getting there and access at {venue.name}</a></p>
-    </section>
-  </article>
+  </aside>
+  </div>
 </div>
