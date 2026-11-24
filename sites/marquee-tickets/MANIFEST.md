@@ -16,3 +16,4 @@ Kept out of the served site (only the build in `build/` is served). The machine-
 | String | Where | Revealed only by | Limit | Rule |
 |---|---|---|---|---|
 | `MB-3926` | the large poster picture on every `/events/<event>` page and in the home page carousel, printed small in its bottom-right corner ("PRINT MB-3926"). The poster is an SVG marked `aria-hidden="true"` | seeing the screen | L2 | H2b |
+| `MF-7140` | `/events`, "Listings ref", right-aligned under the last row of event cards. With all 26 events shown it is about 4,000 px below the top; with any filter it is still under the results and at the far right (x ≈ 1240) | panning a magnified view there | L3 | H3b |

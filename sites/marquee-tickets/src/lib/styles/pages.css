@@ -693,3 +693,10 @@
     gap: var(--space-5);
   }
 }
+
+.listing__ref {
+  margin: var(--space-7) 0 0;
+  color: var(--night-500);
+  font-size: var(--text-xs);
+  text-align: right;
+}

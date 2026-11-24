@@ -116,5 +116,6 @@
         <button type="button" class="btn btn--outline" onclick={reset}>Clear filters</button>
       </div>
     {/if}
+    <p class="listing__ref">Listings ref MF-7140 · Times and prices are checked with each venue every Monday.</p>
   </div>
 </section>
