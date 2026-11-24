@@ -7,7 +7,7 @@ const config = {
   kit: {
     // Every page is rendered to HTML at build time; 404.html answers unknown paths.
     adapter: adapter({ pages: 'build', assets: 'build', fallback: '404.html', strict: true }),
-    prerender: { entries: ['*', '/presale'] },
+    prerender: { entries: ['*'] },
     // Only variables with these prefixes are read from the environment.
     env: { publicPrefix: 'PUBLIC_', privatePrefix: 'MARQUEE_' },
   },
