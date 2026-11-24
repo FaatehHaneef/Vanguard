@@ -6,12 +6,14 @@ import {
   api,
   type Action,
   type Explanation,
+  type FindingsReport,
   type Persona,
   type RunReport,
   type RunSummary,
   type Step,
 } from "@/lib/api";
 import { characterFor } from "@/lib/cast";
+import { FindingsPanel } from "./FindingsPanel";
 import { LiveView } from "./LiveView";
 import { Sprite } from "./Sprite";
 import { TraceReplay } from "./TraceReplay";
@@ -85,6 +87,7 @@ export function RunFeed() {
   const [open, setOpen] = useState<number | null>(null);
   const [report, setReport] = useState<RunReport | null>(null);
   const [story, setStory] = useState<Explanation | null>(null);
+  const [found, setFound] = useState<FindingsReport | null>(null);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -118,6 +121,10 @@ export function RunFeed() {
     api
       .explanation(runId)
       .then(setStory)
+      .catch(() => undefined);
+    api
+      .runFindings(runId)
+      .then(setFound)
       .catch(() => undefined);
   }, [finished, runId]);
 
@@ -219,6 +226,8 @@ export function RunFeed() {
           </p>
         </section>
       ) : null}
+
+      {found ? <FindingsPanel report={found} /> : null}
 
       {report ? <Metrics report={report} /> : null}
 
