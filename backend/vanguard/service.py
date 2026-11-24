@@ -53,14 +53,23 @@ def validate(config: RunConfig, settings: Settings) -> None:
         raise RunRejected(f"Provider {config.provider!r} is not enabled here")
 
 
+def complete(config: RunConfig, settings: Settings) -> RunConfig:
+    """Fill the settings a run records about itself (actions per call)."""
+    if config.actions_per_call is None:
+        return config.model_copy(update={"actions_per_call": settings.actions_per_call})
+    return config
+
+
 def create(config: RunConfig, settings: Settings, store: RunStore) -> RunSummary:
+    """Validate and store a run. Use the returned summary's config to execute it."""
     validate(config, settings)
-    return store.create_run(config)
+    return store.create_run(complete(config, settings))
 
 
 async def execute(
     run_id: str, config: RunConfig, settings: Settings, store: RunStore
 ) -> RunSummary:
+    config = complete(config, settings)
     site = catalog.site(config.site_id)
     return await run_once(
         run_id,

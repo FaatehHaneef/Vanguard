@@ -68,8 +68,24 @@ class StepRecord(BaseModel):
     target_box: Rect | None = Field(
         None, description="Target element's box in document (page) CSS pixels"
     )
-    latency_ms: float = 0
+    call: int | None = Field(
+        None,
+        description="Which model call proposed this step (0, 1, ...); None in runs made "
+        "before several actions per call, where every step was its own call",
+    )
+    in_call: int = Field(
+        0, description="Position of this action among the actions of its call (0 = first)"
+    )
+    latency_ms: float = Field(
+        0, description="Model and execution time; for in_call > 0, execution time only"
+    )
     model: str | None = Field(None, description="The model that proposed the action")
+    # Tokens and cost of the call, recorded on its first step (in_call 0) only.
     input_tokens: int = 0
     output_tokens: int = 0
     cost_usd: float = 0
+
+    @property
+    def model_call(self) -> bool:
+        """True for the step that carries its model call (every step in older runs)."""
+        return self.in_call == 0
