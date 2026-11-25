@@ -1,0 +1,81 @@
+/* Design tokens: colour, type, spacing, radius, shadow and motion. */
+:root {
+  --night-950: #0e0c18;
+  --night-900: #17142a;
+  --night-800: #221d3d;
+  --night-700: #322b57;
+  --night-500: #5e5785;
+  --night-300: #a7a1c7;
+  --paper-50: #fbfaf7;
+  --paper-100: #f4f1ea;
+  --paper-200: #e8e3d6;
+  --bulb-400: #ffc93c;
+  --bulb-300: #ffd96e;
+  --bulb-100: #fff4d1;
+  --rose-600: #c2255c;
+  --rose-500: #e23d7a;
+  --rose-100: #fde4ee;
+  --violet-600: #5b3cc4;
+  --violet-100: #ebe5fb;
+  --go-600: #1f8a4c;
+  --few-500: #e89a17;
+  --gone-500: #b6b2c2;
+  --error-700: #a3122f;
+  --error-100: #fde7eb;
+
+  --color-bg: var(--paper-50);
+  --color-surface: #ffffff;
+  --color-surface-muted: var(--paper-100);
+  --color-text: var(--night-950);
+  --color-text-muted: var(--night-500);
+  --color-border: var(--paper-200);
+  --color-accent: var(--rose-600);
+  --color-accent-hover: #a01b4b;
+  --color-focus: #2f5cff;
+
+  --font-display: 'Anton', Impact, 'Arial Narrow', sans-serif;
+  --font-body: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-md: 1.125rem;
+  --text-lg: 1.375rem;
+  --text-xl: 1.875rem;
+  --text-2xl: 2.5rem;
+  --text-3xl: clamp(2.75rem, 5vw + 1rem, 4.5rem);
+  --leading-tight: 1.05;
+  --leading-normal: 1.55;
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --space-8: 4rem;
+
+  --radius-sm: 4px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-pill: 999px;
+  --shadow-sm: 0 1px 2px rgb(14 12 24 / 0.08);
+  --shadow-md: 0 8px 22px rgb(14 12 24 / 0.12);
+  --shadow-lg: 0 20px 50px rgb(14 12 24 / 0.28);
+
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --duration-fast: 150ms;
+  --duration-base: 220ms;
+  --duration-slow: 300ms;
+
+  --page-width: 1200px;
+  --header-height: 72px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 0ms;
+    --duration-base: 0ms;
+    --duration-slow: 0ms;
+  }
+}

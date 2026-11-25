@@ -26,7 +26,17 @@ import asyncio
 import sys
 from pathlib import Path
 
-from vanguard import batch, bundle, failures, findings, results, service, sitecheck, usage
+from vanguard import (
+    batch,
+    bundle,
+    deps,
+    failures,
+    findings,
+    results,
+    service,
+    sitecheck,
+    usage,
+)
 from vanguard.contracts import BatchRequest, EnforcementOption, RunConfig, StepRecord
 from vanguard.settings import REPO_ROOT, get_settings
 from vanguard.store import RunStore
@@ -68,8 +78,7 @@ def _print_run(store: RunStore, run_id: str) -> None:
 
 async def _run(args: argparse.Namespace) -> int:
     settings = get_settings()
-    store = RunStore(settings.database_url)
-    store.create_schema()
+    store = deps.open_store(settings)
     for repeat in range(args.repeats):
         config = RunConfig(
             site_id=args.site,
@@ -91,8 +100,7 @@ async def _run(args: argparse.Namespace) -> int:
 
 async def _batch(args: argparse.Namespace) -> int:
     settings = get_settings()
-    store = RunStore(settings.database_url)
-    store.create_schema()
+    store = deps.open_store(settings)
     request = BatchRequest(
         batch_id=args.batch,
         site_id=args.site,
@@ -122,8 +130,7 @@ async def _batch(args: argparse.Namespace) -> int:
 
 def _labelling(args: argparse.Namespace) -> int:
     settings = get_settings()
-    store = RunStore(settings.database_url)
-    store.create_schema()
+    store = deps.open_store(settings)
     data = REPO_ROOT / "data"
     if args.action == "export":
         result = bundle.export_bundle(
@@ -244,7 +251,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0 if all(check.ok for check in checks) else 1
     if args.command == "failures":
         settings = get_settings()
-        items = results.batch_failures(RunStore(settings.database_url), args.batch, settings)
+        items = results.batch_failures(deps.open_store(settings), args.batch, settings)
         table = failures.markdown(items)
         if args.out:
             args.out.write_text(table + "\n", encoding="utf-8")
@@ -252,7 +259,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     if args.command == "report":
         settings = get_settings()
-        groups = results.batch_groups(RunStore(settings.database_url), args.batch, settings)
+        groups = results.batch_groups(deps.open_store(settings), args.batch, settings)
         table = results.markdown_table(groups)
         if args.out:
             args.out.write_text(table + "\n", encoding="utf-8")
@@ -260,7 +267,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     if args.command == "findings":
         settings = get_settings()
-        report = findings.batch_report(RunStore(settings.database_url), args.batches, settings)
+        report = findings.batch_report(deps.open_store(settings), args.batches, settings)
         text = findings.markdown(report)
         if args.out:
             args.out.write_text(text + "\n", encoding="utf-8")
@@ -268,13 +275,12 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     if args.command == "usage":
         settings = get_settings()
-        store = RunStore(settings.database_url)
-        store.create_schema()
+        store = deps.open_store(settings)
         print(usage.report(usage.usage_since(store, usage.quota_day_start()), settings))
         return 0
     if args.command == "show":
         settings = get_settings()
-        _print_run(RunStore(settings.database_url), args.run_id)
+        _print_run(deps.open_store(settings), args.run_id)
         return 0
     args.provider = args.provider or get_settings().default_provider
     return asyncio.run(_run(args))

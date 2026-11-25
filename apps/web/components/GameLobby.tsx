@@ -2,9 +2,15 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import { api, type PersonaStatus } from "@/lib/api";
-import { CAST, type Character, type CharacterId } from "@/lib/cast";
+import { CAST, castFor, type Character } from "@/lib/cast";
 import { Sprite } from "./Sprite";
 
 type Stage = "circle" | "walking" | "line";
@@ -31,21 +37,33 @@ const TURN_SPEED = 0.12; // radians per second
 type Layout = { width: number; height: number; columns: number };
 
 /** Where each character stands in the line: in one row, or wrapped onto several on narrow screens. */
-function linePosition(index: number, layout: Layout): { x: number; y: number } {
+function linePosition(
+  index: number,
+  layout: Layout,
+  count: number,
+): { x: number; y: number } {
   const columns = layout.columns;
-  const rows = Math.ceil(CAST.length / columns);
+  const rows = Math.ceil(count / columns);
   const row = Math.floor(index / columns);
-  const inRow = row === rows - 1 ? CAST.length - row * columns : columns;
+  const inRow = row === rows - 1 ? count - row * columns : columns;
   const column = index - row * columns;
   const span = Math.min(layout.width, columns * SLOT_WIDTH);
   const slot = span / columns;
   const start = (layout.width - inRow * slot) / 2;
-  return { x: start + slot * column + slot / 2, y: 40 + row * SLOT_HEIGHT + FIGURE_HEIGHT };
+  return {
+    x: start + slot * column + slot / 2,
+    y: 40 + row * SLOT_HEIGHT + FIGURE_HEIGHT,
+  };
 }
 
 /** Where each character stands in the circle, seen at an angle. Depth runs from 0 (back) to 1 (front). */
-function circlePosition(index: number, turn: number, layout: Layout) {
-  const angle = turn + (index / CAST.length) * Math.PI * 2;
+function circlePosition(
+  index: number,
+  turn: number,
+  layout: Layout,
+  count: number,
+) {
+  const angle = turn + (index / count) * Math.PI * 2;
   const radiusX = Math.min(layout.width * 0.38, 360);
   const radiusY = Math.min(radiusX * 0.22, 80);
   const depth = (Math.sin(angle) + 1) / 2;
@@ -65,9 +83,16 @@ function circlePosition(index: number, turn: number, layout: Layout) {
 export function GameLobby({ start = "circle" }: { start?: "circle" | "line" }) {
   const router = useRouter();
   const [stage, setStage] = useState<Stage>(start);
-  const [layout, setLayout] = useState<Layout>({ width: 1100, height: 420, columns: CAST.length });
-  const [party, setParty] = useState<CharacterId[]>(["knock"]);
-  const [focus, setFocus] = useState<CharacterId>("knock");
+  const [layout, setLayout] = useState<Layout>({
+    width: 1100,
+    height: 420,
+    columns: CAST.length,
+  });
+  // The roster: the built-in cast, then any personas made in the studio. Party and
+  // focus hold persona ids, since custom personas may share a sprite.
+  const [cast, setCast] = useState<readonly Character[]>(CAST);
+  const [party, setParty] = useState<string[]>(["keyboard-only"]);
+  const [focus, setFocus] = useState<string>("keyboard-only");
   const [starting, setStarting] = useState(false);
   const [error, setError] = useState("");
   const [status, setStatus] = useState<Record<string, PersonaStatus>>({});
@@ -76,10 +101,20 @@ export function GameLobby({ start = "circle" }: { start?: "circle" | "line" }) {
   useEffect(() => {
     api
       .personas()
-      .then((personas) =>
-        setStatus(Object.fromEntries(personas.map((persona) => [persona.id, persona.status]))),
-      )
-      .catch(() => setError("The Vanguard API is not reachable. Is the backend running?"));
+      .then((personas) => {
+        setStatus(
+          Object.fromEntries(
+            personas.map((persona) => [persona.id, persona.status]),
+          ),
+        );
+        const custom = personas.filter(
+          (p) => !CAST.some((c) => c.personaId === p.id),
+        );
+        if (custom.length > 0) setCast([...CAST, ...custom.map(castFor)]);
+      })
+      .catch(() =>
+        setError("The Vanguard API is not reachable. Is the backend running?"),
+      );
   }, []);
 
   const field = useRef<HTMLDivElement>(null);
@@ -91,18 +126,21 @@ export function GameLobby({ start = "circle" }: { start?: "circle" | "line" }) {
   useLayoutEffect(() => {
     const element = field.current;
     if (!element) return;
-    reduced.current = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    reduced.current = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
     const measure = () => {
       const width = element.clientWidth;
-      const all = CAST.length;
-      const columns = width >= all * SLOT_WIDTH ? all : width >= 3 * SLOT_WIDTH ? 3 : 2;
+      const all = cast.length;
+      const columns =
+        width >= all * SLOT_WIDTH ? all : width >= 3 * SLOT_WIDTH ? 3 : 2;
       setLayout({ width, height: 0, columns });
     };
     measure();
     const observer = new ResizeObserver(measure);
     observer.observe(element);
     return () => observer.disconnect();
-  }, []);
+  }, [cast.length]);
 
   // In the circle, the characters turn slowly. Their positions are written straight to the page each frame.
   useEffect(() => {
@@ -112,10 +150,10 @@ export function GameLobby({ start = "circle" }: { start?: "circle" | "line" }) {
     const step = (now: number) => {
       if (!reduced.current) turn.current += ((now - last) / 1000) * TURN_SPEED;
       last = now;
-      CAST.forEach((_, index) => {
+      cast.forEach((_, index) => {
         const element = figures.current[index];
         if (!element) return;
-        const spot = circlePosition(index, turn.current, layout);
+        const spot = circlePosition(index, turn.current, layout, cast.length);
         const scale = 0.68 + spot.depth * 0.32;
         element.style.transition = "none";
         element.style.transform = `translate(${spot.x - FIGURE_WIDTH / 2}px, ${spot.y - FIGURE_HEIGHT}px) scale(${scale})`;
@@ -126,16 +164,16 @@ export function GameLobby({ start = "circle" }: { start?: "circle" | "line" }) {
     };
     frame = requestAnimationFrame(step);
     return () => cancelAnimationFrame(frame);
-  }, [stage, layout]);
+  }, [stage, layout, cast]);
 
   // In the line, each character goes to its place, gliding there when the walk starts.
   useEffect(() => {
     if (stage === "circle") return;
-    CAST.forEach((character, index) => {
+    cast.forEach((character, index) => {
       const element = figures.current[index];
       if (!element) return;
-      const spot = linePosition(index, layout);
-      const chosen = party.includes(character.id);
+      const spot = linePosition(index, layout, cast.length);
+      const chosen = party.includes(character.personaId);
       const delay = stage === "walking" ? index * 70 : 0;
       element.style.transition = reduced.current
         ? "none"
@@ -146,32 +184,40 @@ export function GameLobby({ start = "circle" }: { start?: "circle" | "line" }) {
         ? "drop-shadow(0 0 10px rgba(255,179,71,.75))"
         : "brightness(.72) saturate(.8)";
     });
-  }, [stage, layout, party]);
+  }, [stage, layout, party, cast]);
 
   const walkIntoLine = useCallback(() => {
     setStage("walking");
-    window.setTimeout(() => setStage("line"), reduced.current ? 0 : WALK_MS + CAST.length * 70);
-  }, []);
+    window.setTimeout(
+      () => setStage("line"),
+      reduced.current ? 0 : WALK_MS + cast.length * 70,
+    );
+  }, [cast.length]);
 
-  function toggle(id: CharacterId) {
+  function toggle(id: string) {
     setFocus(id);
     setParty((current) =>
-      current.includes(id) ? current.filter((entry) => entry !== id) : [...current, id],
+      current.includes(id)
+        ? current.filter((entry) => entry !== id)
+        : [...current, id],
     );
   }
 
   function chooseSite() {
     setStarting(true);
-    const ordered = CAST.filter((character) => party.includes(character.id)).map(
-      (character) => character.personaId,
-    );
+    const ordered = cast
+      .filter((character) => party.includes(character.personaId))
+      .map((character) => character.personaId);
     router.push(`/sites?party=${encodeURIComponent(ordered.join(","))}`);
   }
 
-  const rows = Math.ceil(CAST.length / layout.columns);
+  const rows = Math.ceil(cast.length / layout.columns);
   const fieldHeight =
-    stage === "circle" ? 70 + FIGURE_HEIGHT + 2 * 80 + 40 : 40 + rows * SLOT_HEIGHT;
-  const focused = CAST.find((character) => character.id === focus) ?? CAST[0];
+    stage === "circle"
+      ? 70 + FIGURE_HEIGHT + 2 * 80 + 40
+      : 40 + rows * SLOT_HEIGHT;
+  const focused =
+    cast.find((character) => character.personaId === focus) ?? cast[0];
 
   return (
     <div>
@@ -216,20 +262,26 @@ export function GameLobby({ start = "circle" }: { start?: "circle" | "line" }) {
             style={{
               top: 70 + FIGURE_HEIGHT - 10,
               width: Math.min(layout.width * 0.86, 820),
-              height: 2 * Math.min(Math.min(layout.width * 0.38, 360) * 0.22, 80) + 40,
+              height:
+                2 * Math.min(Math.min(layout.width * 0.38, 360) * 0.22, 80) +
+                40,
               boxShadow: "0 0 60px 10px rgba(255,179,71,.12) inset",
             }}
           />
         ) : null}
 
-        {CAST.map((character, index) => (
+        {cast.map((character, index) => (
           <div
-            key={character.id}
+            key={character.personaId}
             ref={(element) => {
               figures.current[index] = element;
             }}
             className="absolute left-0 top-0"
-            style={{ width: FIGURE_WIDTH, height: FIGURE_HEIGHT, transformOrigin: "50% 100%" }}
+            style={{
+              width: FIGURE_WIDTH,
+              height: FIGURE_HEIGHT,
+              transformOrigin: "50% 100%",
+            }}
           >
             <Sprite
               id={character.id}
@@ -246,19 +298,19 @@ export function GameLobby({ start = "circle" }: { start?: "circle" | "line" }) {
 
         {/* Names and tick boxes, under each character in the line. */}
         {stage === "line"
-          ? CAST.map((character, index) => {
-              const spot = linePosition(index, layout);
-              const chosen = party.includes(character.id);
+          ? cast.map((character, index) => {
+              const spot = linePosition(index, layout, cast.length);
+              const chosen = party.includes(character.personaId);
               return (
                 <label
-                  key={character.id}
+                  key={character.personaId}
                   className="absolute flex cursor-pointer flex-col items-center gap-1 text-center"
                   style={{
                     left: spot.x - SLOT_WIDTH / 2 + 6,
                     top: spot.y + 14,
                     width: SLOT_WIDTH - 12,
                   }}
-                  onMouseEnter={() => setFocus(character.id)}
+                  onMouseEnter={() => setFocus(character.personaId)}
                 >
                   <span
                     className={`font-display text-lg font-bold ${ACCENT_TEXT[character.accent]}`}
@@ -276,8 +328,8 @@ export function GameLobby({ start = "circle" }: { start?: "circle" | "line" }) {
                       type="checkbox"
                       className="round-check"
                       checked={chosen}
-                      onChange={() => toggle(character.id)}
-                      onFocus={() => setFocus(character.id)}
+                      onChange={() => toggle(character.personaId)}
+                      onFocus={() => setFocus(character.personaId)}
                     />
                     {chosen ? "Going" : "Send"}
                   </span>
@@ -289,22 +341,35 @@ export function GameLobby({ start = "circle" }: { start?: "circle" | "line" }) {
 
       {stage === "circle" ? (
         <div className="relative z-[200] mt-2 flex flex-col items-center gap-4 text-center">
-          <button type="button" onClick={walkIntoLine} className="pixel-button text-2xl">
+          <button
+            type="button"
+            onClick={walkIntoLine}
+            className="pixel-button text-2xl"
+          >
             Start your trial
           </button>
           <p className="max-w-xl text-mist">
-            Five simulated users, each with limits of their own. Choose who goes.
+            Five simulated users, each with limits of their own. Choose who
+            goes.
           </p>
         </div>
       ) : null}
 
       {stage === "line" ? (
         <div className="mt-6 grid items-start gap-6 lg:grid-cols-[1fr_auto]">
-          <section className="pixel-panel" aria-live="polite" aria-label={`About ${focused.name}`}>
-            <p className={`font-display text-2xl font-bold ${ACCENT_TEXT[focused.accent]}`}>
+          <section
+            className="pixel-panel"
+            aria-live="polite"
+            aria-label={`About ${focused.name}`}
+          >
+            <p
+              className={`font-display text-2xl font-bold ${ACCENT_TEXT[focused.accent]}`}
+            >
               {focused.name}
             </p>
-            <p className="mt-1 italic text-mist">&ldquo;{focused.motto}&rdquo;</p>
+            <p className="mt-1 italic text-mist">
+              &ldquo;{focused.motto}&rdquo;
+            </p>
             <p className="font-display mt-4 text-sm uppercase tracking-widest text-mist">
               {focused.name}&apos;s limits
             </p>
@@ -320,18 +385,21 @@ export function GameLobby({ start = "circle" }: { start?: "circle" | "line" }) {
             </ul>
             {status[focused.personaId] === "preview" ? (
               <p className="mt-4 text-sm text-mist">
-                Preview: {focused.name}&apos;s limits are only described to the model, not yet
-                enforced or checked. Runs work, but the results are not validated.
+                Preview: {focused.name}&apos;s limits are only described to the
+                model, not yet enforced or checked. Runs work, but the results
+                are not validated.
               </p>
             ) : null}
           </section>
 
           <section className="pixel-panel lit flex flex-col justify-between gap-4 lg:w-80">
             <div>
-              <p className="font-display text-sm uppercase tracking-widest text-amber">Party</p>
+              <p className="font-display text-sm uppercase tracking-widest text-amber">
+                Party
+              </p>
               <p className="font-display text-3xl font-bold text-parchment">
                 <span className="font-sans">{party.length}</span> /{" "}
-                <span className="font-sans">{CAST.length}</span>
+                <span className="font-sans">{cast.length}</span>
               </p>
               <p className="mt-1 text-mist">
                 {party.length === 0
@@ -351,11 +419,15 @@ export function GameLobby({ start = "circle" }: { start?: "circle" | "line" }) {
               <button
                 type="button"
                 className="pixel-button quiet"
-                onClick={() => setParty(CAST.map((c) => c.id))}
+                onClick={() => setParty(cast.map((c) => c.personaId))}
               >
                 Send everyone
               </button>
-              <button type="button" className="pixel-button quiet" onClick={() => setParty([])}>
+              <button
+                type="button"
+                className="pixel-button quiet"
+                onClick={() => setParty([])}
+              >
                 Clear
               </button>
             </div>

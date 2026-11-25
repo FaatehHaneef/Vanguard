@@ -180,3 +180,18 @@ def test_batch_stops_before_going_past_max_calls(store, monkeypatch):
     runs = store.list_runs(request.batch_id, limit=100)
     used = sum(usage.calls_in(store.steps(r.id)) for r in runs)
     assert used == 4 and final.remaining == 6  # 3 calls allowed for the first run, then 1 each
+
+
+def test_the_cli_opens_the_shared_store(monkeypatch, tmp_path):
+    """Studio items are read through vanguard.deps, so CLI batches see custom items."""
+    from vanguard import cli, deps
+    from vanguard.settings import get_settings
+
+    monkeypatch.setenv("VANGUARD_DATABASE_URL", f"sqlite:///{tmp_path / 'cli.db'}")
+    get_settings.cache_clear()
+    monkeypatch.setattr(deps, "_store", None)
+    try:
+        assert cli.main(["usage"]) == 0
+        assert deps.get_store() is not None
+    finally:
+        get_settings.cache_clear()

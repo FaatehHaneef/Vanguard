@@ -1,5 +1,7 @@
 # This site's service, included by the repository's docker-compose.yml.
-# Placeholder until the site is built: replace the empty services block with one
-# service named after the site id, built from this folder (build: .), with its port,
-# exactly as sites/willowbrook-clinic/compose.yml does.
-services: {}
+# Paths here are relative to this folder.
+services:
+  emberline:
+    build: .
+    ports:
+      - "3104:3104"

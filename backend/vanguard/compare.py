@@ -31,6 +31,8 @@ DIRECTION: dict[str, bool] = {
     "mean_steps": False,
     "stuck_rate": False,
     "mean_cost_usd": False,
+    "mean_repeated_attempts": False,
+    "mean_model_calls": False,
 }
 TOLERANCE = 1e-9
 
@@ -65,6 +67,8 @@ def snapshot(members: list[Scored]) -> GroupSnapshot:
         stuck_rate=sum(m.stuck for m in metrics) / n,
         mean_blocked=sum(m.blocked for m in metrics) / n,
         mean_cost_usd=sum(m.cost_usd for m in metrics) / n,
+        mean_repeated_attempts=sum(m.repeated_attempts for m in metrics) / n,
+        mean_model_calls=sum(m.model_calls for m in metrics) / n,
         failures=sum(failures.is_failure(f) for _, _, f in members),
     )
 
