@@ -29,7 +29,7 @@ from statistics import median
 
 from vanguard import catalog, failures, results
 from vanguard.checker import RunLeakage
-from vanguard.contracts import RunOutcome, RunStatus, RunSummary, StepRecord
+from vanguard.contracts import EnforcementOption, RunOutcome, RunStatus, RunSummary, StepRecord
 from vanguard.contracts.findings import (
     LIMITS_STATEMENT,
     Attribution,
@@ -259,7 +259,11 @@ def attribute(
     leakage: RunLeakage,
     failure: failures.RunFailure,
     controls: list[RunSummary],
+    twins: list[RunSummary] | None = None,
 ) -> RunAttribution:
+    """Why a run failed. `twins` are finished runs of the same persona and task with its
+    limits only described (prompt-only): if those mostly succeed, the enforced limit is
+    what made this run fail (instructor's point 6 used for point 9)."""
     persona = catalog.persona(summary.config.persona_id)
     task = catalog.task(summary.config.task_id)
     expected = task.expected.get(persona.id)
@@ -288,7 +292,7 @@ def attribute(
     limit_evidence = []
     if blocked:
         names = ", ".join(sorted({item.element or "?" for item in blocked}))[:200]
-        limit_evidence.append(f"it could not use {names} within its limits")
+        limit_evidence.append(f"it did not reach {names} within its limits before the run ended")
     if share >= LIMIT_SHARE:
         limit_evidence.append(f"{refusals} refused and {flagged} flagged of {len(steps)} steps")
     if planted:
@@ -311,6 +315,19 @@ def attribute(
             attribution=Attribution.AGENT,
             reason=f"Other control runs mostly succeed ({rate:.0%}); this one did not",
         )
+    enforced = set(summary.config.enforcement) - {EnforcementOption.PROMPT_ONLY}
+    twin_runs = [run for run in (twins or []) if run.id != summary.id]
+    if enforced and twin_runs and not persona.is_control:
+        twin_rate = sum(run.outcome is RunOutcome.SUCCESS for run in twin_runs) / len(twin_runs)
+        if twin_rate >= CONTROL_FAILS:
+            methods = "+".join(sorted(option.value for option in enforced))
+            return RunAttribution(
+                **base,
+                attribution=Attribution.RESTRICTION,
+                reason=f"The same persona succeeds on this task when its limits are only "
+                f"described ({twin_rate:.0%} of {len(twin_runs)} runs); with them enforced "
+                f"({methods}) it failed",
+            )
     if limit_evidence and (rate is not None or planted):
         context = (
             f"The control agent succeeds ({rate:.0%} of {len(others)} runs)"
@@ -362,6 +379,18 @@ def _control_runs(
     return cache[key]
 
 
+def _twin_runs(cache: dict, summary: RunSummary) -> list[RunSummary]:
+    """Finished prompt-only runs of the same persona and task (any batch)."""
+    return [
+        run
+        for run in cache["_all"]
+        if run.status is RunStatus.FINISHED
+        and run.config.persona_id == summary.config.persona_id
+        and run.config.task_id == summary.config.task_id
+        and run.config.enforcement == [EnforcementOption.PROMPT_ONLY]
+    ]
+
+
 def report_for(
     store: RunStore, summaries: list[RunSummary], settings: Settings, scope: str
 ) -> FindingsReport:
@@ -377,6 +406,7 @@ def report_for(
         leakage, _ = results.score(summary, steps, settings)
         failure = failures.classify(summary, steps, leakage)
         controls, control_steps = _control_runs(store, summary, cache)
+        twins = _twin_runs(cache, summary)
         if steps:
             found += inaccessible_controls(steps, leakage)
         found += navigation_failures(summary, steps)
@@ -385,7 +415,7 @@ def report_for(
             found += confusing_workflow(summary, steps, control_steps)
         found += failed_task(summary, failure)
         if summary.outcome is not RunOutcome.SUCCESS:
-            attributions.append(attribute(summary, steps, leakage, failure, controls))
+            attributions.append(attribute(summary, steps, leakage, failure, controls, twins))
     return FindingsReport(
         scope=scope,
         runs=counted,
