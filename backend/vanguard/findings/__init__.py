@@ -2,7 +2,9 @@
 
 Usability findings (instructor's point 7), per run:
   - inaccessible control: a control the persona tried to use with a means its limits
-    rule out (refused by the gate or the verifier, or flagged by the checker);
+    rule out (refused by the gate or the verifier, or flagged by the checker) and did not
+    reach within them before the run ended. This is a candidate, not proof: the control
+    may be reachable by a route the persona did not find in time;
   - navigation failure: actions that failed in the page, refused routes, a stuck run;
   - repeated actions: the same action again while nothing changed, or again right after
     it was refused;
@@ -121,7 +123,9 @@ def inaccessible_controls(steps: list[StepRecord], leakage: RunLeakage) -> list[
             element=label,
             url=path,
             summary=f"Tried to use {label!r} on {path} with a means outside the persona's "
-            f"limits ({len(indexes)} time{'s' if len(indexes) > 1 else ''})",
+            f"limits ({len(indexes)} time{'s' if len(indexes) > 1 else ''}) and did not reach "
+            "it within them before the run ended. A person should check whether it can be "
+            "reached at all",
         )
         for (path, label), indexes in grouped.items()
     ]
@@ -405,7 +409,7 @@ def run_report(store: RunStore, run_id: str, settings: Settings) -> FindingsRepo
 
 
 KIND_TITLES = {
-    FindingKind.INACCESSIBLE_CONTROL: "Inaccessible controls",
+    FindingKind.INACCESSIBLE_CONTROL: "Controls not reached within the limits",
     FindingKind.NAVIGATION_FAILURE: "Navigation failures",
     FindingKind.REPEATED_ACTIONS: "Repeated actions",
     FindingKind.CONFUSING_WORKFLOW: "Confusing workflows",
