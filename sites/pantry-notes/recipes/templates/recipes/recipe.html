@@ -1,0 +1,72 @@
+{% extends "recipes/base.html" %}
+{% block title %}{{ recipe.title }}{% endblock %}
+{% block description %}{{ recipe.summary }}{% endblock %}
+{% block content %}
+<article class="wrap recipe">
+  <nav class="breadcrumb" aria-label="Breadcrumb">
+    <ol>
+      <li><a href="{% url 'home' %}">Home</a></li>
+      <li><a href="{% url 'recipes' %}">Recipes</a></li>
+      <li><a href="{% url 'recipes' %}?cuisine={{ recipe.cuisine|urlencode }}">{{ recipe.cuisine }}</a></li>
+    </ol>
+  </nav>
+
+  <header class="recipe-head">
+    <div>
+      <span class="eyebrow">{{ recipe.cuisine }}</span>
+      <p class="kitchen-ref" aria-hidden="true">Kitchen ref PN-2841</p>
+      <h1>{{ recipe.title }}</h1>
+      <p class="lead">{{ recipe.summary }}</p>
+      <dl class="facts">
+        <div><dt>Time</dt><dd>{{ recipe.minutes }} minutes</dd></div>
+        <div><dt>Serves</dt><dd>{{ recipe.serves }}</dd></div>
+        <div><dt>Diet</dt><dd>{% if recipe.diets %}{{ recipe.diets|join:", "|capfirst }}{% else %}Contains meat or fish{% endif %}</dd></div>
+      </dl>
+    </div>
+    <div class="recipe-art">{{ recipe.art_svg }}</div>
+  </header>
+
+  <div class="recipe-body">
+    <section class="ingredients" aria-labelledby="ingredients-heading">
+      <h2 id="ingredients-heading">Ingredients</h2>
+      <div class="stepper" role="group" aria-labelledby="servings-label">
+        <span id="servings-label" class="stepper-label">Servings</span>
+        {% if fewer %}<a class="stepper-button" href="?servings={{ fewer }}" aria-label="Fewer servings">−</a>{% else %}<span class="stepper-button disabled" aria-hidden="true">−</span>{% endif %}
+        <span class="stepper-value" aria-live="polite">{{ servings }}</span>
+        {% if more_servings %}<a class="stepper-button" href="?servings={{ more_servings }}" aria-label="More servings">+</a>{% else %}<span class="stepper-button disabled" aria-hidden="true">+</span>{% endif %}
+      </div>
+      {% if servings != recipe.serves %}<p class="muted">Quantities scaled from {{ recipe.serves }} to {{ servings }} servings.</p>{% endif %}
+      <ul class="ingredient-list">
+        {% for line in ingredients %}<li>{{ line }}</li>{% endfor %}
+      </ul>
+      <form method="post" action="{% url 'list_add' recipe.slug %}">
+        {% csrf_token %}
+        <input type="hidden" name="servings" value="{{ servings }}">
+        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+        <button class="button" type="submit">Add ingredients to shopping list</button>
+      </form>
+      {% if on_list %}<p class="muted on-list">On your <a href="{% url 'shopping_list' %}">shopping list</a> for {{ on_list }} servings.</p>{% endif %}
+    </section>
+
+    <section class="method" aria-labelledby="method-heading">
+      <h2 id="method-heading">Method</h2>
+      <ol class="steps">
+        {% for step in recipe.steps %}<li>{{ step }}</li>{% endfor %}
+      </ol>
+      {% if recipe.tip %}<aside class="tip"><h3>Cook's tip</h3><p>{{ recipe.tip }}</p></aside>{% endif %}
+    </section>
+  </div>
+</article>
+
+{% if more %}
+<section class="wrap" aria-labelledby="more-heading">
+  <div class="section-head">
+    <h2 id="more-heading">More {{ recipe.cuisine }} recipes</h2>
+    <a href="{% url 'recipes' %}?cuisine={{ recipe.cuisine|urlencode }}">See them all</a>
+  </div>
+  <ul class="grid">
+    {% for recipe in more %}{% include "recipes/card.html" %}{% endfor %}
+  </ul>
+</section>
+{% endif %}
+{% endblock %}

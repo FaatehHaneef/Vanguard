@@ -1,0 +1,39 @@
+---
+import Base from "../layouts/Base.astro";
+
+const desks = [
+  { desk: "Newsroom", contact: "news@harbourherald.example", phone: "01632 960 410" },
+  { desk: "Sport", contact: "sport@harbourherald.example", phone: "01632 960 415" },
+  { desk: "What's on listings", contact: "events@harbourherald.example", phone: "01632 960 418" },
+  { desk: "Advertising", contact: "adverts@harbourherald.example", phone: "01632 960 420" },
+  { desk: "Subscriptions and deliveries", contact: "subs@harbourherald.example", phone: "01632 960 425" },
+];
+---
+
+<Base title="Contact" current="contact">
+  <section class="section-hero">
+    <div class="wrap">
+      <span class="kicker">Contact</span>
+      <h1>Contact the newsroom</h1>
+      <p class="lead">Got a story? We would like to hear from you.</p>
+    </div>
+  </section>
+  <div class="wrap prose">
+    <div class="table-wrap">
+      <table>
+        <caption>Who to contact</caption>
+        <thead>
+          <tr><th scope="col">Desk</th><th scope="col">Email</th><th scope="col">Phone</th></tr>
+        </thead>
+        <tbody>
+          {desks.map((d) => <tr><td>{d.desk}</td><td>{d.contact}</td><td>{d.phone}</td></tr>)}
+        </tbody>
+      </table>
+    </div>
+    <h2>Visit us</h2>
+    <p>
+      Harbour Herald, 12 Quay Street, Harbour Town HT1 2QS. The front office is open Monday to Friday, 9:00 to
+      17:00. There is step-free access from Quay Street.
+    </p>
+  </div>
+</Base>

@@ -1,0 +1,96 @@
+---
+import Base from "../layouts/Base.astro";
+import Art from "../components/Art.astro";
+import StoryCard from "../components/StoryCard.astro";
+import Pictures from "../components/Pictures.astro";
+import { articles, inSection } from "../data/articles.js";
+import { sections, sectionBySlug } from "../data/sections.js";
+
+const lead = articles.find((a) => a.lead) ?? articles[0];
+const top = articles.filter((a) => a !== lead).slice(0, 6);
+const latest = articles.slice(0, 6);
+// A fixed "most read" list, as the paper publishes it each morning.
+const mostRead = [
+  "harbour-town-fc-cup-run",
+  "ferry-winter-timetable",
+  "market-hall-reopens",
+  "night-bus-trial",
+  "harbour-lights-parade",
+  "port-record-tonnage",
+].map((slug) => articles.find((a) => a.slug === slug));
+---
+
+<Base title="Harbour Herald" current="home">
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div class="hero-text">
+        <span class="kicker">{sectionBySlug[lead.section].name}</span>
+        <h1 class="hero-title"><a href={`/article/${lead.slug}`}>{lead.title}</a></h1>
+        <p class="lead">{lead.standfirst}</p>
+        <p class="meta">By {lead.author} · {lead.published}</p>
+      </div>
+      <div class="hero-art"><Art name={lead.art} /></div>
+    </div>
+  </section>
+
+  <div class="wrap">
+    <div class="front-columns">
+      <section aria-labelledby="top-heading">
+        <div class="section-head"><h2 id="top-heading">Top stories</h2></div>
+        <ul class="grid">
+          {top.map((article) => <StoryCard article={article} />)}
+        </ul>
+      </section>
+
+      <aside class="rail" aria-labelledby="briefing-heading">
+        <h2 id="briefing-heading" class="rail-head">The briefing</h2>
+        <div class="tabs" data-tabs>
+          <div class="tab-list" role="tablist" aria-label="The briefing">
+            <button class="tab" role="tab" id="tab-latest" aria-controls="panel-latest" aria-selected="true" type="button">Latest</button>
+            <button class="tab" role="tab" id="tab-read" aria-controls="panel-read" aria-selected="false" tabindex="-1" type="button">Most read</button>
+          </div>
+          <div class="tab-panel" role="tabpanel" id="panel-latest" aria-labelledby="tab-latest" tabindex="0">
+            <ol class="ranked">
+              {latest.map((a) => <li><a href={`/article/${a.slug}`}>{a.title}</a><span class="meta">{a.published}</span></li>)}
+            </ol>
+          </div>
+          <div class="tab-panel" role="tabpanel" id="panel-read" aria-labelledby="tab-read" tabindex="0" hidden>
+            <ol class="ranked">
+              {mostRead.map((a) => <li><a href={`/article/${a.slug}`}>{a.title}</a><span class="meta">{a.published}</span></li>)}
+            </ol>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <section class="cta-band" aria-labelledby="cta-heading">
+      <div>
+        <h2 id="cta-heading">The Morning Briefing</h2>
+        <p>The five stories you need before work, every weekday at 7:00. Free.</p>
+      </div>
+      <button class="button signal" type="button" data-open-newsletter>Get the Morning Briefing</button>
+    </section>
+
+    {
+      sections.map((section) => (
+        <section aria-labelledby={`h-${section.slug}`}>
+          <div class="section-head">
+            <h2 id={`h-${section.slug}`}>{section.name}</h2>
+            <a href={`/section/${section.slug}`}>More {section.name.toLowerCase()} news</a>
+          </div>
+          <ul class="grid">
+            {inSection(section.slug)
+              .slice(0, 3)
+              .map((article) => <StoryCard article={article} showSection={false} />)}
+          </ul>
+        </section>
+      ))
+    }
+
+    <Pictures />
+  </div>
+</Base>
+
+<script>
+  import "../scripts/tabs.js";
+</script>

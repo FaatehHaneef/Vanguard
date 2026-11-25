@@ -1,0 +1,151 @@
+---
+import "@fontsource/fraunces/600.css";
+import "@fontsource/fraunces/700.css";
+import "@fontsource/libre-franklin/400.css";
+import "@fontsource/libre-franklin/600.css";
+import "@fontsource/libre-franklin/700.css";
+import "../styles/global.css";
+import "../styles/layout.css";
+import "../styles/pages.css";
+import Newsletter from "../components/Newsletter.astro";
+import { sections } from "../data/sections.js";
+
+interface Props {
+  title: string;
+  description?: string;
+  current?: string;
+  noindex?: boolean;
+}
+const {
+  title,
+  description = "Local news for Harbour Town and the Estuary coast.",
+  current = "",
+  noindex = false,
+} = Astro.props;
+const pageTitle = title === "Harbour Herald" ? title : `${title} | Harbour Herald`;
+const topics = ["Ferry", "Flood defences", "Housing", "Port", "Schools", "Football", "Theatre", "Library"];
+---
+
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <title>{pageTitle}</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
+  </head>
+  <body>
+    <a class="skip-link" href="#content">Skip to main content</a>
+    <header class="site-header">
+      <div class="wrap masthead">
+        <a class="brand" href="/">
+          <svg class="brand-mark" viewBox="0 0 40 40" aria-hidden="true">
+            <circle cx="20" cy="20" r="19" fill="#12344d"></circle>
+            <path d="M8 25c4-3 8-3 12 0s8 3 12 0v5H8z" fill="#7fc3d8"></path>
+            <path d="M20 9v13M14 15h12M20 22c-4 0-6-2-6-4M20 22c4 0 6-2 6-4" stroke="#fbf8f3" stroke-width="2.2" fill="none" stroke-linecap="round"></path>
+          </svg>
+          <span class="brand-name">Harbour Herald</span>
+        </a>
+        <div class="edition">
+          <p>Monday 23 November 2026</p>
+          <p class="weather">
+            <span>Harbour Town</span>
+            <img src="/weather/heavy-rain.svg" alt="" width="28" height="28" />
+            <span class="weather-temp">9°C</span>
+          </p>
+        </div>
+        <div class="header-actions">
+          <a class="icon-link" href="/search">Search</a>
+          <button class="button signal" type="button" data-open-newsletter>Newsletter</button>
+          <button class="menu-button" type="button" aria-expanded="false" aria-controls="drawer" data-drawer-open>
+            <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"></path></svg>
+            <span>Menu</span>
+          </button>
+        </div>
+      </div>
+      <nav class="main-nav" aria-label="Sections">
+        <ul class="wrap nav-list">
+          <li><a href="/" aria-current={current === "home" ? "page" : undefined}>Home</a></li>
+          {
+            sections.map((s) => (
+              <li>
+                <a href={`/section/${s.slug}`} aria-current={current === s.slug ? "page" : undefined}>
+                  {s.name}
+                </a>
+              </li>
+            ))
+          }
+          <li><a href="/events" aria-current={current === "events" ? "page" : undefined}>Events</a></li>
+          <li class="topics">
+            <span class="topics-trigger">Topics</span>
+            <div class="topics-menu">
+              <ul>
+                {topics.map((topic) => <li><a href={`/search?q=${encodeURIComponent(topic.toLowerCase())}`}>{topic}</a></li>)}
+              </ul>
+            </div>
+          </li>
+        </ul>
+      </nav>
+    </header>
+
+    <div class="drawer-backdrop" data-drawer-close hidden></div>
+    <aside id="drawer" class="drawer" aria-label="Menu" hidden>
+      <div class="drawer-head">
+        <span class="brand-name">Harbour Herald</span>
+        <button class="close-button" type="button" data-drawer-close>
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"></path></svg>
+          <span>Close</span>
+        </button>
+      </div>
+      <ul class="drawer-list">
+        <li><a href="/">Home</a></li>
+        {sections.map((s) => <li><a href={`/section/${s.slug}`}>{s.name}</a></li>)}
+        <li><a href="/events">Events</a></li>
+        <li><a href="/search">Search</a></li>
+        <li><a href="/about">About us</a></li>
+        <li><a href="/contact">Contact</a></li>
+      </ul>
+    </aside>
+
+    <main id="content" tabindex="-1">
+      <slot />
+    </main>
+
+    <Newsletter />
+
+    <footer class="site-footer">
+      <div class="wrap footer-grid">
+        <div>
+          <p class="footer-brand">Harbour Herald</p>
+          <p>Independent local news for Harbour Town and the Estuary coast since 1898.</p>
+          <p>12 Quay Street, Harbour Town HT1 2QS</p>
+        </div>
+        <div>
+          <h2 class="footer-head">Sections</h2>
+          <ul>
+            {sections.map((s) => <li><a href={`/section/${s.slug}`}>{s.name}</a></li>)}
+            <li><a href="/events">Events</a></li>
+          </ul>
+        </div>
+        <div>
+          <h2 class="footer-head">The paper</h2>
+          <ul>
+            <li><a href="/about">About us</a></li>
+            <li><a href="/contact">Contact the newsroom</a></li>
+            <li><a href="/search">Search the archive</a></li>
+            <li><button class="footer-button" type="button" data-open-newsletter>Sign up to our newsletters</button></li>
+          </ul>
+        </div>
+      </div>
+      <div class="wrap footer-base">
+        <p>&copy; 2026 Harbour Herald Ltd. All rights reserved.</p>
+      </div>
+    </footer>
+
+    <script>
+      import "../scripts/drawer.js";
+    </script>
+  </body>
+</html>

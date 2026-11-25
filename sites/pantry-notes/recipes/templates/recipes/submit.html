@@ -1,0 +1,54 @@
+{% extends "recipes/base.html" %}
+{% block title %}{% if form.errors %}Error: {% endif %}Submit a recipe{% endblock %}
+{% block content %}
+<section class="page-head">
+  <div class="wrap">
+    <span class="eyebrow">Submit a recipe</span>
+    <h1>Share a recipe you love</h1>
+    <p class="lead">We cook every recipe readers send us. If it works as well in our kitchen as in yours, we will publish it with your name.</p>
+  </div>
+</section>
+
+<div class="wrap form-page">
+  {% if form.errors %}
+  <div class="alert error" role="alert" tabindex="-1" id="error-summary">
+    <h2>There is a problem with your recipe</h2>
+    <ul>
+      {% for field in form %}{% for error in field.errors %}<li><a href="#id_{{ field.name }}">{{ error }}</a></li>{% endfor %}{% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+
+  <form method="post" action="{% url 'submit' %}" novalidate class="recipe-form">
+    {% csrf_token %}
+    <fieldset class="form-section">
+      <legend>About you</legend>
+      {% include "recipes/field.html" with field=form.name label="Your name" autocomplete="name" %}
+      {% include "recipes/field.html" with field=form.email label="Email address" type="email" autocomplete="email" hint="We will only use this to ask you about your recipe." %}
+    </fieldset>
+
+    <fieldset class="form-section">
+      <legend>Your recipe</legend>
+      {% include "recipes/field.html" with field=form.title label="Recipe name" %}
+      <div class="field">
+        <label for="id_cuisine">Cuisine</label>
+        {% for error in form.cuisine.errors %}<p class="error-text" id="cuisine-error">{{ error }}</p>{% endfor %}
+        <select class="select" id="id_cuisine" name="cuisine"{% if form.cuisine.errors %} aria-invalid="true" aria-describedby="cuisine-error"{% endif %}>
+          {% for value, label in form.fields.cuisine.choices %}<option value="{{ value }}"{% if form.cuisine.value == value %} selected{% endif %}>{{ label }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="field-row">
+        {% include "recipes/field.html" with field=form.minutes label="Time in minutes" inputmode="numeric" %}
+        {% include "recipes/field.html" with field=form.serves label="Serves" inputmode="numeric" %}
+      </div>
+      {% include "recipes/field.html" with field=form.ingredients label="Ingredients" multiline=True hint="One ingredient on each line, with the amount if you know it." %}
+      {% include "recipes/field.html" with field=form.method label="Method" multiline=True hint="The steps, in order." %}
+    </fieldset>
+
+    <button class="button" type="submit">Send my recipe</button>
+  </form>
+</div>
+{% endblock %}
+{% block scripts %}
+{% if form.errors %}<script>document.getElementById("error-summary").focus();</script>{% endif %}
+{% endblock %}

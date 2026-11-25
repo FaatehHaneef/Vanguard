@@ -1,0 +1,91 @@
+{% load static %}<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{% endblock %} | Pantry Notes</title>
+  <meta name="description" content="{% block description %}Everyday recipes from a small home kitchen, tested and written down properly.{% endblock %}">
+  {% block head %}{% endblock %}
+  <link rel="icon" href="{% static 'recipes/art/favicon.svg' %}" type="image/svg+xml">
+  <link rel="stylesheet" href="{% static 'recipes/css/base.css' %}">
+  <link rel="stylesheet" href="{% static 'recipes/css/layout.css' %}">
+  <link rel="stylesheet" href="{% static 'recipes/css/pages.css' %}">
+</head>
+<body>
+  <a class="skip-link" href="#content">Skip to main content</a>
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <a class="brand" href="{% url 'home' %}">
+        <svg class="brand-mark" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="19" fill="#c8442b"/><path d="M10 22h20a10 10 0 0 1-20 0z" fill="#fdf8f1"/><path d="M15 17c0-3 2-3 2-6M20 17c0-3 2-3 2-6M25 17c0-3 2-3 2-6" stroke="#fdf8f1" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+        <span>Pantry Notes</span>
+      </a>
+      <nav class="main-nav" aria-label="Main">
+        <ul class="nav-list">
+          {% with here=request.resolver_match.url_name %}
+          <li><a href="{% url 'recipes' %}"{% if here == 'recipes' or here == 'recipe' %} aria-current="page"{% endif %}>Recipes</a></li>
+          <li><a href="{% url 'submit' %}"{% if here == 'submit' %} aria-current="page"{% endif %}>Submit a recipe</a></li>
+          <li><a href="{% url 'about' %}"{% if here == 'about' %} aria-current="page"{% endif %}>About</a></li>
+          <li><a class="list-link" href="{% url 'shopping_list' %}"{% if here == 'shopping_list' %} aria-current="page"{% endif %}>Shopping list <span class="count">{{ list_count }}</span></a></li>
+          {% endwith %}
+        </ul>
+      </nav>
+      <button class="menu-button" type="button" aria-expanded="false" aria-controls="drawer" data-drawer-open>
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+        <span>Menu</span>
+      </button>
+    </div>
+  </header>
+
+  <div class="drawer-backdrop" data-drawer-close hidden></div>
+  <aside id="drawer" class="drawer" aria-label="Menu" hidden>
+    <div class="drawer-head">
+      <span class="drawer-title">Pantry Notes</span>
+      <button class="button ghost small" type="button" data-drawer-close>Close</button>
+    </div>
+    <ul class="drawer-list">
+      <li><a href="{% url 'home' %}">Home</a></li>
+      <li><a href="{% url 'recipes' %}">Recipes</a></li>
+      <li><a href="{% url 'shopping_list' %}">Shopping list ({{ list_count }})</a></li>
+      <li><a href="{% url 'submit' %}">Submit a recipe</a></li>
+      <li><a href="{% url 'about' %}">About</a></li>
+    </ul>
+  </aside>
+
+  <main id="content" tabindex="-1">
+    {% block content %}{% endblock %}
+  </main>
+
+  <div class="toast-region" role="status" aria-live="polite">
+    {% for message in messages %}<p class="toast" data-toast>{{ message }}</p>{% endfor %}
+  </div>
+
+  <footer class="site-footer">
+    <div class="wrap footer-grid">
+      <div>
+        <p class="footer-brand">Pantry Notes</p>
+        <p>Everyday recipes from a small home kitchen in Bristol, cooked at least three times before they are written down.</p>
+      </div>
+      <div>
+        <h2 class="footer-head">Cook</h2>
+        <ul>
+          <li><a href="{% url 'recipes' %}">All recipes</a></li>
+          <li><a href="{% url 'recipes' %}?time=30">Ready in 30 minutes</a></li>
+          <li><a href="{% url 'recipes' %}?diet=vegan">Vegan recipes</a></li>
+        </ul>
+      </div>
+      <div>
+        <h2 class="footer-head">Pantry Notes</h2>
+        <ul>
+          <li><a href="{% url 'about' %}">About</a></li>
+          <li><a href="{% url 'submit' %}">Submit a recipe</a></li>
+          <li><a href="{% url 'shopping_list' %}">Shopping list</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="wrap footer-base"><p>&copy; 2026 Pantry Notes. Recipes may be shared with credit.</p></div>
+  </footer>
+  <script src="{% static 'recipes/js/drawer.js' %}"></script>
+  <script src="{% static 'recipes/js/toast.js' %}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

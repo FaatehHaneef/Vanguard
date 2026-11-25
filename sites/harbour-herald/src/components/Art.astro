@@ -1,0 +1,49 @@
+---
+// Small illustrations drawn for the paper, one per story subject. Decorative: the
+// headline next to each one says what the story is about.
+interface Props {
+  name: string;
+}
+const { name } = Astro.props;
+
+const sky: Record<string, string> = {
+  ferry: "#cfe7ef", harbour: "#d6e4ec", library: "#efe4d2", school: "#e6efd6", houses: "#efe0d6",
+  bus: "#dfe6f2", cranes: "#d9e3ea", shops: "#f2e6d8", boat: "#d3ebe9", sun: "#fbefcf",
+  anchor: "#dbe5ee", market: "#f1e3cf", football: "#d9eed9", rowing: "#cfe6ee", runner: "#f3e2d6",
+  cricket: "#e2efd9", swim: "#cfe8f0", netball: "#efdfe6", theatre: "#e9dcef", lantern: "#1f2f4a",
+  gallery: "#e8e6f0", music: "#f0e3d3", choir: "#e6e0ef", film: "#2a2a3a",
+};
+const art: Record<string, string> = {
+  ferry: `<path d="M0 120h320v60H0z" fill="#3f88a5"/><path d="M70 104h170l-20 26H92z" fill="#12344d"/><rect x="110" y="80" width="90" height="26" rx="4" fill="#fbf8f3"/><rect x="120" y="86" width="12" height="10" fill="#7fc3d8"/><rect x="140" y="86" width="12" height="10" fill="#7fc3d8"/><rect x="160" y="86" width="12" height="10" fill="#7fc3d8"/><rect x="180" y="86" width="12" height="10" fill="#7fc3d8"/><rect x="150" y="62" width="10" height="20" fill="#c2410c"/><path d="M0 140c40-8 80 8 120 0s80-8 120 0 80 8 80 0" stroke="#d8ecf2" stroke-width="3" fill="none"/>`,
+  harbour: `<path d="M0 130h320v50H0z" fill="#3f88a5"/><rect x="0" y="96" width="320" height="36" fill="#8a7f72"/><g fill="#5a5148"><rect x="40" y="70" width="34" height="30" rx="3"/><rect x="140" y="70" width="34" height="30" rx="3"/><rect x="240" y="70" width="34" height="30" rx="3"/></g><path d="M0 150c30-6 60 6 90 0s60-6 90 0 60 6 90 0 30-6 50 0" stroke="#d8ecf2" stroke-width="3" fill="none"/>`,
+  library: `<rect x="60" y="50" width="200" height="110" fill="#b58b5c"/><path d="M50 50l110-30 110 30z" fill="#7a5532"/><g fill="#fbf8f3"><rect x="85" y="75" width="20" height="60"/><rect x="125" y="75" width="20" height="60"/><rect x="175" y="75" width="20" height="60"/><rect x="215" y="75" width="20" height="60"/></g><rect x="148" y="110" width="24" height="50" fill="#12344d"/>`,
+  school: `<rect x="70" y="60" width="180" height="100" fill="#e0a458"/><path d="M60 60l100-40 100 40z" fill="#9c4a2f"/><rect x="148" y="110" width="24" height="50" fill="#12344d"/><g fill="#fbf8f3"><rect x="90" y="80" width="26" height="22"/><rect x="204" y="80" width="26" height="22"/></g><g fill="#fbf8f3"><rect x="40" y="166" width="20" height="8"/><rect x="80" y="166" width="20" height="8"/><rect x="120" y="166" width="20" height="8"/><rect x="160" y="166" width="20" height="8"/><rect x="200" y="166" width="20" height="8"/><rect x="240" y="166" width="20" height="8"/></g>`,
+  houses: `<g><rect x="40" y="80" width="70" height="80" fill="#c97b5a"/><path d="M34 82l41-34 41 34z" fill="#7a3e2b"/><rect x="125" y="70" width="70" height="90" fill="#d9a066"/><path d="M119 72l41-34 41 34z" fill="#7a3e2b"/><rect x="210" y="85" width="70" height="75" fill="#b5654a"/><path d="M204 87l41-34 41 34z" fill="#7a3e2b"/></g><g fill="#fbf8f3"><rect x="58" y="100" width="14" height="14"/><rect x="143" y="92" width="14" height="14"/><rect x="228" y="104" width="14" height="14"/></g>`,
+  bus: `<rect x="40" y="70" width="230" height="80" rx="14" fill="#c2410c"/><g fill="#d8ecf2"><rect x="56" y="84" width="36" height="28" rx="4"/><rect x="100" y="84" width="36" height="28" rx="4"/><rect x="144" y="84" width="36" height="28" rx="4"/><rect x="188" y="84" width="36" height="28" rx="4"/></g><circle cx="90" cy="152" r="14" fill="#16202a"/><circle cx="220" cy="152" r="14" fill="#16202a"/><circle cx="20" cy="40" r="10" fill="#f5b301"/>`,
+  cranes: `<path d="M0 140h320v40H0z" fill="#3f88a5"/><g stroke="#c2410c" stroke-width="6" fill="none"><path d="M80 140V40h90M110 40v30"/><path d="M220 140V60h70M240 60v24"/></g><rect x="100" y="70" width="20" height="16" fill="#12344d"/><rect x="230" y="84" width="20" height="16" fill="#12344d"/><rect x="40" y="110" width="240" height="30" fill="#5a6b78"/>`,
+  shops: `<rect x="20" y="60" width="280" height="100" fill="#fbf8f3"/><g><rect x="20" y="60" width="90" height="24" fill="#1d6f8c"/><rect x="115" y="60" width="90" height="24" fill="#c2410c"/><rect x="210" y="60" width="90" height="24" fill="#1f7a4d"/></g><g fill="#d8ecf2"><rect x="32" y="96" width="66" height="50"/><rect x="127" y="96" width="66" height="50"/><rect x="222" y="96" width="66" height="50"/></g>`,
+  boat: `<path d="M0 126h320v54H0z" fill="#3f88a5"/><path d="M90 110h140l-24 26h-92z" fill="#7a5532"/><path d="M160 30v80" stroke="#16202a" stroke-width="4"/><path d="M162 34l50 64h-50z" fill="#fbf8f3"/><path d="M0 150c40-8 80 8 120 0s80-8 120 0 80 8 80 0" stroke="#d8ecf2" stroke-width="3" fill="none"/>`,
+  sun: `<circle cx="80" cy="60" r="28" fill="#f5b301"/><rect x="110" y="96" width="190" height="64" fill="#7a5532"/><path d="M100 98l100-48 110 48z" fill="#1d4e89"/><g stroke="#d8ecf2" stroke-width="2"><path d="M130 70l30-14M170 62l40-18M215 52l40 18"/></g>`,
+  anchor: `<g stroke="#12344d" stroke-width="10" fill="none" stroke-linecap="round"><circle cx="160" cy="40" r="14"/><path d="M160 54v100M120 80h80M100 120c10 30 40 40 60 40s50-10 60-40"/></g>`,
+  market: `<path d="M30 70l130-40 130 40z" fill="#1f7a4d"/><rect x="45" y="70" width="230" height="90" fill="#fbf8f3"/><g><circle cx="90" cy="130" r="14" fill="#d9534f"/><circle cx="125" cy="130" r="14" fill="#f0ad4e"/><circle cx="160" cy="130" r="14" fill="#5cb85c"/><circle cx="195" cy="130" r="14" fill="#c2410c"/><circle cx="230" cy="130" r="14" fill="#f5b301"/></g>`,
+  football: `<rect x="0" y="110" width="320" height="70" fill="#4f9d5a"/><path d="M0 130h320" stroke="#e6f3e6" stroke-width="3"/><circle cx="160" cy="88" r="30" fill="#fbf8f3" stroke="#16202a" stroke-width="3"/><path d="M160 70l14 10-5 16h-18l-5-16z" fill="#16202a"/>`,
+  rowing: `<path d="M0 110h320v70H0z" fill="#3f88a5"/><path d="M70 110h180l-14 10H84z" fill="#c2410c"/><g stroke="#16202a" stroke-width="3"><path d="M100 108l-30 40M150 108l-30 40M200 108l-30 40"/></g><g fill="#12344d"><circle cx="100" cy="94" r="8"/><circle cx="150" cy="94" r="8"/><circle cx="200" cy="94" r="8"/></g>`,
+  runner: `<rect x="0" y="140" width="320" height="40" fill="#e0c9a6"/><circle cx="160" cy="46" r="14" fill="#12344d"/><g stroke="#12344d" stroke-width="9" stroke-linecap="round" fill="none"><path d="M160 62l-6 40M154 102l-24 34M154 102l26 30M158 72l-28 16M158 72l30 6"/></g>`,
+  cricket: `<rect x="0" y="120" width="320" height="60" fill="#6fb06b"/><g fill="#e8d8b0"><rect x="140" y="40" width="6" height="80"/><rect x="152" y="40" width="6" height="80"/><rect x="164" y="40" width="6" height="80"/></g><circle cx="230" cy="80" r="12" fill="#b42318"/>`,
+  swim: `<path d="M0 90h320v90H0z" fill="#3f88a5"/><path d="M0 100c40-10 80 10 120 0s80-10 120 0 80 10 80 0" stroke="#d8ecf2" stroke-width="4" fill="none"/><circle cx="150" cy="92" r="10" fill="#f5b301"/><path d="M164 96c20-12 40-12 60 0" stroke="#fbf8f3" stroke-width="6" fill="none" stroke-linecap="round"/>`,
+  netball: `<rect x="0" y="150" width="320" height="30" fill="#9b6b8b"/><path d="M220 150V40" stroke="#16202a" stroke-width="5"/><ellipse cx="200" cy="44" rx="20" ry="6" fill="none" stroke="#c2410c" stroke-width="4"/><circle cx="110" cy="90" r="18" fill="#f5b301"/>`,
+  theatre: `<rect x="40" y="30" width="240" height="130" fill="#6b2d5c"/><path d="M40 30c40 50 60 80 60 130H40zM280 30c-40 50-60 80-60 130h60z" fill="#b2324d"/><circle cx="160" cy="110" r="22" fill="#f5b301" opacity="0.8"/>`,
+  lantern: `<g><circle cx="80" cy="70" r="26" fill="#f5b301"/><circle cx="160" cy="54" r="30" fill="#f08a3c"/><circle cx="240" cy="78" r="24" fill="#f5d061"/></g><g stroke="#fbf8f3" stroke-width="2"><path d="M80 44V20M160 24V0M240 54V30"/></g><rect x="0" y="140" width="320" height="40" fill="#0b2335"/>`,
+  gallery: `<rect x="40" y="40" width="100" height="80" fill="#fbf8f3" stroke="#7a5532" stroke-width="6"/><rect x="180" y="40" width="100" height="80" fill="#fbf8f3" stroke="#7a5532" stroke-width="6"/><g fill="#1d6f8c"><circle cx="70" cy="80" r="10"/><circle cx="95" cy="90" r="8" fill="#7fc3d8"/><circle cx="210" cy="70" r="12" fill="#1f7a4d"/><circle cx="245" cy="92" r="9" fill="#c2410c"/></g><rect x="0" y="150" width="320" height="30" fill="#b9b1a4"/>`,
+  music: `<g fill="#12344d"><circle cx="110" cy="130" r="18"/><circle cx="210" cy="116" r="18"/></g><g stroke="#12344d" stroke-width="8"><path d="M124 130V40l100-16v92"/></g><path d="M124 40l100-16v20l-100 16z" fill="#12344d"/>`,
+  choir: `<g fill="#6b4c9a"><rect x="60" y="80" width="40" height="80" rx="20"/><rect x="140" y="70" width="40" height="90" rx="20"/><rect x="220" y="80" width="40" height="80" rx="20"/></g><g fill="#f3d3b5"><circle cx="80" cy="66" r="16"/><circle cx="160" cy="56" r="16"/><circle cx="240" cy="66" r="16"/></g>`,
+  film: `<rect x="60" y="40" width="200" height="110" rx="6" fill="#fbf8f3"/><g fill="#2a2a3a"><rect x="60" y="40" width="200" height="14"/><rect x="60" y="136" width="200" height="14"/></g><g fill="#fbf8f3"><rect x="70" y="44" width="10" height="6"/><rect x="100" y="44" width="10" height="6"/><rect x="130" y="44" width="10" height="6"/><rect x="160" y="44" width="10" height="6"/><rect x="190" y="44" width="10" height="6"/><rect x="220" y="44" width="10" height="6"/></g><path d="M140 76l40 20-40 20z" fill="#c2410c"/>`,
+};
+const background = sky[name] ?? "#d8ecf2";
+const body = art[name] ?? art.harbour;
+---
+
+<svg viewBox="0 0 320 180" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
+  <rect width="320" height="180" fill={background}></rect>
+  <Fragment set:html={body} />
+</svg>

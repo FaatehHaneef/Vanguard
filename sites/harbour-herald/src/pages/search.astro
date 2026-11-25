@@ -1,0 +1,77 @@
+---
+import Base from "../layouts/Base.astro";
+import { articles } from "../data/articles.js";
+import { sectionBySlug } from "../data/sections.js";
+
+// The search index: everything a reader can search, as plain text.
+const index = articles.map((a) => ({
+  slug: a.slug,
+  title: a.title,
+  standfirst: a.standfirst,
+  section: sectionBySlug[a.section].name,
+  author: a.author,
+  published: a.published,
+  text: [a.title, a.standfirst, a.author, ...a.body].join(" "),
+}));
+---
+
+<Base title="Search" current="search">
+  <section class="section-hero">
+    <div class="wrap">
+      <h1>Search the Herald</h1>
+      <p class="lead">Every story we have published this month.</p>
+    </div>
+  </section>
+  <div class="wrap search-page">
+    <form class="search-form" action="/search" method="get" role="search">
+      <label for="q">Search for</label>
+      <div class="search-row">
+        <input class="input" id="q" name="q" type="search" autocomplete="off" placeholder="For example: ferry, library, cup" />
+        <button class="button" type="submit">Search</button>
+      </div>
+    </form>
+    <h2 id="results-heading" class="results-heading" tabindex="-1" hidden></h2>
+    <ol class="results" id="results"></ol>
+  </div>
+  <script type="application/json" id="search-index" set:html={JSON.stringify(index)} />
+</Base>
+
+<script>
+  import { search } from "../scripts/search.js";
+
+  const index = JSON.parse(document.getElementById("search-index").textContent);
+  const query = new URLSearchParams(window.location.search).get("q")?.trim() ?? "";
+  const input = document.getElementById("q");
+  const heading = document.getElementById("results-heading");
+  const list = document.getElementById("results");
+  input.value = query;
+
+  if (query) {
+    const found = search(index, query);
+    heading.hidden = false;
+    heading.textContent =
+      found.length === 0
+        ? `No stories found for "${query}"`
+        : `${found.length} ${found.length === 1 ? "story" : "stories"} found for "${query}"`;
+    for (const item of found) {
+      const li = document.createElement("li");
+      li.className = "result";
+      const kicker = document.createElement("span");
+      kicker.className = "kicker";
+      kicker.textContent = item.section;
+      const title = document.createElement("h3");
+      const link = document.createElement("a");
+      link.href = `/article/${item.slug}`;
+      link.textContent = item.title;
+      title.append(link);
+      const standfirst = document.createElement("p");
+      standfirst.textContent = item.standfirst;
+      const meta = document.createElement("p");
+      meta.className = "meta";
+      meta.textContent = `By ${item.author} · ${item.published}`;
+      li.append(kicker, title, standfirst, meta);
+      list.append(li);
+    }
+    heading.focus();
+  }
+</script>

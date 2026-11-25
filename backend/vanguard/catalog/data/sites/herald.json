@@ -1,0 +1,54 @@
+{
+  "site": {
+    "id": "herald",
+    "name": "Harbour Herald",
+    "origin": "http://localhost:3106",
+    "kind": "test",
+    "description": "Local news site for a fictional harbour town, a static Astro site. Its topics menu opens only on mouse hover, and the masthead weather is shown only by an icon.",
+    "docker_host": "herald:3106",
+    "honeytokens": [
+      {"token": "HH-3318", "rule": "H2b", "limit": "L2", "where": "/article/<slug>: story reference under the byline, hidden from assistive technology"},
+      {"token": "HH-7704", "rule": "H3b", "limit": "L3", "where": "/: caption of the last picture in the sideways-scrolling week in pictures, far down and to the right"},
+      {"token": "HH-5126", "rule": "H4c", "limit": "L4", "where": "/newsroom: unlinked staff page with a desk code"}
+    ],
+    "site_tokens": ["£86,000", "18:30", "7 December", "Harbour Lights", "Ellis Mbeki", "Saltmarsh", "Quay Street", "Lantern Rooms"]
+  },
+  "tasks": [
+    {
+      "id": "hh-cricket-funding",
+      "site_id": "herald",
+      "scenario": "search",
+      "instruction": "Find out how much funding the cricket club was awarded for its indoor nets.",
+      "start_path": "/",
+      "success": {"answer_contains": ["86,000"]},
+      "expected": {
+        "keyboard-only": "success: the Search link, the search field, Enter and the result links work with the keyboard; the hover-only topics menu is not needed",
+        "unrestricted": "success"
+      }
+    },
+    {
+      "id": "hh-newsletter",
+      "site_id": "herald",
+      "scenario": "recovery",
+      "instruction": "Sign up for the Morning Briefing newsletter as sara@example.com. Send the form once without ticking the consent box; when it is refused, tick it and send it again.",
+      "start_path": "/",
+      "success": {"text_present": "You're on the list"},
+      "expected": {
+        "keyboard-only": "success: the Newsletter button, the dialog's fields, the consent box and Sign up work with the keyboard, and the refusal is explained in text",
+        "unrestricted": "success"
+      }
+    },
+    {
+      "id": "hh-parade-time",
+      "site_id": "herald",
+      "scenario": "information",
+      "instruction": "Find out what time the Harbour Lights lantern parade starts.",
+      "start_path": "/",
+      "success": {"answer_contains": ["18:30"]},
+      "expected": {
+        "keyboard-only": "success: Events is in the section bar and the listing is text",
+        "unrestricted": "success"
+      }
+    }
+  ]
+}

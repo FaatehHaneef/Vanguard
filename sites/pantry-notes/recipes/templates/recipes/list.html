@@ -1,0 +1,66 @@
+{% extends "recipes/base.html" %}
+{% block title %}Shopping list{% endblock %}
+{% block content %}
+<section class="page-head">
+  <div class="wrap">
+    <span class="eyebrow">Shopping list</span>
+    <h1>{% if entries %}Shopping list for {{ entries|length }} recipe{{ entries|length|pluralize }}{% else %}Your shopping list is empty{% endif %}</h1>
+    <p class="lead">Ingredients are listed for the number of servings you chose. The list is kept in this browser until you clear it.</p>
+  </div>
+</section>
+
+<div class="wrap shopping">
+  {% if entries %}
+  <ul class="list-entries">
+    {% for entry in entries %}
+    <li class="list-entry">
+      <div class="list-entry-head">
+        <div>
+          <h2><a href="{% url 'recipe' entry.recipe.slug %}?servings={{ entry.servings }}">{{ entry.recipe.title }}</a></h2>
+          <p class="muted">{{ entry.servings }} servings</p>
+        </div>
+        <form method="post" action="{% url 'list_remove' entry.recipe.slug %}">
+          {% csrf_token %}
+          <button class="button ghost small" type="submit">Remove {{ entry.recipe.title }}</button>
+        </form>
+      </div>
+      <ul class="checklist">
+        {% for line in entry.lines %}
+        <li><label><input type="checkbox"> <span>{{ line }}</span></label></li>
+        {% endfor %}
+      </ul>
+    </li>
+    {% endfor %}
+  </ul>
+  <div class="list-actions">
+    <button class="button ghost" type="button" data-open-clear>Clear the whole list</button>
+    <a class="button" href="{% url 'recipes' %}">Add more recipes</a>
+  </div>
+
+  <dialog class="modal" id="clear-dialog" aria-labelledby="clear-title">
+    <h2 id="clear-title">Clear your shopping list?</h2>
+    <p>This removes all {{ entries|length }} recipe{{ entries|length|pluralize }} from the list. You cannot undo it.</p>
+    <form method="post" action="{% url 'list_clear' %}" class="modal-actions">
+      {% csrf_token %}
+      <button class="button" type="submit">Yes, clear the list</button>
+      <button class="button ghost" type="button" data-close-clear>Keep my list</button>
+    </form>
+  </dialog>
+  {% else %}
+  <div class="empty">
+    <p>Open any recipe and choose <strong>Add ingredients to shopping list</strong>. Its ingredients will appear here, scaled to your servings.</p>
+    <a class="button" href="{% url 'recipes' %}">Browse recipes</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+  (function () {
+    var dialog = document.getElementById("clear-dialog");
+    if (!dialog) return;
+    document.querySelector("[data-open-clear]").addEventListener("click", function () { dialog.showModal(); });
+    dialog.querySelector("[data-close-clear]").addEventListener("click", function () { dialog.close(); });
+  })();
+</script>
+{% endblock %}

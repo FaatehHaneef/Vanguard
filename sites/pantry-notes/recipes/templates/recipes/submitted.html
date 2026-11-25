@@ -1,0 +1,19 @@
+{% extends "recipes/base.html" %}
+{% block title %}Recipe received{% endblock %}
+{% block content %}
+<div class="wrap form-page">
+  <div class="alert success received">
+    <h1>Thank you, we have your recipe</h1>
+    <p>Submission number <strong>{{ number }}</strong></p>
+  </div>
+  <p>We have received <strong>{{ submission.title }}</strong> ({{ submission.cuisine }}, {{ submission.minutes }} minutes, serves {{ submission.serves }}) from {{ submission.name }}.</p>
+  <h2>What you sent</h2>
+  <ul>
+    {% for line in submission.ingredients %}<li>{{ line }}</li>{% endfor %}
+  </ul>
+  <p>{{ submission.method }}</p>
+  <h2>What happens next</h2>
+  <p>We cook every recipe we receive. If it is chosen, we will email {{ submission.email }} before it is published.</p>
+  <p><a href="{% url 'recipes' %}">Back to the recipes</a></p>
+</div>
+{% endblock %}

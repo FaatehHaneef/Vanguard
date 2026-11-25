@@ -1,0 +1,28 @@
+---
+import Base from "../../layouts/Base.astro";
+import StoryCard from "../../components/StoryCard.astro";
+import { inSection } from "../../data/articles.js";
+import { sections } from "../../data/sections.js";
+
+export function getStaticPaths() {
+  return sections.map((section) => ({ params: { slug: section.slug }, props: { section } }));
+}
+const { section } = Astro.props;
+const stories = inSection(section.slug);
+---
+
+<Base title={section.name} current={section.slug} description={section.blurb}>
+  <section class="section-hero">
+    <div class="wrap">
+      <span class="kicker">Section</span>
+      <h1>{section.name}</h1>
+      <p class="lead">{section.blurb}</p>
+    </div>
+  </section>
+  <div class="wrap">
+    <p class="meta">{stories.length} stories</p>
+    <ul class="grid">
+      {stories.map((article) => <StoryCard article={article} showSection={false} />)}
+    </ul>
+  </div>
+</Base>

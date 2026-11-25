@@ -1,0 +1,19 @@
+<li class="card">
+  <div class="card-art">{{ recipe.art_svg }}</div>
+  <form class="quick-save" method="post" action="{% url 'list_add' recipe.slug %}">
+    {% csrf_token %}
+    <input type="hidden" name="servings" value="{{ recipe.serves }}">
+    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+    <button class="save-button" type="submit"><svg viewBox="0 0 24 24" width="22" height="22" focusable="false"><path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.5-7 10-7 10z" fill="currentColor"/></svg></button>
+  </form>
+  <div class="card-body">
+    <span class="eyebrow">{{ recipe.cuisine }}</span>
+    <h3><a href="{% url 'recipe' recipe.slug %}">{{ recipe.title }}</a></h3>
+    <p class="card-summary">{{ recipe.summary }}</p>
+    <ul class="tags">
+      <li class="tag">{{ recipe.minutes }} min</li>
+      <li class="tag">Serves {{ recipe.serves }}</li>
+      {% for diet in recipe.diets %}<li class="tag diet">{{ diet|capfirst }}</li>{% endfor %}
+    </ul>
+  </div>
+</li>

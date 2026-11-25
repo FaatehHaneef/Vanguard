@@ -1,0 +1,46 @@
+---
+import Base from "../layouts/Base.astro";
+import { events } from "../data/events.js";
+
+// Group the listing by date, keeping the order of the list.
+const days: { date: string; items: typeof events }[] = [];
+for (const event of events) {
+  const last = days[days.length - 1];
+  if (last && last.date === event.date) last.items.push(event);
+  else days.push({ date: event.date, items: [event] });
+}
+---
+
+<Base title="Events" current="events" description="What's on in Harbour Town over the coming weeks.">
+  <section class="section-hero">
+    <div class="wrap">
+      <span class="kicker">What's on</span>
+      <h1>Events in Harbour Town</h1>
+      <p class="lead">Concerts, markets, sport and community meetings from now until the New Year.</p>
+    </div>
+  </section>
+  <div class="wrap events">
+    {
+      days.map((day) => (
+        <section class="event-day" aria-label={day.date}>
+          <h2 class="event-date">{day.date}</h2>
+          <ul class="event-list">
+            {day.items.map((event) => (
+              <li class="event">
+                <p class="event-time">{event.time}</p>
+                <div>
+                  <h3>{event.title}</h3>
+                  <p class="meta">
+                    {event.place} · {event.price}
+                  </p>
+                </div>
+                <span class="event-kind">{event.kind}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))
+    }
+    <p class="meta">Times are start times. Send listings to events@harbourherald.example by the Wednesday before.</p>
+  </div>
+</Base>
