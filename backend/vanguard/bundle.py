@@ -52,13 +52,20 @@ def export_bundle(
     name: str,
     count: int = 60,
     no_shots: frozenset[str] = frozenset(),
+    hard: frozenset[tuple[str, int]] = frozenset(),
+    hard_share: float = 0.0,
 ) -> dict:
     """Sample `count` steps from runs of full (evaluated) personas.
 
     Runs that stopped early (for example on model quota) are included: each recorded
     step is still a complete, executed proposal, which is what a label judges.
     Batches in `no_shots` are exported without screenshots (for example runs recorded
-    with the character overlay on, whose focus ring would bias labellers)."""
+    with the character overlay on, whose focus ring would bias labellers).
+
+    `hard` holds (run id, step) keys of harder steps, those the gate or verifier refused or
+    the checker flagged; up to `hard_share` of the items come from them and the rest from
+    all steps. Both draws use the fixed seed, and the items are shuffled together, so a
+    labeller cannot tell which kind an item is."""
     keys = []
     summaries = {}
     for batch_id in batches:
@@ -70,8 +77,13 @@ def export_bundle(
             summaries[run.id] = run
             keys.extend((run.id, index) for index in range(run.steps))
     keys.sort()
-    random.Random(SAMPLE_SEED).shuffle(keys)
-    chosen = keys[:count]
+    rng = random.Random(SAMPLE_SEED)
+    rng.shuffle(keys)
+    pool = [key for key in keys if key in hard]
+    chosen = pool[: int(count * hard_share)]
+    taken = set(chosen)
+    chosen += [key for key in keys if key not in taken][: count - len(chosen)]
+    rng.shuffle(chosen)
 
     out.mkdir(parents=True, exist_ok=True)
     shots = out / "shots"

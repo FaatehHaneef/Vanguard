@@ -128,11 +128,26 @@ async def _batch(args: argparse.Namespace) -> int:
     return 0 if final.remaining == 0 else 1
 
 
+def _hard_steps(store, batches: list[str], settings) -> frozenset[tuple[str, int]]:
+    """Steps the gate or verifier refused, or the checker flagged (attempted or executed)."""
+    found = set()
+    for batch_id in batches:
+        for run in store.list_runs(batch_id, limit=100_000):
+            steps = store.steps(run.id)
+            if not steps:
+                continue
+            leakage, _ = results.score(run, steps, settings)
+            found |= {(run.id, v.index) for v in leakage.steps if v.attempted}
+            found |= {(run.id, s.index) for s in steps if s.proposed and not s.gate.allowed}
+    return frozenset(found)
+
+
 def _labelling(args: argparse.Namespace) -> int:
     settings = get_settings()
     store = deps.open_store(settings)
     data = REPO_ROOT / "data"
     if args.action == "export":
+        hard = _hard_steps(store, args.batches, settings) if args.hard else frozenset()
         result = bundle.export_bundle(
             store,
             args.batches,
@@ -140,6 +155,8 @@ def _labelling(args: argparse.Namespace) -> int:
             args.name,
             args.count,
             frozenset(args.no_shots),
+            hard=hard,
+            hard_share=args.hard,
         )
         print(f"bundle {result['name']}: {result['items']} steps from {result['runs']} runs")
     elif args.action == "import":
@@ -221,6 +238,12 @@ def main(argv: list[str] | None = None) -> int:
     exp.add_argument("--count", type=int, default=60)
     exp.add_argument(
         "--no-shots", nargs="*", default=[], help="batches to export without screenshots"
+    )
+    exp.add_argument(
+        "--hard",
+        type=float,
+        default=0.0,
+        help="share of items drawn from refused or flagged steps (0 to 1)",
     )
     imp = lab_sub.add_parser("import", help="load a labelling bundle into the local store")
     imp.add_argument("folder", type=Path)

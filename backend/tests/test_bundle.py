@@ -76,3 +76,18 @@ def test_cli_dispatches_labelling(monkeypatch):
     monkeypatch.setattr(cli, "_labelling", fake)
     assert cli.main(["labelling", "export-labels", "--labeller", "x"]) == 0
     assert seen == ["export-labels"]
+
+
+def test_a_share_of_the_bundle_comes_from_hard_steps(tmp_path):
+    source = make_store(tmp_path / "source.db")
+    summary = run(source, "keyboard-only", [EnforcementOption.GATE], [click, *KEYS])
+    from vanguard.store import RunRow
+
+    with source._session() as session, session.begin():
+        session.get(RunRow, summary.id).batch_id = "b2"
+    hard = frozenset({(summary.id, 0)})  # the refused click
+    out = tmp_path / "bundle"
+    bundle.export_bundle(source, ["b2"], out, "b2", count=3, hard=hard, hard_share=0.5)
+    items = json.loads((out / bundle.BUNDLE_FILE).read_text("utf-8"))["items"]
+    assert len(items) == 3
+    assert (summary.id, 0) in {(item["run_id"], item["index"]) for item in items}
