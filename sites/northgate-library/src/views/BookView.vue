@@ -2,6 +2,7 @@
 import { computed, watchEffect } from 'vue'
 import { useRoute } from 'vue-router'
 import { findBook } from '../data/books.js'
+import { coverColour } from '../covers.js'
 
 const route = useRoute()
 const book = computed(() => findBook(route.params.id))
@@ -15,6 +16,7 @@ watchEffect(() => {
   <div v-if="book" class="book-page">
     <div class="book-main">
       <p class="crumbs"><RouterLink to="/search">Back to search</RouterLink></p>
+      <span class="cover large" :style="{ '--cover': coverColour(book) }" aria-hidden="true"></span>
       <h1 tabindex="-1">{{ book.title }}</h1>
       <p class="byline">{{ book.author }}, {{ book.year }}</p>
       <p class="about">{{ book.about }}</p>

@@ -1,8 +1,11 @@
 {% extends "base.html" %}
 {% block title %}Community notices{% endblock %}
 {% block content %}
-<h1>Community notices</h1>
-<p class="lead">Notices posted by residents, clubs and local groups. The council does not check or endorse them.</p>
+<div class="page-head">
+  <span class="eyebrow">Around the borough</span>
+  <h1>Community notices</h1>
+  <p class="lead">Notices posted by residents, clubs and local groups. The council does not check or endorse them.</p>
+</div>
 <ol class="notices">
   {% for notice in notices %}
   <li class="notice" id="notice-{{ notice.id }}">

@@ -44,7 +44,7 @@ async function reserve() {
       the welcome desk on Floor 1.
     </p>
 
-    <form class="reserve-form" novalidate @submit.prevent="reserve">
+    <form class="reserve-form form-card" novalidate @submit.prevent="reserve">
       <label for="card">Library card number</label>
       <p id="card-hint" class="hint">8 digits, printed on the back of your card.</p>
       <input

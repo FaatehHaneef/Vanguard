@@ -2,6 +2,7 @@
 import { computed, nextTick, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { books } from '../data/books.js'
+import { coverColour } from '../covers.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -56,8 +57,9 @@ watch(query, async (now) => {
 </script>
 
 <template>
+  <span class="eyebrow">27 books on three floors</span>
   <h1 tabindex="-1">Search the catalogue</h1>
-  <form class="search-form" role="search" @submit.prevent="search">
+  <form class="search-form form-card" role="search" @submit.prevent="search">
     <label for="q">Title or author</label>
     <div class="search-row">
       <input id="q" v-model="typed" type="search" name="q" autocomplete="off" />
@@ -97,8 +99,11 @@ watch(query, async (now) => {
     </template>
     <ul v-if="shown.length" class="results">
       <li v-for="book in shown" :key="book.id">
-        <RouterLink :to="`/book/${book.id}`">{{ book.title }}</RouterLink>
-        <span class="byline">{{ book.author }}, {{ book.year }}</span>
+        <span class="cover" :style="{ '--cover': coverColour(book) }" aria-hidden="true"></span>
+        <span>
+          <RouterLink :to="`/book/${book.id}`">{{ book.title }}</RouterLink>
+          <span class="byline">{{ book.author }}, {{ book.year }}</span>
+        </span>
       </li>
     </ul>
     <p v-else-if="results.length">No books match these filters.</p>

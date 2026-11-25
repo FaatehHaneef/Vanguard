@@ -1,10 +1,13 @@
 {% extends "base.html" %}
 {% block title %}{% if error %}Error: {% endif %}Bin collections{% endblock %}
 {% block content %}
-<h1>Bin collections</h1>
-<p class="lead">General waste (black bin) and recycling (blue bin) are collected on the same day of the week, on alternate weeks.</p>
+<div class="page-head">
+  <span class="eyebrow">Waste and recycling</span>
+  <h1>Bin collections</h1>
+  <p class="lead">General waste (black bin) and recycling (blue bin) are collected on the same day of the week, on alternate weeks.</p>
+</div>
 
-<form class="form" method="get" action="/bins" role="search">
+<form class="form form-card" method="get" action="/bins" role="search">
   <div class="field">
     <label for="postcode">Your postcode</label>
     <span class="hint" id="postcode-hint">For example, RV2 3QR</span>
@@ -34,16 +37,30 @@
 {% endif %}
 
 <h2>What goes in each bin</h2>
-<div class="table-wrap">
-<table>
-  <caption>Bins and what they take</caption>
-  <thead><tr><th scope="col">Bin</th><th scope="col">Put in</th><th scope="col">Keep out</th></tr></thead>
-  <tbody>
-    <tr><td>Black bin</td><td>Food-soiled packaging, nappies, plastic film</td><td>Batteries, garden waste, hot ashes</td></tr>
-    <tr><td>Blue bin</td><td>Paper, card, cans, glass bottles and jars, plastic bottles</td><td>Plastic bags, food waste, textiles</td></tr>
-    <tr><td>Brown bin (garden waste, by subscription)</td><td>Grass, leaves, hedge cuttings</td><td>Soil, rubble, treated wood</td></tr>
-  </tbody>
-</table>
+{% set bin_types = [
+  ('black', 'Black bin', '#2b3436', 'Food-soiled packaging, nappies, plastic film', 'Batteries, garden waste, hot ashes'),
+  ('blue', 'Blue bin', '#1f6fb2', 'Paper, card, cans, glass bottles and jars, plastic bottles', 'Plastic bags, food waste, textiles'),
+  ('brown', 'Brown bin (garden waste, by subscription)', '#7a5230', 'Grass, leaves, hedge cuttings', 'Soil, rubble, treated wood'),
+] %}
+<div class="tabs" data-tabs>
+  <div class="tab-list" role="tablist" aria-label="Bins">
+    {% for key, label, colour, put_in, keep_out in bin_types %}
+    <button type="button" role="tab" id="tab-{{ key }}" aria-controls="panel-{{ key }}"
+            aria-selected="{{ 'true' if loop.first else 'false' }}" tabindex="{{ 0 if loop.first else -1 }}">{{ label.split(' (')[0] }}</button>
+    {% endfor %}
+  </div>
+  {% for key, label, colour, put_in, keep_out in bin_types %}
+  <div class="tab-panel" role="tabpanel" id="panel-{{ key }}" aria-labelledby="tab-{{ key }}" tabindex="0"{% if not loop.first %} hidden{% endif %}>
+    <svg class="bin-art" viewBox="0 0 64 80" aria-hidden="true" focusable="false">
+      <rect x="8" y="14" width="48" height="62" rx="6" fill="{{ colour }}"/>
+      <rect x="4" y="8" width="56" height="10" rx="4" fill="{{ colour }}" opacity="0.8"/>
+      <circle cx="16" cy="76" r="4" fill="#15262b"/><circle cx="48" cy="76" r="4" fill="#15262b"/>
+      <path d="M20 30v36M32 30v36M44 30v36" stroke="#fff" stroke-width="3" opacity="0.35" stroke-linecap="round"/>
+    </svg>
+    <div><h3>{{ label }}: put in</h3><p>{{ put_in }}</p></div>
+    <div><h3>Keep out</h3><p>{{ keep_out }}</p></div>
+  </div>
+  {% endfor %}
 </div>
 
 <h2>Areas we collect from</h2>
@@ -52,4 +69,24 @@
   {% for area in areas %}<li>{{ area }}</li>{% endfor %}
 </ul>
 <p>If your bin was missed, leave it out and tell us by 12:00 the next working day by calling 0300 555 0140.</p>
+
+<h2>Common questions</h2>
+<div class="accordion">
+  <details>
+    <summary>Can I get an extra recycling bin?</summary>
+    <div class="answer"><p>Yes. Households of five or more people can ask for a second blue bin at no charge. Call 0300 555 0140 and we will deliver it within ten working days.</p></div>
+  </details>
+  <details>
+    <summary>How do I subscribe to garden waste collections?</summary>
+    <div class="answer"><p>The garden waste service costs £48 a year and runs from March to November, with brown bins collected every other week. Subscriptions for 2027 open on 1 February 2027.</p></div>
+  </details>
+  <details>
+    <summary>What do I do with large items such as a sofa?</summary>
+    <div class="answer"><p>We collect up to three large items for £35. Book by phone, and leave the items outside your home by 7:00 on the day we give you.</p></div>
+  </details>
+  <details>
+    <summary>My bin is damaged. Will you replace it?</summary>
+    <div class="answer"><p>If your bin was damaged by our crew, we replace it free of charge. Otherwise a new black or blue bin costs £25, delivered.</p></div>
+  </details>
+</div>
 {% endblock %}

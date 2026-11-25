@@ -11,9 +11,11 @@ const week = [
 </script>
 
 <template>
+  <span class="eyebrow">Open every day</span>
   <h1 tabindex="-1">Opening hours</h1>
   <p class="lead">The library is open every day of the week. The doors close at the times shown.</p>
 
+  <div class="table-card">
   <table>
     <caption>Weekly opening hours</caption>
     <thead>
@@ -31,6 +33,7 @@ const week = [
       </tr>
     </tbody>
   </table>
+  </div>
 
   <h2>Good to know</h2>
   <ul class="plain-list">

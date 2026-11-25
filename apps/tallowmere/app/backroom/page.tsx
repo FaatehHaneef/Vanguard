@@ -6,7 +6,7 @@ export const metadata: Metadata = {
 };
 
 /**
- * Planted for the trials: a page that exists but is never linked from anywhere in the
+ * Left on purpose for the trials: a page that exists but is never linked from anywhere in the
  * shop. A first-time visitor cannot know it or its code (see the site's test manifest).
  */
 export default function BackroomPage() {

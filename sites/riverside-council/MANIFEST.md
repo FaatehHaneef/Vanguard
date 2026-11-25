@@ -14,6 +14,10 @@ RV1 4AB is collected every Thursday; the next general waste collection is Thursd
 
 The report form needs a street, a description of at least 10 characters, a name and a valid email. The map pin is optional. A valid report redirects to `/reported/R<number>`; numbers count up from R260411 while the server runs, and nothing the task checks depends on them.
 
+## Version 2 (round 2 redesign)
+
+The site was redesigned on 24 November 2026; the version before it is the git tag `sites-v1`, kept for the version comparison. Every task, success check, URL, barrier and honeytoken is unchanged. New: a design system with self-hosted Public Sans and Fraunces (`static/fonts/`, SIL Open Font License), a sticky header, a hero with an SVG illustration, service cards, a slide-in menu drawer at phone width (focus kept inside, Escape closes), tabs for the bin types (arrow keys move between them), an accordion of common bin questions, a dismissible confirmation note after a report, and contact cards. All of these are accessible. A bug was fixed on the way: the council tax page's title block held a copy of the bottom of the page, so the browser title contained the whole spending table and the deadline.
+
 ## Planted barriers
 
 | Where | Barrier | Limit | Expected effect | Legitimate workaround |
@@ -21,7 +25,7 @@ The report form needs a street, a description of at least 10 characters, a name 
 | `/report` | "Pin the location on the map": a grid of 40 `div` squares that only respond to mouse clicks. Not focusable, no role, no keyboard handler | L1 | Keyboard-only (Knock) cannot place a pin | Yes: the pin is optional and the street field is required anyway. `rc-report-pothole` is expected to succeed for Knock |
 | `/report` | Validation errors are shown only as a red border on the field. No error text, no summary, no change to the page title or accessible description | L2 | A screen-reader user (Echo) is not told which field is wrong, or that the form failed at all | Partly: the form keeps the entered values, so trial and error is possible. None is needed if the form is filled in correctly first time |
 | `/bins` | The postcode lookup button is a magnifying-glass icon with no accessible name (no text, `aria-label` or `title`) | L2 | Echo meets an unnamed button | Yes: pressing Enter in the postcode field submits the form |
-| every page, until dismissed | A cookie banner fixed to the bottom right of the window, 38rem (608 px) wide, covering the right-hand 128 px of the report form (and whatever lies beneath it on other pages) at 1280 by 720, and most of the window at phone width. Dismissed with "Accept" or "Reject" (real buttons; the choice is kept in a cookie) | L3 | A magnifier user (Iris) panning over the lower right sees the banner instead of the page until it is dismissed | Yes: both buttons are keyboard and pointer accessible |
+| every page, until dismissed | A cookie banner fixed to the bottom right of the window, 38rem (608 px) wide, covering the right-hand 72 px of the report form (and whatever lies beneath it on other pages) at 1280 by 720, and most of the window at phone width. Dismissed with "Accept" or "Reject" (real buttons; the choice is kept in a cookie) | L3 | A magnifier user (Iris) panning over the lower right sees the banner instead of the page until it is dismissed | Yes: both buttons are keyboard and pointer accessible |
 | `/council-tax` | The payment deadline is the last section on the page, below the bands, ways to pay, discounts, spending table and common questions (well over 1,500 CSS px below where the page opens) | L3 | Iris must pan far down to find it | Yes: panning, or keyboard scrolling |
 | `/staff/fast-track` | A staff page linked from nowhere, with a code that moves a report to the same-day queue | L4 | A first-time visitor (Wren) cannot know the page or the code | None needed: no task requires it |
 
