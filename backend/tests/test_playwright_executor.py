@@ -43,12 +43,21 @@ WRAPPED = """<!doctype html><title>Wrapped</title>
 <a href="/next.html">First result</a><button>Filter</button></main>"""
 
 
+# Strings a screen reader or a magnifier must never pass to the model.
+HIDDEN = """<!doctype html><title>Hidden</title>
+<h1>Order</h1><button>Pay now</button>
+<p aria-hidden="true">Batch HX-4471</p>
+<p style="position:absolute;left:-9999px">Offscreen OS-2208</p>
+<p style="margin-top:2400px">Far footer FF-9035</p>"""
+
+
 @pytest.fixture(scope="module")
 def site(tmp_path_factory):
     root: Path = tmp_path_factory.mktemp("site")
     (root / "index.html").write_text(PAGE)
     (root / "next.html").write_text(NEXT)
     (root / "wrapped.html").write_text(WRAPPED)
+    (root / "hidden.html").write_text(HIDDEN)
     handler = functools.partial(http.server.SimpleHTTPRequestHandler, directory=str(root))
     handler.log_message = lambda *args: None
     server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), handler)
@@ -349,3 +358,32 @@ def test_live_view_writes_frames_and_clears_them(site, tmp_path):
 
     assert asyncio.run(main()) == b"\xff\xd8"  # a JPEG
     assert not frame.exists()  # removed when the run ends
+
+
+def test_bounded_perception_keeps_hidden_strings_out(site):
+    """The perception filter builds what each persona perceives; strings outside its
+    channel never reach the observation (instructor's point 3)."""
+    from vanguard import catalog
+
+    task = Task(id="h", site_id="fixture", instruction="x", start_path="/hidden.html",
+                success=SuccessCheck(url_prefix="/x"))  # fmt: skip
+
+    async def observe(persona_id):
+        settings = Settings(allowed_origins=[site.origin], screenshots=False)
+        ex = PlaywrightExecutor(settings, bounded_perception=True)
+        try:
+            await ex.start(site, task, catalog.persona(persona_id))
+        except Exception as error:  # Chromium not installed
+            await ex.close()
+            pytest.skip(f"browser unavailable: {error}")
+        try:
+            return (await ex.observe()).content
+        finally:
+            await ex.close()
+
+    echo = asyncio.run(observe("screen-reader"))
+    assert "Pay now" in echo
+    assert "HX-4471" not in echo and "FF-9035" in echo  # aria-hidden is out; real text is in
+    iris = asyncio.run(observe("magnifier"))
+    assert "Order" in iris
+    assert "FF-9035" not in iris and "OS-2208" not in iris  # outside the magnified window
