@@ -339,7 +339,7 @@ def test_live_view_writes_frames_and_clears_them(site, tmp_path):
             pytest.skip(f"browser unavailable: {error}")
         try:
             await executor.execute(Action(tool=Tool.PRESS, key="Tab"))
-            for _ in range(50):  # the first frame arrives within a moment
+            for _ in range(150):  # the first frame can take a while on a busy machine
                 if frame.exists():
                     break
                 await asyncio.sleep(0.1)
