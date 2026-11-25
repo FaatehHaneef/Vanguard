@@ -24,6 +24,7 @@ MODULES: list[str] = [
     "vanguard.evaluation.tasks",
     "vanguard.evaluation.realism",
     "vanguard.evaluation.diversity",
+    "vanguard.evaluation.verifier",
 ]
 
 
