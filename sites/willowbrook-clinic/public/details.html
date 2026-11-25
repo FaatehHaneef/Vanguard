@@ -7,20 +7,24 @@
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
+    <a class="skip-link" href="#main">Skip to main content</a>
     <header class="site">
       <div class="bar">
-        <a class="brand" href="/">Willowbrook Family Clinic</a>
-        <nav aria-label="Main">
-          <a href="/">Home</a>
-          <a href="/book.html">Book an appointment</a>
-          <a href="/callback.html">Request a callback</a>
-        </nav>
+        <a class="brand" href="/"><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true" focusable="false"><rect width="32" height="32" rx="9" fill="#fff"/><path d="M16 6c-5 0-8 4-8 8 0 3 2 5 4 6l-1 6h10l-1-6c2-1 4-3 4-6 0-4-3-8-8-8z" fill="#2f6b4f"/><path d="M14 13h4M16 11v4" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>Willowbrook Family Clinic</a>
+        <nav class="main-nav" aria-label="Main"><a href="/">Home</a><a href="/book.html" aria-current="page">Book an appointment</a><a href="/callback.html">Request a callback</a></nav>
+        <button class="menu-button" type="button" aria-expanded="false" aria-controls="drawer">Menu</button>
       </div>
     </header>
+    <div class="drawer-backdrop" hidden></div>
+    <div class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-heading" hidden>
+      <div class="drawer-head"><h2 id="drawer-heading">Menu</h2><button class="button secondary drawer-close" type="button">Close</button></div>
+      <nav aria-label="Main (menu)"><ul><li><a href="/">Home</a></li><li><a href="/book.html">Book an appointment</a></li><li><a href="/callback.html">Request a callback</a></li></ul></nav>
+    </div>
     <main id="main">
+      <ol class="stepper" aria-label="Booking steps"><li class="done"><span>1</span>Choose a time</li><li aria-current="step"><span>2</span>Your details</li><li><span>3</span>Booked</li></ol>
       <h1>Your details</h1>
       <p id="summary"></p>
-      <form id="details">
+      <form id="details" class="form-card">
         <label for="name">Full name</label>
         <input id="name" name="name" autocomplete="name" required />
         <label for="phone">Phone number</label>
@@ -29,6 +33,9 @@
       </form>
       <p><a href="/book.html">Choose a different time</a></p>
     </main>
+    <footer class="small">
+      <p>Willowbrook Family Clinic, 12 Willow Road · This is a demonstration website. It does not book real appointments.</p>
+    </footer>
     <script>
       const booking = JSON.parse(sessionStorage.getItem("willowbrook.booking") || "null");
       const summary = document.getElementById("summary");
@@ -46,5 +53,6 @@
         location.href = `/confirmed.html?ref=${ref}`;
       });
     </script>
+    <script src="/site.js"></script>
   </body>
 </html>
