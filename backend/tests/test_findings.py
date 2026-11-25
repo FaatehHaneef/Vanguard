@@ -172,3 +172,15 @@ def test_findings_endpoints(client):
     assert client.get("/findings", params={"batches": ["f1"]}).json()["runs"] == 1
     assert client.get("/findings", params={"batches": ["nope"]}).status_code == 404
     assert client.get("/runs/nope/findings").status_code == 404
+
+
+def test_the_restriction_when_the_same_persona_succeeds_without_enforcement():
+    from vanguard.contracts import EnforcementOption
+
+    enforced = run("wb-callback", "keyboard-only", RunOutcome.GAVE_UP)
+    enforced.config.enforcement = [EnforcementOption.GATE]
+    twins = [run("wb-callback", "keyboard-only", RunOutcome.SUCCESS, f"t{i}") for i in range(3)]
+    result = findings.attribute(enforced, [step(0, TAB)], NO_LEAKS, failure("gave_up"),
+                                controls("wb-callback", 3, 0), twins)  # fmt: skip
+    assert result.attribution is Attribution.RESTRICTION
+    assert "only described (100% of 3 runs)" in result.reason

@@ -1,7 +1,7 @@
 import type { Attribution, FindingKind, FindingsReport } from "@/lib/api";
 
 const KIND: Record<FindingKind, string> = {
-  inaccessible_control: "Inaccessible control",
+  inaccessible_control: "Control not reached within the limits",
   navigation_failure: "Navigation failure",
   repeated_actions: "Repeated actions",
   confusing_workflow: "Confusing workflow",
