@@ -125,7 +125,7 @@ flowchart TB
 
 **Implementation framework.** Backend: Python 3.11, FastAPI, Pydantic contracts, SQLAlchemy, Playwright (Chromium). Models: Gemini through the `google-genai` SDK with forced function calling, or any OpenAI-compatible endpoint (Ollama, LM Studio, Groq). Web app: Next.js 16, React 19, Tailwind. Test sites: Next.js, plain HTML, Vue 3, Flask, React, SvelteKit, Astro and Django. Deployment uses Docker Compose: the database, the API with the Playwright worker, the web app, and one service per test site (each site's own `compose.yml` is included). Continuous integration runs linting, the backend tests (including tests in a real Chromium), the web and site builds, and the Compose build on every push.
 
-**Database.** PostgreSQL (SQLite for local runs) with seven tables: runs, steps, batches, labels, label samples, and the studio's custom personas, sites and tasks. Each step's full record is stored as validated JSON, and verdicts, metrics and findings are recomputed from it, never stored. The design is in Appendix D.1.
+**Database.** PostgreSQL (SQLite for local runs) with seven tables: runs, steps, batches, labels, label samples, and the studio's custom personas, sites and tasks. Each step's full record is stored as validated JSON, and verdicts, metrics and findings are recomputed from it, never stored. The design is in the supporting document, Appendix D.1.
 
 ## 5. Generative AI Techniques
 
@@ -151,7 +151,7 @@ Candidate models: Gemini Flash (every A3 result uses `gemini-3.6-flash` on the f
 
 Options can be combined. The choice is made on executed and attempted leakage, task success, steps, stuck rate, latency and cost, with 95% intervals.
 
-Limits are of three kinds, each detected differently: **action** (L1, no pointer: the tool used and trusted pointer events), **perception** (L2 accessibility tree, L3 magnified view: elements or strings the persona could not perceive, caught by planted honeytokens) and **knowledge** (L4 first-time visitor: addresses and terms not yet seen). A3 evaluates the two full personas end to end (Knock, keyboard-only; Cog, the unrestricted control); Echo, Iris and Wren run as preview personas. Each condition changes one thing while the model, prompt, tools, tasks and sites stay fixed. Persona definitions, how the perception filter keeps hidden information out, and the condition table are in Appendices D.2 and D.3.
+Limits are of three kinds, each detected differently: **action** (L1, no pointer: the tool used and trusted pointer events), **perception** (L2 accessibility tree, L3 magnified view: elements or strings the persona could not perceive, caught by planted honeytokens) and **knowledge** (L4 first-time visitor: addresses and terms not yet seen). A3 evaluates the two full personas end to end (Knock, keyboard-only; Cog, the unrestricted control); Echo, Iris and Wren run as preview personas. Each condition changes one thing while the model, prompt, tools, tasks and sites stay fixed. Persona definitions, how the perception filter keeps hidden information out, and the condition table are in the supporting document, Appendices D.2 and D.3.
 
 **AI task 2: explaining a run.** (a) template only; (b) model text; (c) model text checked by code, rejected if it contains any number not in the computed facts or skips a finding. Chosen on correctness (human check of a sample), rejection rate and latency.
 
@@ -177,7 +177,7 @@ Limits are of three kinds, each detected differently: **action** (L1, no pointer
 | Explanation generator | ≥ 50 explanations | Rejection rate of the checked mode, factual errors in a human-checked sample | Template |
 | Every AI component | All runs | Latency p50 and p95 per step, tokens and cost per run, model failure rate | — |
 
-**Results so far** (details and further results in Appendix D.4). The four enforcement methods were compared on the same task, agent and model (Knock and Cog, three runs each):
+**Results so far** (details and further results in the supporting document, Appendix D.4). The four enforcement methods were compared on the same task, agent and model (Knock and Cog, three runs each):
 
 | Knock (keyboard-only) | Success | Runs with an executed leak | Steps | Model calls per run |
 |---|---|---|---|---|
