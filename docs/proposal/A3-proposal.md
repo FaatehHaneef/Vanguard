@@ -257,7 +257,7 @@ The control persona leaked in every run under both options (its reference rate).
 **Diversity measure** (as agreed in the approval feedback). For each persona and task across repeated runs, and between personas: the normalised edit distance between the sequences of action types; the Shannon entropy of the action-type mix; and the spread (standard deviation and interquartile range) of step counts and success. The input-modality profile is compared with the Reduced A11y-CUA reference statistics where the quantities match (for example, blind and low-vision users made 0.1% of their actions with a pointer and 58.4% of their key presses were Tab or arrow keys), noting that A11y-CUA tasks were desktop tasks rather than web shopping. The entropy and interval helpers are implemented; the diversity report itself is A4 work.
 
 ### 8.1 Task-level evaluation (point 10)
-Single labelled steps do not show whole failures, so tasks are also evaluated as tasks. Every task has a scenario (search, add to cart, checkout, form, recovery from an error, finding information) and a deterministic success check; the A3 task suite covers every scenario across the sites, and results are reported per scenario: completion, actions, model calls, repeated attempts, latency and cost (`python -m vanguard.evaluation task-report`). The design and results are in the evaluation section by Ibrahim Malik (`docs/proposal/sections/evaluation.md`, to be inlined in the final version).
+Single labelled steps do not show whole failures, so tasks are also evaluated as tasks. Every task has a scenario (search, add to cart, checkout, form, recovery from an error, finding information) and a deterministic success check; the A3 task suite covers every scenario across the sites, and results are reported per scenario: completion, actions, model calls, repeated attempts, latency and cost (`python -m vanguard.evaluation task-report`). The design and results are in the evaluation section by Ibrahim Malik (Section 14.1).
 
 ### 8.2 The four methods, and twin runs (points 6, 11)
 Batch `four-methods-callback` (Willowbrook's call-back form, Knock and Cog, all four methods, 3 runs each; `docs/results/four-methods.md`):
@@ -375,6 +375,117 @@ Round 2 (after the feedback) divided the work by module: Faateh Haneef, the engi
 **Documentation plan (A4).** README with setup and deployment; architecture document; API documentation (OpenAPI, generated); the leakage specification and labelling guide (already written); data cards (written); an AI card per component; PRD with these acceptance criteria; user guide; system demonstration paper.
 
 **Target demonstration track.** ACL System Demonstrations (with EMNLP System Demonstrations as the alternative).
+
+## 14. Detailed Designs
+
+### 14.1 Evaluation design and results (Ibrahim Malik)
+
+Vanguard's evaluation asks two questions: does the simulated user behave like the person it stands for, and do the enforcement methods keep it inside its limits without stopping it doing the task? Single steps cannot answer the first question, so runs are also scored as whole tasks, compared with real users' input, and compared with each other. Every number below is computed by code (`backend/vanguard/metrics/` and `backend/vanguard/evaluation/`) from the stored traces; no model counts, scores or decides leakage.
+
+#### Tasks and scenarios
+
+A task is an instruction, a start page and a deterministic success check: a page address reached, text shown on the page, or words the final `done()` answer must contain. Each task has one **scenario**, so results can be grouped by the kind of work rather than by site:
+
+| Scenario | What the user does | Example |
+|---|---|---|
+| search | finds an item with search or filters | Northgate `ng-author`: who wrote *The Remains of the Day* |
+| add_to_cart | adds an item and opens the basket or list | Tallowmere `tm-add-moss`, Pantry Notes `pn-save-tacos` |
+| checkout | completes a purchase or booking | Tallowmere `buy-one` |
+| form | fills in and sends a form | Pantry Notes `pn-submit-curry` |
+| recovery | recovers from a form that refuses the first attempt | Riverside `rc-report-recover`, Harbour Herald `hh-newsletter` |
+| information | reads an answer off the site | Willowbrook `wb-ahmed-days`, Harbour Herald `hh-parade-time` |
+
+The A3 suite (`backend/vanguard/catalog/data/tasks/a3-suite.json`, plus the tasks of the two new sites) adds the scenarios each existing site lacked. Every task is short enough for an efficient person to finish in at most ten actions, so a run fits the 12-step cap and the free-tier call budget.
+
+#### What is held fixed and what changes
+
+Within one comparison, the model, the prompt version, the tasks, the start pages, the step cap and the number of actions per model call stay the same; only one condition changes:
+
+- **Persona** (keyboard-only Knock vs unrestricted Cog): the limits stated in the prompt and, under the gate, the actions allowed.
+- **Enforcement method**: prompt-only (limits stated, nothing enforced), gate (hard rules refuse forbidden actions in code), bounded perception (the model sees only what the persona could perceive), verifier (a second model call judges each action).
+- **Site**: the barriers and honeytokens planted in it (each site's `MANIFEST.md`).
+
+Each condition is run at least three times, and every proportion is reported with a 95% Wilson interval.
+
+#### Metrics per task
+
+For each task (and each scenario), persona and enforcement method, over its runs (`python -m vanguard.evaluation task-report`):
+
+- **Completion rate**: runs that passed the success check, with a Wilson interval.
+- **Actions**: steps per run. **Model calls**: agent calls plus verifier checks per run. One call may propose up to four actions, so the two differ.
+- **Repeated attempts**: proposals identical to the previous one (same tool and the same key, element, text or address) that either follow a refusal of that action or follow an attempt that changed neither the address nor the focus. This counts an agent hammering at a barrier.
+- **Refusals**: actions the gate refused.
+- **Stuck rate and step-limit rate**: runs that ended because nothing changed for several steps, or because the 12-step cap ran out.
+- **Task time**: the run's total model and browser time, as the median and 95th percentile over runs; **cost** from tokens and the configured price.
+- **Failure cause**: the primary cause of each failed run (model unavailable, persona leak, invalid output, refusal loop, action errors, stuck, step limit, gave up, wrong answer), assigned by `vanguard.failures`.
+
+#### Realism: compared with real users
+
+`python -m vanguard.evaluation realism` compares each persona's executed input with the Reduced A11y-CUA logs (reference statistics only; the dataset is never used for training or prompts). Three shares are computed the same way for both: **pointer share** (pointer actions over pointer actions plus key presses), **Tab and arrow share** and **Enter share** of key presses, counting typing as one key press per character, as the logs do. Knock is compared with blind and low-vision users and Cog with sighted users, and the report gives both values and their absolute difference. A11y-CUA's tasks were desktop tasks rather than these sites' tasks, so this compares input habits, not performance.
+
+#### Diversity
+
+`python -m vanguard.evaluation diversity` measures how differently personas, and repeated runs of one persona, behave. A run's behaviour is its sequence of proposed action types (the tool, and the key for key presses). It reports:
+
+- the **normalised edit distance** between two runs' sequences (0 = identical, 1 = nothing in common), averaged within a persona on the same task and between pairs of personas;
+- the **Shannon entropy** of each persona's action-type mix;
+- the **spread** (standard deviation and interquartile range) of actions per run and of completion, per persona and across personas;
+- the **distinct navigation paths** per persona and task.
+
+Low distances and identical paths across runs show the collapse that the project's earlier work found; differences between personas show whether the persona description changes behaviour at all.
+
+#### The verifier against people
+
+The verifier (enforcement method 4) is itself a model, so it is measured (`python -m vanguard.evaluation verifier-report`) on the steps it judged that both labellers labelled. A refusal is its positive. Against **(a) the agreed human labels** (both labellers gave the same yes or no) and **(b) the hard rules** (the checker's verdict), the report gives **precision** (refusals that were leaks), **recall** (leaks that were refused) and the **false-positive rate** (valid actions wrongly refused, over all valid actions), with the confusion counts and every step where the verifier and the reference differ. Steps where the labellers disagreed or were unsure are listed and left out of (a), and steps where the verifier was unavailable are left out of both. A verifier with a high false-positive rate blocks legitimate users' actions, so this rate matters as much as recall.
+
+#### Results
+
+First A3 suite results (`docs/results/task-level.md`, `realism.md`, `diversity.md`): 24 runs on gemini-3.6-flash, one task on each of Northgate, Tallowmere, Willowbrook and Riverside, keyboard-only and unrestricted under the gate, three runs each, 12-step cap.
+
+- **Search and information** tasks were completed in every run by both personas (`ng-author`, `wb-ahmed-days`); the keyboard-only persona had one click refused by the gate per Northgate run and no executed leaks.
+- **Add to cart** (`tm-add-moss`): keyboard-only 2 of 3, unrestricted 3 of 3. The failed keyboard run reached the step limit on Tallowmere's "Add to cart", whose focus outline is hidden.
+- **Recovery** (`rc-report-recover`): keyboard-only 0 of 3 and unrestricted 2 of 3, every failure at the 12-step limit. Filling the form, being refused and sending it again needs more key presses than the cap allows, so this result reflects the step cap as much as the agent; A4 raises the cap for recovery tasks.
+- The keyboard-only persona needed more actions than the control on the same tasks (7.3 vs 6.0 on Northgate, 11.0 vs 6.0 on Tallowmere), as expected for a keyboard user.
+- **Realism**: the A11y-CUA reference data was not available on the machine that generated the table, so `realism.md` shows the personas' input profiles only; the comparison is regenerated with the data in A4.
+- **Not yet run**: the Harbour Herald and Pantry Notes tasks (defined and checked, but they did not fit in the free-tier call budget before the deadline) and the verifier on labelled data (waiting for the second labelling round); both move to A4.
+
+**Limits of the design.** Three runs per condition give wide intervals, so differences are reported as indications, not significant effects. The test sites were built by the team to a written specification, not independently. Labels made with an AI tool are declared as such in `AI_USE.md`, and agreement between them is not reported as agreement between people.
+
+### 14.2 Configuration studio (Abdul Hadi)
+
+#### What it does
+
+The configuration studio (`/studio` in the web app) lets a team create, edit and save its own personas, add any website it may test, and define tasks on that website without changing code. Everything made in the studio appears wherever the built-in catalog does: the site picker, trials, batches, results and the comparison page.
+
+- **Personas.** A form sets the name, description, character sprite, limits (L1 to L4), perception (full, screen reader or magnified, with a magnification factor), and the groups of actions the persona may use. Each option shows its meaning in plain language, and a live preview shows the sprite and the status the persona will get. A built-in persona can be duplicated as a starting point. "Send on a trial" opens the site picker with the persona already in the party.
+- **Sites.** A name, an address (`https://shop.example.com`) and an optional description, with a confirmation that the team owns the site or is allowed to test it.
+- **Tasks.** On any site, built-in or custom: an instruction, a start page, a scenario (search, add to cart, checkout, form, recovery or information) and a success check. The check is a page address the run reaches, text that appears on the page, or words the final answer must contain.
+
+#### Data model
+
+Three tables in the run database, one per kind of item, with the same columns:
+
+| Table | Holds | Columns |
+|---|---|---|
+| `custom_personas` | `PersonaSpec` | `id` (primary key), `data` (JSON), `created_at`, `updated_at` |
+| `custom_sites` | `Site` | the same |
+| `custom_tasks` | `Task` | the same |
+
+`data` is the item itself, stored as the contract model's JSON (`backend/vanguard/contracts/`), so a custom item is exactly the shape a built-in one has and no other code needs to know where it came from. Ids are `custom-<slug>-<4 hex>`, made from the name or instruction, so they never clash with built-in ids. The tables are created on first use; no migration is needed.
+
+#### How custom items reach the catalog
+
+`vanguard.catalog` is the one place the rest of the backend looks up personas, sites and tasks. On every lookup it calls `vanguard.studio.source`, whose `personas()`, `sites()` and `tasks()` read the three tables, and joins the results with the built-in files. **Built-in items always win**: a custom item can never replace or shadow one. Because the browser's allowed origins are built from the catalog's site origins, a custom site becomes reachable by the agent as soon as it is saved, and only then. The source reads the database the API has open; when there is none (tests, the command line) it returns nothing, so the built-in catalog is never affected by whatever is in a developer's local database.
+
+The API is `GET/POST /studio/{personas,sites,tasks}` and `GET/PUT/DELETE /studio/{kind}/{id}` (`backend/vanguard/routes/studio.py`). Built-in items can be read but not changed (409, "copy it first").
+
+#### Validation and safety
+
+- **Every item is validated against its contract before it is written**, then the write happens in one transaction. Errors come back as 422 with the field that is wrong, and the forms show each message next to that field.
+- **Personas.** A name, a description, a known character and at least one action group are required; a magnified view needs a magnification above 1. A custom persona is never the control persona. Its **status is computed, not chosen**: it is `full` only when its limits, perception, action groups and magnification exactly match a built-in persona whose status is full, because only those bundles are enforced and validated in code (`docs/leakage-spec.md`, Section 4). Any other combination is `preview`, which states its limits in the prompt only, and the editor says so before saving.
+- **Sites.** The address must be an `http` or `https` origin with a host and no path, query or fragment. The form asks the user to confirm they own the site or may test it, and warns against live sites where a form would send a real order or message. The agent can only visit origins that are in the catalog, and the run's network filter still applies.
+- **Tasks.** The site must exist, the start page must be a path starting with `/`, and at least one success check is required, so every custom task can be scored by the deterministic checker rather than by a model.
+- Deleting a custom site also deletes its custom tasks. Runs refer to the persona, site and task by id and store their own steps and outcome, so deleting an item does not delete its runs or change their recorded results.
 
 ## References
 
