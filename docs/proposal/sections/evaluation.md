@@ -60,6 +60,13 @@ The verifier (enforcement method 4) is itself a model, so it is measured (`pytho
 
 ## Results
 
-The task-level, realism, diversity and verifier tables are generated from the A3 suite runs and the labelled verifier sample into `docs/results/task-level.md`, `realism.md`, `diversity.md` and `verifier.md`. They are summarised here once those runs and labels are complete.
+First A3 suite results (`docs/results/task-level.md`, `realism.md`, `diversity.md`): 24 runs on gemini-3.6-flash, one task on each of Northgate, Tallowmere, Willowbrook and Riverside, keyboard-only and unrestricted under the gate, three runs each, 12-step cap.
+
+- **Search and information** tasks were completed in every run by both personas (`ng-author`, `wb-ahmed-days`); the keyboard-only persona had one click refused by the gate per Northgate run and no executed leaks.
+- **Add to cart** (`tm-add-moss`): keyboard-only 2 of 3, unrestricted 3 of 3. The failed keyboard run reached the step limit on Tallowmere's "Add to cart", whose focus outline is hidden.
+- **Recovery** (`rc-report-recover`): keyboard-only 0 of 3 and unrestricted 2 of 3, every failure at the 12-step limit. Filling the form, being refused and sending it again needs more key presses than the cap allows, so this result reflects the step cap as much as the agent; A4 raises the cap for recovery tasks.
+- The keyboard-only persona needed more actions than the control on the same tasks (7.3 vs 6.0 on Northgate, 11.0 vs 6.0 on Tallowmere), as expected for a keyboard user.
+- **Realism**: the A11y-CUA reference data was not available on the machine that generated the table, so `realism.md` shows the personas' input profiles only; the comparison is regenerated with the data in A4.
+- **Not yet run**: the Harbour Herald and Pantry Notes tasks (defined and checked, but they did not fit in the free-tier call budget before the deadline) and the verifier on labelled data (waiting for the second labelling round); both move to A4.
 
 **Limits of the design.** Three runs per condition give wide intervals, so differences are reported as indications, not significant effects. The test sites were built by the team to a written specification, not independently. Labels made with an AI tool are declared as such in `AI_USE.md`, and agreement between them is not reported as agreement between people.
