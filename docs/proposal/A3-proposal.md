@@ -7,7 +7,7 @@
 | Product name | Vanguard |
 | One-line description | Runs AI "simulated users" with stated limits (for example a keyboard-only shopper) through real websites, enforces and checks those limits in code, and reports where the simulation broke them |
 | Project track | Pure Product |
-| Group members | Syed Muhammad Faateh Haneef (23i-0688), Abdul Hadi (23i-0676), Ibrahim Malik (23i-0694) |
+| Group members | Faateh Haneef (23i-0688), Abdul Hadi (23i-0676), Ibrahim Malik (23i-0694) |
 | Course | AI-4009 Generative AI, FAST-NUCES Islamabad, Section A |
 | Repository | https://github.com/FaatehHaneef/Vanguard |
 
@@ -302,7 +302,7 @@ Vanguard is deployed with Docker on a cloud VPS, not on a serverless host, becau
 
 | Member | AI work | Engineering work |
 |---|---|---|
-| Syed Muhammad Faateh Haneef | Agent loop and prompts, enforcement options, the A3 comparison runs | Architecture, executor and worker, gate and rules, API, CI, deployment |
+| Faateh Haneef | Agent loop and prompts, enforcement options, the A3 comparison runs | Architecture, executor and worker, gate and rules, API, CI, deployment |
 | Abdul Hadi | Explanation generator (alternative c), perception and prompts for the preview personas | Results and live-view polish; 2–4 test sites |
 | Ibrahim Malik | Verifier evaluation, labelling and kappa, failure analysis | Leakage checker and metrics extensions, functional tests; 2–4 test sites |
 
@@ -460,6 +460,33 @@ The API is `GET/POST /studio/{personas,sites,tasks}` and `GET/PUT/DELETE /studio
 - **Tasks.** The site must exist, the start page must be a path starting with `/`, and at least one success check is required, so every custom task can be scored by the deterministic checker rather than by a model.
 - Deleting a custom site also deletes its custom tasks. Runs refer to the persona, site and task by id and store their own steps and outcome, so deleting an item does not delete its runs or change their recorded results.
 
+## Appendix B. Feedback on the Original Proposal
+
+The instructor's feedback on the original proposal (22 November 2026) raised twenty points. This table shows where each is addressed in this proposal and in the product.
+
+| # | Point (in short) | Where it is addressed |
+|---|---|---|
+| 1 | Separate action, perception and knowledge violations | Section 6.1: three limit categories, each with its own detection method |
+| 2 | Define each persona's capabilities and expected behaviour separately | Section 6.1, persona table |
+| 3 | Explain how the perception filter keeps hidden information out | Section 6.1, bounded perception |
+| 4 | Enforcing restrictions is not the same as realistic behaviour | Section 8.3: realism compared with real users' input profiles (A11y-CUA) |
+| 5 | Define the diversity metrics | Section 8.4 |
+| 6 | Same user with and without enforced restrictions | Section 8.2, twin runs |
+| 7 | Report usability problems, not only violations | Section 3, findings report: inaccessible controls, navigation failures, confusing workflows, repeated actions, failed tasks |
+| 8 | Interactive trace viewer | Section 3, live view and step-by-step replay |
+| 9 | Tell interface, agent and restriction failures apart | Section 3, failure attribution (site, restriction, agent, infrastructure) |
+| 10 | Task-level evaluation across scenarios | Section 8.1, task suite by scenario (search, cart, checkout, form, recovery, information) |
+| 11 | Compare the four enforcement approaches carefully | Section 6.2 and Section 8.2: one condition changed at a time, agent and tasks fixed |
+| 12 | Verifier precision, recall and false-positive rate against labels | Section 8.5 |
+| 13 | Completion, actions, repeated attempts, latency and cost | Section 8, every results table |
+| 14 | Configurable website URL and task definitions | Section 3, configuration studio |
+| 15 | Create, edit and save simulated-user profiles | Section 3, configuration studio |
+| 16 | Compare results across runs or website versions | Section 3, comparison report; Section 8.6 version comparison |
+| 17 | Simulated users are not real users with disabilities | Section 11 and on every findings report |
+| 18 | Prioritise a working workflow with a few well-defined personas | Section 6.1: two full personas evaluated, three in preview |
+| 19 | Framework, deployment, database, costs, business model, milestones, 60–75% split | Sections 4, 4.1, 9, 10 and 12 |
+| 20 | Every member understands the system | Section 12, review and walk-through practice |
+
 ## References
 
 [1] Mohanbabu, Natalie, Kim, Guo, Pavel. *A11y-CUA Dataset: Characterizing the Accessibility Gap in Computer Use Agents.* arXiv:2602.09310 (CHI '26).
@@ -472,13 +499,13 @@ The API is `GET/POST /studio/{personas,sites,tasks}` and `GET/PUT/DELETE /studio
 [8] startup.pk. *NIC Islamabad's Cohort 6 applications are open.* https://startup.pk/nic-islamabads-cohort-6-applications-are-open-heres-everything-you-need-to-apply/ ; techx.pk, *NIC Islamabad Cohort 6 window shuts* (read 2026-11-22).
 [9] Google. *Google for Startups Cloud Program.* https://cloud.google.com/startup (terms to be confirmed; secondary summary read 2026-11-22).
 
-## Appendix: AI tool declaration
+## Appendix C. AI Tool Declaration
 
 As required by Assignment 3, Section 9. Kept in the repository as `AI_USE.md`; runtime use of AI inside the product is described in Sections 4 and 5.
 
 | Date | Member | Tool | Used for | Checked by |
 |---|---|---|---|---|
-| 2026-11-21 | Syed Muhammad Faateh Haneef | Claude Code (Anthropic) | Reading and summarising the course documents and the two earlier repositories; drafting `Vanguard.md` and `docs/leakage-spec.md`; writing the backend foundation (contracts, rules, gate, agent loop, store, API) and its tests; extracting and porting reused code from Sentinel | Design decisions made by the team; every file reviewed by Faateh; tests run locally |
-| 2026-11-22 | Syed Muhammad Faateh Haneef | Claude Code (Anthropic) | Writing the Playwright executor (observation, event recording, network filter, screen-reader and magnifier perception, conditions), the character overlay, the leakage checker (H1, H3a, H4a, H4b, honeytokens), metrics, batches, labelling and agreement, failure analysis, the explanation generator and verifier, the OpenAI-compatible provider, the related web pages, tests, CI and documentation; verifying the downloaded datasets | Design decisions and scope set by Faateh; code to be reviewed by Faateh before submission; 80 automated tests run locally and in CI against a real Chromium |
+| 2026-11-21 | Faateh Haneef | Claude Code (Anthropic) | Reading and summarising the course documents and the two earlier repositories; drafting `Vanguard.md` and `docs/leakage-spec.md`; writing the backend foundation (contracts, rules, gate, agent loop, store, API) and its tests; extracting and porting reused code from Sentinel | Design decisions made by the team; every file reviewed by Faateh; tests run locally |
+| 2026-11-22 | Faateh Haneef | Claude Code (Anthropic) | Writing the Playwright executor (observation, event recording, network filter, screen-reader and magnifier perception, conditions), the character overlay, the leakage checker (H1, H3a, H4a, H4b, honeytokens), metrics, batches, labelling and agreement, failure analysis, the explanation generator and verifier, the OpenAI-compatible provider, the related web pages, tests, CI and documentation; verifying the downloaded datasets | Design decisions and scope set by Faateh; code to be reviewed by Faateh before submission; 80 automated tests run locally and in CI against a real Chromium |
 | 2026-11-22 | Abdul Hadi | Claude Code (Anthropic) | Building the Northgate Library test site from `docs/tasks-A3.md` Section 1: the Vue 3 + Vite scaffold, pages, styles, catalogue data, planted barriers and honeytokens, Dockerfile, README and manifest; registering the site and its tasks in the catalog, Compose and the allowed origins; running the site checks; labelling the 60 steps of the A3 sample (`data/labels/hadi.json`) by following `docs/labelling-guide.md` | `check-site northgate --live` and `pytest -q` run locally; each task tried in Chromium with a mouse and with the keyboard only against the manifest; code and labels to be reviewed by Abdul before pushing |
 | 2026-11-22 | Ibrahim Malik | Claude Code (Anthropic) | Building the Riverside Council test site (Flask templates, styles, planted barriers, honeytokens, Dockerfile, README and manifest), the 24-notice prompt-injection set, `backend/tests/test_injection.py`, the catalog and Compose entries, and the functional test table; checking the site in Chromium by keyboard and mouse; labelling the 60 steps of the A3 sample (`data/labels/ibrahim.json`) | Site design and steps from `docs/tasks-A3.md`; code to be reviewed by Ibrahim before submission; `check-site --live` (15/15) and 206 backend tests run locally. The A3 labels were made with Claude Code, so agreement involving them is not agreement between two people |
