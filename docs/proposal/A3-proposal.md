@@ -125,20 +125,7 @@ flowchart TB
 
 **Implementation framework.** Backend: Python 3.11, FastAPI, Pydantic contracts, SQLAlchemy, Playwright (Chromium). Models: Gemini through the `google-genai` SDK with forced function calling, or any OpenAI-compatible endpoint (Ollama, LM Studio, Groq). Web app: Next.js 16, React 19, Tailwind. Test sites: Next.js, plain HTML, Vue 3, Flask, React, SvelteKit, Astro and Django. Deployment uses Docker Compose: the database, the API with the Playwright worker, the web app, and one service per test site (each site's own `compose.yml` is included). Continuous integration runs linting, the backend tests (including tests in a real Chromium), the web and site builds, and the Compose build on every push.
 
-### 4.1 Database Design
-
-PostgreSQL in deployment, SQLite for local runs, through the same SQLAlchemy models. A step's full record is stored as JSON, validated against the shared contract on read, so the audit can always be recomputed from the store.
-
-| Table | Key | Holds |
-|---|---|---|
-| `runs` | run id | configuration (persona, site, task, enforcement, provider, seed, actions per call), batch id, status, outcome, step and refusal counts, times, error |
-| `steps` | run id + step index | the full step record: observation (mode, URL, perceived text, links, magnifier window, screenshot path), proposed action and rationale, model call number and position in the call, gate and verifier decisions, input events, URL and focus after, target box, latency, tokens, cost |
-| `batches` | batch id | the batch request (tasks × personas × methods, repeats, call budget), so progress can be reported and resumed |
-| `labels` | run id + step + labeller | one person's verdict on one step (violation or not, limit, kind, note) |
-| `label_samples` | bundle | the fixed, seeded sample of steps in a labelling bundle |
-| `custom_personas`, `custom_sites`, `custom_tasks` | id | items made in the configuration studio, validated against the same contracts as the built-in catalogue |
-
-Leakage verdicts, metrics, findings and comparisons are not stored: they are recomputed by code from `runs` and `steps`, so a rule change never leaves stale results. Screenshots and live-view frames are files under the data directory, outside the database and the repository.
+**Database.** PostgreSQL (SQLite for local runs) with seven tables: runs, steps, batches, labels, label samples, and the studio's custom personas, sites and tasks. Each step's full record is stored as validated JSON, and verdicts, metrics and findings are recomputed from it, never stored. The design is in Appendix D.1.
 
 ## 5. Generative AI Techniques
 
@@ -164,40 +151,7 @@ Candidate models: Gemini Flash (every A3 result uses `gemini-3.6-flash` on the f
 
 Options can be combined. The choice is made on executed and attempted leakage, task success, steps, stuck rate, latency and cost, with 95% intervals.
 
-### 6.1 Limits, personas and how each is checked
-
-The three kinds of limit need different detection, so each has its own method:
-
-| Kind | Limits | Detected by | Evidence |
-|---|---|---|---|
-| **Action** | L1 no pointer | The action itself (a pointer tool), and trusted pointer events recorded in the page | The gate refuses before execution; the checker confirms from the input events |
-| **Perception** | L2 accessibility tree only; L3 magnified view | Whether the step used something the persona could not perceive: an element outside the magnified window, or a string shown only visually | Honeytokens: strings placed where only the forbidden channel reveals them (an `aria-hidden` batch code, a footer code far below the magnified view) |
-| **Knowledge** | L4 first-time visitor | Navigation to an address never seen in an observation, or a site-specific term never seen yet | The set of links and text the persona has perceived so far; an unlinked staff page with a code |
-
-Personas are bundles of these limits, evaluated separately because they cannot share one criterion:
-
-| Persona | Limits | Can perceive | Can do | Expected behaviour | Evaluated on | Status |
-|---|---|---|---|---|---|---|
-| Knock, keyboard-only | L1 | The full page | Keys only (Tab, arrows, Enter, Space, typing) | Moves by focus; cannot use mouse-only controls; gives up or finds a keyboard route | Executed pointer actions (gate refusals, pointer events) | Full |
-| Cog, unrestricted control | none | The full page | Everything | Reference behaviour on the same tasks; its "leaks" are a reference rate | Task success and steps (the yardstick) | Full |
-| Echo, screen-reader user | L1, L2 | The accessibility tree only | Screen-reader and keyboard commands | Cannot know what is only drawn on screen | Honeytokens (H2b), uses of unnamed controls | Preview |
-| Iris, magnifier user | L3 | A 400% window, moved by panning | Everything, within the view | Must pan to find content far from where the page opens | Elements outside the window (H3a), honeytokens (H3b) | Preview |
-| Wren, first-time visitor | L4 | The full page | Everything | Knows nothing site-specific until it has seen it | Unseen addresses (H4a) and terms (H4b), honeytokens (H4c) | Preview |
-
-As advised, A3 evaluates the two full personas end to end; the three preview personas run and are checked, but their results are marked "not validated" until their labelled sets are complete.
-
-**How bounded perception keeps hidden information out.** The observation for each persona is built by the browser executor, not filtered from a full page afterwards. For Echo it is Chrome's accessibility tree (the same tree a screen reader reads), so text that is `aria-hidden` or drawn only in images or CSS never reaches the model, while text a real screen reader would announce (including visually off-screen text) does; element identifiers are the tree's own, not page coordinates. For Iris it is only the elements that intersect the magnified window, in document coordinates, with nothing outside it. Screenshots are never sent to the model. A test in a real Chromium plants an `aria-hidden` code, an off-screen code and a far-away footer code, and asserts that each persona's observation contains exactly what its user could perceive; honeytokens then catch any step that uses hidden information anyway (for example from the model's prior knowledge).
-
-### 6.2 What each enforcement condition changes
-
-| Condition | What changes | What stays fixed |
-|---|---|---|
-| Prompt-only | The limits are described in the prompt | Model, prompt version, tools offered, tasks, sites, step limit, seeds |
-| Gate | As prompt-only, plus code refuses any action outside the limits before it reaches the page and tells the agent why | As above |
-| Bounded perception | As prompt-only, plus the observation is built for the persona's perception | As above |
-| Verifier | As prompt-only, plus a second model call judges each proposed action against the persona before it runs | As above |
-
-The four address different things: the gate enforces action limits; bounded perception enforces perception limits; the verifier is a learned, general check that can cover all three but can be wrong. They are therefore compared on the same tasks, and each is also judged on the limits it is meant to cover.
+Limits are of three kinds, each detected differently: **action** (L1, no pointer: the tool used and trusted pointer events), **perception** (L2 accessibility tree, L3 magnified view: elements or strings the persona could not perceive, caught by planted honeytokens) and **knowledge** (L4 first-time visitor: addresses and terms not yet seen). A3 evaluates the two full personas end to end (Knock, keyboard-only; Cog, the unrestricted control); Echo, Iris and Wren run as preview personas. Each condition changes one thing while the model, prompt, tools, tasks and sites stay fixed. Persona definitions, how the perception filter keeps hidden information out, and the condition table are in Appendices D.2 and D.3.
 
 **AI task 2: explaining a run.** (a) template only; (b) model text; (c) model text checked by code, rejected if it contains any number not in the computed facts or skips a finding. Chosen on correctness (human check of a sample), rejection rate and latency.
 
@@ -223,22 +177,7 @@ The four address different things: the gate enforces action limits; bounded perc
 | Explanation generator | ≥ 50 explanations | Rejection rate of the checked mode, factual errors in a human-checked sample | Template |
 | Every AI component | All runs | Latency p50 and p95 per step, tokens and cost per run, model failure rate | — |
 
-Error analysis groups every failing run by cause, computed by code (model unavailable, run error, persona leak, invalid output, refusal loop, action errors, stuck, step limit, gave up, wrong answer); at least ten failures are read and described with planned fixes. **First results (A3; full tables in `docs/results/a3-results.md`, regenerated by `backend/scripts/a3_results.py`).** Model gemini-3.6-flash; Tallowmere `cheapest` and Willowbrook `wb-callback`; 24 runs (3 per persona, task and option), 119 steps, 12-step cap.
-
-| Keyboard-only persona | Success | Runs with an executed leak | Mean steps |
-|---|---|---|---|
-| Prompt-only | 6 of 6 | **5 of 6** (it clicked with a mouse; in the sixth run it answered without clicking) | 4.7 |
-| Gate | 6 of 6 | **0 of 6** (4 attempted clicks refused, in 4 runs; it then finished by keyboard) | 6.5 |
-
-The control persona leaked in every run under both options (its reference rate). Step latency p50 8.5 s and p95 26.6 s; about 1,900 input tokens per step; $0 on the free tier, about $0.008 per run at the paid list price. Labelled test set: 60 steps from the real runs labelled independently by two members; Cohen's kappa 1.00, and the checker matched the agreed labels with kappa 1.00, precision and recall 100%. Because this sample is dominated by unambiguous input-type cases, A4 adds harder information-leak cases (preview personas, honeytokens). Failure analysis over all 37 A3 runs with the real model: 15 failing runs, 8 stopped by model quota (planned fix: several actions per model call and local models for volume) and 7 keyboard-only runs that clicked under prompt-only (the leak the gate exists to stop). These first runs compared prompt-only and the gate; the four-method comparison in Section 8.2 then added bounded perception and the verifier. The explanation generator is integrated, and its evaluation on labelled explanations is planned for A4.
-
-**Diversity measure** (as agreed in the approval feedback). For each persona and task across repeated runs, and between personas: the normalised edit distance between the sequences of action types; the Shannon entropy of the action-type mix; and the spread (standard deviation and interquartile range) of step counts and success. The input-modality profile is compared with the Reduced A11y-CUA reference statistics where the quantities match (for example, blind and low-vision users made 0.1% of their actions with a pointer and 58.4% of their key presses were Tab or arrow keys), noting that A11y-CUA tasks were desktop tasks rather than web shopping. The entropy and interval helpers are implemented; the diversity report itself is A4 work.
-
-### 8.1 Task-level evaluation
-Single labelled steps do not show whole failures, so tasks are also evaluated as tasks. Every task has a scenario (search, add to cart, checkout, form, recovery from an error, finding information) and a deterministic success check; the A3 task suite covers every scenario across the sites, and results are reported per scenario: completion, actions, model calls, repeated attempts, latency and cost (`python -m vanguard.evaluation task-report`). The design and results are in the evaluation section by Ibrahim Malik (Appendix A.1).
-
-### 8.2 The four methods, and twin runs
-Batch `four-methods-callback` (Willowbrook's call-back form, Knock and Cog, all four methods, 3 runs each; `docs/results/four-methods.md`):
+**Results so far** (details and further results in Appendix D.4). The four enforcement methods were compared on the same task, agent and model (Knock and Cog, three runs each):
 
 | Knock (keyboard-only) | Success | Runs with an executed leak | Steps | Model calls per run |
 |---|---|---|---|---|
@@ -247,25 +186,7 @@ Batch `four-methods-callback` (Willowbrook's call-back form, Knock and Cog, all 
 | Bounded perception | 3 of 3 | 3 of 3 | 7.7 | 4.0 |
 | Verifier | 3 of 3 | 3 of 3 | 8.3 | 13.7 |
 
-Only the gate stopped every leak, at no cost in task success and about three extra steps. Bounded perception does not address an action limit (it is meant for L2 and L3). The verifier was answering throughout but allowed 3 of Knock's 5 pointer actions, at about four times the model calls. The control agent behaved identically under all four.
-
-Twin runs give the same persona the same task with its limits only described and with them enforced (`docs/results/twins-and-versions.md`). Iris, the magnifier persona, found the floor of a book in 5 steps in all three runs when she could see the whole page, and failed all three when her view was enforced (only a 400% window), repeating herself about six times per run: the planted barrier, information in a far-right sidebar, only bites when the perception limit is real, so a prompt-only simulation would have missed it. Knock could not finish Northgate's reservation within 12 steps under either condition (the control agent needs about 10); the gate changed how he failed, not whether: without it he used the mouse in 2 of 3 runs, with it never. The failure attribution reads these runs as restriction failures (Iris's because the same persona succeeds without enforcement; Knock's because the control succeeds and he did not reach the controls he wanted by keyboard in time), each marked as a candidate for people to check.
-
-### 8.3 Realism
-Enforcing a limit does not make behaviour realistic, so realism is measured separately: each persona's input profile (pointer share of actions, Tab and arrow share of key presses) is compared with the matching group of real users in the A11y-CUA data [1] (`python -m vanguard.evaluation realism`).
-
-### 8.4 Diversity
-Across repeated runs of one persona and task, and between personas: the normalised edit distance between action-type sequences (navigation paths), the Shannon entropy of the action-type mix (interaction strategy), and the spread of steps, success and failure causes (`python -m vanguard.evaluation diversity`).
-
-### 8.5 The verifier against people
-Two members label bundle 2 (60 steps, half of them refused or flagged steps, shown without the checker's verdicts) independently. The verifier's decisions are scored against the agreed labels: precision, recall and false-positive rate (`python -m vanguard.evaluation verifier-report`, tested on hand-made data), alongside the gate's. Bundle 2 was being labelled at submission; its results are shown at the demonstration. On the steps it judged in the four-method runs, the verifier allowed 3 of Knock's 5 pointer actions.
-
-### 8.6 Website versions
-Every test site was redesigned during A3 with its tasks, barriers and honeytokens unchanged; the earlier versions are kept (git tag `sites-v1`). Running the same persona, task and method on both versions and comparing them with the comparison report shows whether the redesign introduced new failures. For Knock under the gate on Willowbrook's call-back form, version 2 kept success at 3 of 3 and leaks at 0, and needed fewer steps (9.0 vs 10.3) and model calls (5.0 vs 6.0); the report found no new failure causes.
-
-**Scope of the A3 evaluation, and what follows in A4.** The free tier allows about 20 model requests per key per day, so A3 uses **3 runs per persona, task and method** on short tasks with at most 12 steps, and several actions per model call. All four methods are compared in A3. A4 raises the repeats to 5, adds the longer tasks and the task-suite runs on the two newest sites, uses local models for volume, and grows the labelled set to at least 100 steps across all evaluated personas.
-
-**User-level benefit.** For a site owner, the test is whether Vanguard finds the planted barriers that matter to each persona (for example the cart's quantity buttons that a keyboard user cannot reach) and explains them correctly.
+Only the gate stopped every leak, with no loss of task success; bounded perception does not address an action limit, and the verifier allowed 3 of Knock's 5 pointer actions at about four times the model calls. Twin runs (the same persona with its limits described or enforced) show barriers that only appear when a limit is real: the magnifier persona succeeded in 3 of 3 runs with the full page and 0 of 3 with only its magnified view. A version comparison of a redesigned site found no new failures. The task suite covers search, cart, checkout, form, recovery and information tasks on four sites; realism is measured against real users' input profiles (A11y-CUA), diversity by edit distance and entropy of action sequences, and the verifier against two labellers' labels. Error analysis groups every failing run by cause, and each failure is attributed to the site, the restriction or the agent. Latency, tokens, model calls and cost are recorded per step and per run.
 
 ## 9. Deployment Plan
 
@@ -304,12 +225,6 @@ Vanguard is deployed with Docker on a cloud VPS, not on a serverless host, becau
 - **Security and secrets.** Keys stay in untracked environment files; the repository history is scanned before each push.
 
 ## 12. Work Plan and Team Roles
-
-| Member | AI work | Engineering work |
-|---|---|---|
-| Faateh Haneef | Agent loop and prompts, enforcement options, the A3 comparison runs | Architecture, executor and worker, gate and rules, API, CI, deployment |
-| Abdul Hadi | Explanation generator (alternative c), perception and prompts for the preview personas | Results and live-view polish; 2–4 test sites |
-| Ibrahim Malik | Verifier evaluation, labelling and kappa, failure analysis | Leakage checker and metrics extensions, functional tests; 2–4 test sites |
 
 In the second phase of A3 the work was divided by module: Faateh Haneef, the engine, live view and replay, findings and attribution, the four-method and twin runs, the site redesigns and the comparison API; Abdul Hadi, the configuration studio, the comparison page, two new sites and the verifier runs; Ibrahim Malik, the evaluation package (task suite, realism, diversity, verifier report, repeated attempts, calls vs actions) and two new sites. Every module was reviewed and merged by Faateh.
 
@@ -353,6 +268,18 @@ In the second phase of A3 the work was divided by module: Faateh Haneef, the eng
 **Documentation plan (A4).** README with setup and deployment; architecture document; API documentation (OpenAPI, generated); the leakage specification and labelling guide (already written); data cards (written); an AI card per component; PRD with these acceptance criteria; user guide; system demonstration paper.
 
 **Target demonstration track.** ACL System Demonstrations (with EMNLP System Demonstrations as the alternative).
+
+## References
+
+[1] Mohanbabu, Natalie, Kim, Guo, Pavel. *A11y-CUA Dataset: Characterizing the Accessibility Gap in Computer Use Agents.* arXiv:2602.09310 (CHI '26).
+[2] Natalie, Xu, Chang, Mihalcea, Guo. *Not There Yet: Evaluating Vision Language Models in Simulating the Visual Perception of People with Low Vision.* arXiv:2508.10972.
+[3] Xiao, Zhang, Yang, Xuan, Huang. *The Chameleon's Limit: Investigating Persona Collapse and Homogenization in Large Language Models.* arXiv:2604.24698.
+[4] Touir, Ktata, Soui. *Grounding Persona-Driven Usability Simulation in Established Standards.* CHI '26 Workshop on Responsible Use of AI Personas, CEUR-WS Vol-4249, paper 4.
+[5] Zhong, Chen, Win Kyi, Li, Fogarty, Wobbrock. *TaskAudit: Detecting Functiona11ity Errors in Mobile Apps via Agentic Task Execution.* arXiv:2510.12972 (CHI 2026).
+[6] Deng et al. *Mind2Web: Towards a Generalist Agent for the Web.* arXiv:2306.06070.
+[7] Google. *Gemini API pricing.* https://ai.google.dev/gemini-api/docs/pricing (read 2026-11-22).
+[8] startup.pk. *NIC Islamabad's Cohort 6 applications are open.* https://startup.pk/nic-islamabads-cohort-6-applications-are-open-heres-everything-you-need-to-apply/ ; techx.pk, *NIC Islamabad Cohort 6 window shuts* (read 2026-11-22).
+[9] Google. *Google for Startups Cloud Program.* https://cloud.google.com/startup (terms to be confirmed; secondary summary read 2026-11-22).
 
 ## Appendix A. Detailed Designs
 
@@ -471,38 +398,26 @@ The instructor's feedback on the original proposal (22 November 2026) raised twe
 
 | # | Point (in short) | Where it is addressed |
 |---|---|---|
-| 1 | Separate action, perception and knowledge violations | Section 6.1: three limit categories, each with its own detection method |
-| 2 | Define each persona's capabilities and expected behaviour separately | Section 6.1, persona table |
-| 3 | Explain how the perception filter keeps hidden information out | Section 6.1, bounded perception |
-| 4 | Enforcing restrictions is not the same as realistic behaviour | Section 8.3: realism compared with real users' input profiles (A11y-CUA) |
-| 5 | Define the diversity metrics | Section 8.4 |
-| 6 | Same user with and without enforced restrictions | Section 8.2, twin runs |
+| 1 | Separate action, perception and knowledge violations | Section 6 and Appendix D.2: three limit categories, each with its own detection method |
+| 2 | Define each persona's capabilities and expected behaviour separately | Section 6 and Appendix D.2, persona table |
+| 3 | Explain how the perception filter keeps hidden information out | Section 6 and Appendix D.2, bounded perception |
+| 4 | Enforcing restrictions is not the same as realistic behaviour | Appendix D.4: realism compared with real users' input profiles (A11y-CUA) |
+| 5 | Define the diversity metrics | Appendix D.4 |
+| 6 | Same user with and without enforced restrictions | Section 8 and Appendix D.4, twin runs |
 | 7 | Report usability problems, not only violations | Section 3, findings report: inaccessible controls, navigation failures, confusing workflows, repeated actions, failed tasks |
 | 8 | Interactive trace viewer | Section 3, live view and step-by-step replay |
 | 9 | Tell interface, agent and restriction failures apart | Section 3, failure attribution (site, restriction, agent, infrastructure) |
-| 10 | Task-level evaluation across scenarios | Section 8.1, task suite by scenario (search, cart, checkout, form, recovery, information) |
-| 11 | Compare the four enforcement approaches carefully | Section 6.2 and Section 8.2: one condition changed at a time, agent and tasks fixed |
-| 12 | Verifier precision, recall and false-positive rate against labels | Section 8.5 |
+| 10 | Task-level evaluation across scenarios | Section 8 and Appendix D.4, task suite by scenario (search, cart, checkout, form, recovery, information) |
+| 11 | Compare the four enforcement approaches carefully | Appendix D.3 and Section 8: one condition changed at a time, agent and tasks fixed |
+| 12 | Verifier precision, recall and false-positive rate against labels | Appendix D.4 |
 | 13 | Completion, actions, repeated attempts, latency and cost | Section 8, every results table |
 | 14 | Configurable website URL and task definitions | Section 3, configuration studio |
 | 15 | Create, edit and save simulated-user profiles | Section 3, configuration studio |
-| 16 | Compare results across runs or website versions | Section 3, comparison report; Section 8.6 version comparison |
+| 16 | Compare results across runs or website versions | Section 3, comparison report; Appendix D.4 version comparison |
 | 17 | Simulated users are not real users with disabilities | Section 11 and on every findings report |
-| 18 | Prioritise a working workflow with a few well-defined personas | Section 6.1: two full personas evaluated, three in preview |
-| 19 | Framework, deployment, database, costs, business model, milestones, 60–75% split | Sections 4, 4.1, 9, 10 and 12 |
+| 18 | Prioritise a working workflow with a few well-defined personas | Section 6 and Appendix D.2: two full personas evaluated, three in preview |
+| 19 | Framework, deployment, database, costs, business model, milestones, 60–75% split | Sections 4, 9, 10 and 12, and Appendix D.1 |
 | 20 | Every member understands the system | Section 12, review and walk-through practice |
-
-## References
-
-[1] Mohanbabu, Natalie, Kim, Guo, Pavel. *A11y-CUA Dataset: Characterizing the Accessibility Gap in Computer Use Agents.* arXiv:2602.09310 (CHI '26).
-[2] Natalie, Xu, Chang, Mihalcea, Guo. *Not There Yet: Evaluating Vision Language Models in Simulating the Visual Perception of People with Low Vision.* arXiv:2508.10972.
-[3] Xiao, Zhang, Yang, Xuan, Huang. *The Chameleon's Limit: Investigating Persona Collapse and Homogenization in Large Language Models.* arXiv:2604.24698.
-[4] Touir, Ktata, Soui. *Grounding Persona-Driven Usability Simulation in Established Standards.* CHI '26 Workshop on Responsible Use of AI Personas, CEUR-WS Vol-4249, paper 4.
-[5] Zhong, Chen, Win Kyi, Li, Fogarty, Wobbrock. *TaskAudit: Detecting Functiona11ity Errors in Mobile Apps via Agentic Task Execution.* arXiv:2510.12972 (CHI 2026).
-[6] Deng et al. *Mind2Web: Towards a Generalist Agent for the Web.* arXiv:2306.06070.
-[7] Google. *Gemini API pricing.* https://ai.google.dev/gemini-api/docs/pricing (read 2026-11-22).
-[8] startup.pk. *NIC Islamabad's Cohort 6 applications are open.* https://startup.pk/nic-islamabads-cohort-6-applications-are-open-heres-everything-you-need-to-apply/ ; techx.pk, *NIC Islamabad Cohort 6 window shuts* (read 2026-11-22).
-[9] Google. *Google for Startups Cloud Program.* https://cloud.google.com/startup (terms to be confirmed; secondary summary read 2026-11-22).
 
 ## Appendix C. AI Tool Declaration
 
@@ -517,3 +432,109 @@ As required by Assignment 3, Section 9. Kept in the repository as `AI_USE.md`; r
 | 2026-11-24 to 2026-11-27 | Faateh Haneef | Claude Code (Anthropic) | Round 2: the groundwork for parallel work (per-site catalog, studio hook, route folder, comparison API), several actions per model call and the call budget, the live view and step-by-step replay, the findings report and failure attribution, the redesign of Tallowmere, Willowbrook, Northgate and Riverside, labelling bundle 2, running the four-method, twin and version-comparison batches and writing up their results, reviewing and merging the teammates' branches, and revising the proposal and slides | Design, scope and every merge decided by Faateh; code reviewed by Faateh; 313 automated test cases run locally and in CI; each site's tasks tried by keyboard and mouse against its manifest |
 | 2026-11-24 to 2026-11-27 | Ibrahim Malik | Claude Code (Anthropic) | Round 2 (`docs/tasks-A3-round2.md`, Section 3): the evaluation package and its commands (task-level scoring, realism against A11y-CUA, diversity, the verifier report), repeated attempts and calls-vs-actions metrics, the A3 task suite, the Harbour Herald (Astro) and Pantry Notes (Django) test sites with their barriers, honeytokens, manifests and catalog files, the evaluation write-up, the refreshed functional test table, and running the suite batches and generating their results tables | Design and steps from `docs/tasks-A3-round2.md`; code to be reviewed by Ibrahim; 313 backend tests and `check-site --live` (17/17 for both sites) run locally; both sites walked by keyboard and mouse in Chromium |
 | 2026-11-24 | Abdul Hadi | Claude Code (Anthropic) | Round 2 (`docs/tasks-A3-round2.md` Section 2): building the Emberline Kitchen (React + Vite) and Marquee Tickets (SvelteKit) test sites with their design systems, menu and event data, planted barriers, honeytokens, Dockerfiles, READMEs, manifests and catalog files; the configuration studio (the three custom-item tables, the repository and its validation, the catalog source, the `/studio` API and its tests, and the persona, site and task editors); the comparison page; checking the sites and the studio in Chromium; drafting `docs/proposal/sections/studio.md`; setting up the Gemini keys in the local `.env` | Steps and scope from the task file; `check-site --live` (17/17 for both sites), 252 backend tests, ruff, typecheck and lint run locally; every site task tried with a mouse and with the keyboard only against its manifest; the studio tried end to end with a custom persona, site and task; code to be reviewed by Abdul before pushing |
+
+## Appendix D. Supporting Details
+
+### D.1 Database design
+
+PostgreSQL in deployment, SQLite for local runs, through the same SQLAlchemy models. A step's full record is stored as JSON, validated against the shared contract on read, so the audit can always be recomputed from the store.
+
+| Table | Key | Holds |
+|---|---|---|
+| `runs` | run id | configuration (persona, site, task, enforcement, provider, seed, actions per call), batch id, status, outcome, step and refusal counts, times, error |
+| `steps` | run id + step index | the full step record: observation (mode, URL, perceived text, links, magnifier window, screenshot path), proposed action and rationale, model call number and position in the call, gate and verifier decisions, input events, URL and focus after, target box, latency, tokens, cost |
+| `batches` | batch id | the batch request (tasks × personas × methods, repeats, call budget), so progress can be reported and resumed |
+| `labels` | run id + step + labeller | one person's verdict on one step (violation or not, limit, kind, note) |
+| `label_samples` | bundle | the fixed, seeded sample of steps in a labelling bundle |
+| `custom_personas`, `custom_sites`, `custom_tasks` | id | items made in the configuration studio, validated against the same contracts as the built-in catalogue |
+
+Leakage verdicts, metrics, findings and comparisons are not stored: they are recomputed by code from `runs` and `steps`, so a rule change never leaves stale results. Screenshots and live-view frames are files under the data directory, outside the database and the repository.
+
+### D.2 Limits, personas and how each is checked
+
+The three kinds of limit need different detection, so each has its own method:
+
+| Kind | Limits | Detected by | Evidence |
+|---|---|---|---|
+| **Action** | L1 no pointer | The action itself (a pointer tool), and trusted pointer events recorded in the page | The gate refuses before execution; the checker confirms from the input events |
+| **Perception** | L2 accessibility tree only; L3 magnified view | Whether the step used something the persona could not perceive: an element outside the magnified window, or a string shown only visually | Honeytokens: strings placed where only the forbidden channel reveals them (an `aria-hidden` batch code, a footer code far below the magnified view) |
+| **Knowledge** | L4 first-time visitor | Navigation to an address never seen in an observation, or a site-specific term never seen yet | The set of links and text the persona has perceived so far; an unlinked staff page with a code |
+
+Personas are bundles of these limits, evaluated separately because they cannot share one criterion:
+
+| Persona | Limits | Can perceive | Can do | Expected behaviour | Evaluated on | Status |
+|---|---|---|---|---|---|---|
+| Knock, keyboard-only | L1 | The full page | Keys only (Tab, arrows, Enter, Space, typing) | Moves by focus; cannot use mouse-only controls; gives up or finds a keyboard route | Executed pointer actions (gate refusals, pointer events) | Full |
+| Cog, unrestricted control | none | The full page | Everything | Reference behaviour on the same tasks; its "leaks" are a reference rate | Task success and steps (the yardstick) | Full |
+| Echo, screen-reader user | L1, L2 | The accessibility tree only | Screen-reader and keyboard commands | Cannot know what is only drawn on screen | Honeytokens (H2b), uses of unnamed controls | Preview |
+| Iris, magnifier user | L3 | A 400% window, moved by panning | Everything, within the view | Must pan to find content far from where the page opens | Elements outside the window (H3a), honeytokens (H3b) | Preview |
+| Wren, first-time visitor | L4 | The full page | Everything | Knows nothing site-specific until it has seen it | Unseen addresses (H4a) and terms (H4b), honeytokens (H4c) | Preview |
+
+As advised, A3 evaluates the two full personas end to end; the three preview personas run and are checked, but their results are marked "not validated" until their labelled sets are complete.
+
+**How bounded perception keeps hidden information out.** The observation for each persona is built by the browser executor, not filtered from a full page afterwards. For Echo it is Chrome's accessibility tree (the same tree a screen reader reads), so text that is `aria-hidden` or drawn only in images or CSS never reaches the model, while text a real screen reader would announce (including visually off-screen text) does; element identifiers are the tree's own, not page coordinates. For Iris it is only the elements that intersect the magnified window, in document coordinates, with nothing outside it. Screenshots are never sent to the model. A test in a real Chromium plants an `aria-hidden` code, an off-screen code and a far-away footer code, and asserts that each persona's observation contains exactly what its user could perceive; honeytokens then catch any step that uses hidden information anyway (for example from the model's prior knowledge).
+
+### D.3 What each enforcement condition changes
+
+| Condition | What changes | What stays fixed |
+|---|---|---|
+| Prompt-only | The limits are described in the prompt | Model, prompt version, tools offered, tasks, sites, step limit, seeds |
+| Gate | As prompt-only, plus code refuses any action outside the limits before it reaches the page and tells the agent why | As above |
+| Bounded perception | As prompt-only, plus the observation is built for the persona's perception | As above |
+| Verifier | As prompt-only, plus a second model call judges each proposed action against the persona before it runs | As above |
+
+The four address different things: the gate enforces action limits; bounded perception enforces perception limits; the verifier is a learned, general check that can cover all three but can be wrong. They are therefore compared on the same tasks, and each is also judged on the limits it is meant to cover.
+
+### D.4 Evaluation details and results
+
+Error analysis groups every failing run by cause, computed by code (model unavailable, run error, persona leak, invalid output, refusal loop, action errors, stuck, step limit, gave up, wrong answer); at least ten failures are read and described with planned fixes. **First results (A3; full tables in `docs/results/a3-results.md`, regenerated by `backend/scripts/a3_results.py`).** Model gemini-3.6-flash; Tallowmere `cheapest` and Willowbrook `wb-callback`; 24 runs (3 per persona, task and option), 119 steps, 12-step cap.
+
+| Keyboard-only persona | Success | Runs with an executed leak | Mean steps |
+|---|---|---|---|
+| Prompt-only | 6 of 6 | **5 of 6** (it clicked with a mouse; in the sixth run it answered without clicking) | 4.7 |
+| Gate | 6 of 6 | **0 of 6** (4 attempted clicks refused, in 4 runs; it then finished by keyboard) | 6.5 |
+
+The control persona leaked in every run under both options (its reference rate). Step latency p50 8.5 s and p95 26.6 s; about 1,900 input tokens per step; $0 on the free tier, about $0.008 per run at the paid list price. Labelled test set: 60 steps from the real runs labelled independently by two members; Cohen's kappa 1.00, and the checker matched the agreed labels with kappa 1.00, precision and recall 100%. Because this sample is dominated by unambiguous input-type cases, A4 adds harder information-leak cases (preview personas, honeytokens). Failure analysis over all 37 A3 runs with the real model: 15 failing runs, 8 stopped by model quota (planned fix: several actions per model call and local models for volume) and 7 keyboard-only runs that clicked under prompt-only (the leak the gate exists to stop). These first runs compared prompt-only and the gate; the four-method comparison below then added bounded perception and the verifier. The explanation generator is integrated, and its evaluation on labelled explanations is planned for A4.
+
+**Diversity measure** (as agreed in the approval feedback). For each persona and task across repeated runs, and between personas: the normalised edit distance between the sequences of action types; the Shannon entropy of the action-type mix; and the spread (standard deviation and interquartile range) of step counts and success. The input-modality profile is compared with the Reduced A11y-CUA reference statistics where the quantities match (for example, blind and low-vision users made 0.1% of their actions with a pointer and 58.4% of their key presses were Tab or arrow keys), noting that A11y-CUA tasks were desktop tasks rather than web shopping. The entropy and interval helpers are implemented; the diversity report itself is A4 work.
+
+#### Task-level evaluation
+Single labelled steps do not show whole failures, so tasks are also evaluated as tasks. Every task has a scenario (search, add to cart, checkout, form, recovery from an error, finding information) and a deterministic success check; the A3 task suite covers every scenario across the sites, and results are reported per scenario: completion, actions, model calls, repeated attempts, latency and cost (`python -m vanguard.evaluation task-report`). The design and results are in the evaluation section by Ibrahim Malik (Appendix A.1).
+
+#### The four methods, and twin runs
+Batch `four-methods-callback` (Willowbrook's call-back form, Knock and Cog, all four methods, 3 runs each; `docs/results/four-methods.md`):
+
+| Knock (keyboard-only) | Success | Runs with an executed leak | Steps | Model calls per run |
+|---|---|---|---|---|
+| Prompt-only | 3 of 3 | 3 of 3 | 7.3 | 3.3 |
+| Gate | 3 of 3 | **0 of 3** | 10.3 | 6.0 |
+| Bounded perception | 3 of 3 | 3 of 3 | 7.7 | 4.0 |
+| Verifier | 3 of 3 | 3 of 3 | 8.3 | 13.7 |
+
+Only the gate stopped every leak, at no cost in task success and about three extra steps. Bounded perception does not address an action limit (it is meant for L2 and L3). The verifier was answering throughout but allowed 3 of Knock's 5 pointer actions, at about four times the model calls. The control agent behaved identically under all four.
+
+Twin runs give the same persona the same task with its limits only described and with them enforced (`docs/results/twins-and-versions.md`). Iris, the magnifier persona, found the floor of a book in 5 steps in all three runs when she could see the whole page, and failed all three when her view was enforced (only a 400% window), repeating herself about six times per run: the planted barrier, information in a far-right sidebar, only bites when the perception limit is real, so a prompt-only simulation would have missed it. Knock could not finish Northgate's reservation within 12 steps under either condition (the control agent needs about 10); the gate changed how he failed, not whether: without it he used the mouse in 2 of 3 runs, with it never. The failure attribution reads these runs as restriction failures (Iris's because the same persona succeeds without enforcement; Knock's because the control succeeds and he did not reach the controls he wanted by keyboard in time), each marked as a candidate for people to check.
+
+#### Realism
+Enforcing a limit does not make behaviour realistic, so realism is measured separately: each persona's input profile (pointer share of actions, Tab and arrow share of key presses) is compared with the matching group of real users in the A11y-CUA data [1] (`python -m vanguard.evaluation realism`).
+
+#### Diversity
+Across repeated runs of one persona and task, and between personas: the normalised edit distance between action-type sequences (navigation paths), the Shannon entropy of the action-type mix (interaction strategy), and the spread of steps, success and failure causes (`python -m vanguard.evaluation diversity`).
+
+#### The verifier against people
+Two members label bundle 2 (60 steps, half of them refused or flagged steps, shown without the checker's verdicts) independently. The verifier's decisions are scored against the agreed labels: precision, recall and false-positive rate (`python -m vanguard.evaluation verifier-report`, tested on hand-made data), alongside the gate's. Bundle 2 was being labelled at submission; its results are shown at the demonstration. On the steps it judged in the four-method runs, the verifier allowed 3 of Knock's 5 pointer actions.
+
+#### Website versions
+Every test site was redesigned during A3 with its tasks, barriers and honeytokens unchanged; the earlier versions are kept (git tag `sites-v1`). Running the same persona, task and method on both versions and comparing them with the comparison report shows whether the redesign introduced new failures. For Knock under the gate on Willowbrook's call-back form, version 2 kept success at 3 of 3 and leaks at 0, and needed fewer steps (9.0 vs 10.3) and model calls (5.0 vs 6.0); the report found no new failure causes.
+
+**Scope of the A3 evaluation, and what follows in A4.** The free tier allows about 20 model requests per key per day, so A3 uses **3 runs per persona, task and method** on short tasks with at most 12 steps, and several actions per model call. All four methods are compared in A3. A4 raises the repeats to 5, adds the longer tasks and the task-suite runs on the two newest sites, uses local models for volume, and grows the labelled set to at least 100 steps across all evaluated personas.
+
+**User-level benefit.** For a site owner, the test is whether Vanguard finds the planted barriers that matter to each persona (for example the cart's quantity buttons that a keyboard user cannot reach) and explains them correctly.
+
+### D.5 Roles in the first phase
+
+| Member | AI work | Engineering work |
+|---|---|---|
+| Faateh Haneef | Agent loop and prompts, enforcement options, the A3 comparison runs | Architecture, executor and worker, gate and rules, API, CI, deployment |
+| Abdul Hadi | Explanation generator (alternative c), perception and prompts for the preview personas | Results and live-view polish; 2–4 test sites |
+| Ibrahim Malik | Verifier evaluation, labelling and kappa, failure analysis | Leakage checker and metrics extensions, functional tests; 2–4 test sites |
