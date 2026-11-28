@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Suspense } from "react";
 import "@fontsource/dm-sans/400.css";
 import "@fontsource/dm-sans/500.css";
 import "@fontsource/dm-sans/700.css";
@@ -57,7 +58,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
               </nav>
               <div className="flex items-center gap-2 sm:hidden">
                 <CartLink />
-                <MenuDrawer links={LINKS} />
+                <Suspense fallback={null}>
+                  <MenuDrawer links={LINKS} />
+                </Suspense>
               </div>
             </div>
           </header>
